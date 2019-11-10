@@ -6,6 +6,70 @@
 #include "task.h"
 #include "windows.h"
 
+/* definition of performance monitor control registers and such */
+#include "armv8_pm.h"
+
+
+static inline uint64_t armv8pmu_pmcr_read(void)
+{
+    uint64_t val = 0;
+    asm volatile ("mrs %0, pmcr_el0" : "=r" (val));
+    return val;
+}
+
+static inline uint64_t armv8pmu_pmccntr_read(void)
+{
+    uint64_t val = 0;
+	asm volatile("mrs %0, pmccntr_el0" : "=r" (val));
+    return val;
+}
+
+static inline uint64_t armv8pmu_pmcntenset_read(void)
+{
+    uint64_t val = 0;
+    asm volatile("mrs %0, pmcntenset_el0" : "=r" (val));
+    return val;
+}
+
+static inline void armv8pmu_pmcr_write(uint64_t val)
+{
+    val &= ARMV8_PMCR_MASK;
+	asm volatile("isb");
+	asm volatile("msr pmcr_el0, %0" : : "r" (val));
+}
+
+static inline uint64_t read_counter()
+{
+	/* Access cycle counter */
+	uint64_t val = 0;
+	asm volatile("mrs %0, pmccntr_el0" : "=r" (val));
+	return val;
+}
+
+static inline void enable_counters()
+{
+	/*Enable user-mode access to counters. */
+	uint64_t pmuserenr = ((uint64_t) ARMV8_PMUSERENR_EN_EL0|ARMV8_PMUSERENR_ER|ARMV8_PMUSERENR_CR);
+	asm volatile("msr pmuserenr_el0, %0" : : "r" (pmuserenr));
+    asm volatile("msr pmccfiltr_el0, %0" : : "r" (ARMV8_PMCCFILTR_EL0));
+    // asm volatile("msr pmccfiltr_el0, %0" : : "r" (0));
+
+	/* Performance Monitors Count Enable Set register bit 30:0 disable, 31 enable. */
+	/* Can also enable other event counters here. */
+	asm volatile("msr pmcntenset_el0, %0" : : "r" (ARMV8_PMCNTENSET_EL0_ENABLE));
+
+	/* Enable counters */
+	uint64_t val=0;
+	asm volatile("mrs %0, pmcr_el0" : "=r" (val));
+	asm volatile("msr pmcr_el0, %0" : : "r" (val|ARMV8_PMCR_E));
+}
+
+static void disable_counters()
+{
+    asm volatile("msr pmuserenr_el0, %0" : : "r" (0));
+    armv8pmu_pmcr_write(armv8pmu_pmcr_read() & (~ARMV8_PMCR_E));
+}
+
 
 static bool lit = false;
 void Flash_LED(void)
@@ -109,16 +173,34 @@ void task1A(void* pParam) {
 	int total = 1000;
 	int step = 0;
 	int dir = 1;
+    unsigned int cycles_begin, cycles_end, time, pmcr;
+    unsigned int iter=0;
+	enable_counters();
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
 			dir = -dir;
 		}
+		// Measure the progress function
+		pmcr = armv8pmu_pmcr_read();
+		cycles_begin = read_counter();
 		DoProgress(Dc, step, total, 10, 130, GetScreenWidth() - 20, 20, col);
+		cycles_end = read_counter();
+		time = cycles_end - cycles_begin;
+
 		xTaskDelay(35);
-		sprintf(&buf[0], "Core 0 Load: %3i%% Task count: %2i", xLoadPercentCPU(), xTaskGetNumberOfTasks());
+		sprintf(&buf[0],
+				"Core 0 Load: %3i%% Task count: %2i Cycle count: %u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				time);
 		TextOut(Dc, 20, 80, &buf[0], strlen(&buf[0]));
+
+		if (step % 10 == 1) {
+			sprintf(&buf[0], "Core 0 PMCR: %u Cycle count: %u iteration: %u\n\r", pmcr, time, ++iter);
+			pl011_uart_puts(buf);
+        }
 	}
 }
 
@@ -129,16 +211,34 @@ void task2A(void* pParam) {
 	int total = 1000;
 	int step = 0;
 	int dir = 1;
+    unsigned int cycles_begin, cycles_end, time, pmcr;
+    unsigned int iter=0;
+	enable_counters();
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
 			dir = -dir;
 		}
+		// Measure the progress function
+		pmcr = armv8pmu_pmcr_read();
+		cycles_begin = read_counter();
 		DoProgress(Dc, step, total, 10, 230, GetScreenWidth() - 20, 20, col);
+		cycles_end = read_counter();
+		time = cycles_end - cycles_begin;
+
 		xTaskDelay(37);
-		sprintf(&buf[0], "Core 1 Load: %3i%% Task count: %2i", xLoadPercentCPU(), xTaskGetNumberOfTasks());
+		sprintf(&buf[0],
+				"Core 1 Load: %3i%% Task count: %2i Cycle count: %u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				time);
 		TextOut(Dc, 20, 180, &buf[0], strlen(&buf[0]));
+
+		if (step % 10 == 2) {
+			sprintf(&buf[0], "Core 1 PMCR: %u Cycle count: %u iteration: %u\n\r", pmcr, time, ++iter);
+			pl011_uart_puts(buf);
+        }
 	}
 }
 
@@ -149,16 +249,34 @@ void task3A(void* pParam) {
 	int total = 1000;
 	int step = 0;
 	int dir = 1;
+    unsigned int cycles_begin, cycles_end, time, pmcr;
+    unsigned int iter=0;
+	enable_counters();
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
 			dir = -dir;
 		}
+		// Measure the progress function
+		pmcr = armv8pmu_pmcr_read();
+		cycles_begin = read_counter();
 		DoProgress(Dc, step, total, 10, 330, GetScreenWidth() - 20, 20, col);
+		cycles_end = read_counter();
+		time = cycles_end - cycles_begin;
+
 		xTaskDelay(39);
-		sprintf(&buf[0], "Core 2 Load: %3i%% Task count: %2i", xLoadPercentCPU(), xTaskGetNumberOfTasks());
+		sprintf(&buf[0],
+				"Core 2 Load: %3i%% Task count: %2i Cycle count: %u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				time);
 		TextOut(Dc, 20, 280, &buf[0], strlen(&buf[0]));
+
+		if (step % 10 == 3) {
+			sprintf(&buf[0], "Core 2 PMCR: %u Cycle count: %u iteration: %u\n\r", pmcr, time, ++iter);
+			pl011_uart_puts(buf);
+        }
 	}
 }
 
@@ -169,16 +287,35 @@ void task4A(void* pParam) {
 	int total = 1000;
 	int step = 0;
 	int dir = 1;
+    unsigned int cycles_begin, cycles_end, time, pmcr;
+    unsigned int iter=0;
+	enable_counters();
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
 			dir = -dir;
+
 		}
+		// Measure the progress function
+		pmcr = armv8pmu_pmcr_read();
+		cycles_begin = read_counter();
 		DoProgress(Dc, step, total, 10, 430, GetScreenWidth() - 20, 20, col);
+		cycles_end = read_counter();
+		time = cycles_end - cycles_begin;
+
 		xTaskDelay(41);
-		sprintf(&buf[0], "Core 3 Load: %3i%% Task count: %2i", xLoadPercentCPU(), xTaskGetNumberOfTasks());
+		sprintf(&buf[0],
+				"Core 3 Load: %3i%% Task count: %2i Cycle count: %u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				time);
 		TextOut(Dc, 20, 380, &buf[0], strlen(&buf[0]));
+
+		if (step % 10 == 4) {
+			sprintf(&buf[0], "Core 3 PMCR: %u Cycle count: %u iteration: %u\n\r", pmcr, time, ++iter);
+			pl011_uart_puts(buf);
+        }
 	}
 }
 
@@ -190,7 +327,16 @@ void main (void)
 	displaySmartStart(printf);										// Display smart start details
 	ARM_setmaxspeed(printf);										// ARM CPU to max speed
 	printf("Task tick rate: %u\n", configTICK_RATE_HZ);
-	
+
+    unsigned int baudrate = 115200;
+    if (pl011_uart_init(baudrate)) {
+        printf("UART succesfully initialized\n");
+        pl011_uart_puts("UART succesfully initialized\n\0");
+    } else {
+        printf("UART could not be initialized!\n");
+    }
+
+    pl011_uart_puts("Initializing xRTOS\n\0");
 	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
 
 	/* Core 0 tasks */

@@ -17,19 +17,19 @@ TOOLCHAIN_BASE = $(HOME)/local/share
 CROSS_COMPILER_ARM = $(TOOLCHAIN_BASE)/gcc-arm-eabi-8.3
 CROSS_COMPILER_AARCH64 = $(TOOLCHAIN_BASE)/gcc-aarch64-elf-8.3
 
-Pi3-64: CFLAGS = -Wall -O3 -mcpu=cortex-a53+fp+simd -ffreestanding -nostartfiles -std=c11 -mstrict-align -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
+Pi3-64: CFLAGS = -Wall -O3 -mcpu=cortex-a53+fp+simd -ffreestanding -nostartfiles -std=gnu11 -mstrict-align -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
 Pi3-64: ARMGNU = $(CROSS_COMPILER_AARCH64)/bin/aarch64-elf
 Pi3-64: LINKERFILE = rpi64.ld
 Pi3-64: SMARTSTART = SmartStart64.S
 Pi3-64: IMGFILE = kernel8.img
 
-Pi3: CFLAGS = -Wall -O3 -mcpu=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard -ffreestanding -nostartfiles -std=c11 -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
+Pi3: CFLAGS = -Wall -O3 -mcpu=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard -ffreestanding -nostartfiles -std=gnu11 -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
 Pi3: ARMGNU = $(CROSS_COMPILER_ARM)/bin/arm-eabi
 Pi3: LINKERFILE = rpi32.ld
 Pi3: SMARTSTART = SmartStart32.S
 Pi3: IMGFILE = kernel8-32.img
 
-Pi2: CFLAGS = -Wall -O3 -mcpu=cortex-a7 -mfpu=neon -mfloat-abi=hard -ffreestanding -nostartfiles -std=c11 -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
+Pi2: CFLAGS = -Wall -O3 -mcpu=cortex-a7 -mfpu=neon -mfloat-abi=hard -ffreestanding -nostartfiles -std=gnu11 -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
 Pi2: ARMGNU = $(CROSS_COMPILER_ARM)/bin/arm-eabi
 Pi2: LINKERFILE = rpi32.ld
 Pi2: SMARTSTART = SmartStart32.S
@@ -42,7 +42,7 @@ Pi1:
 	endif
 
 ######## PI1 NOT A VALID TARGET FOR THIS PROJECT #########
-##Pi1: CFLAGS = -Wall -O3 -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -ffreestanding -nostartfiles -std=c11 -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
+##Pi1: CFLAGS = -Wall -O3 -mcpu=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard -ffreestanding -nostartfiles -std=gnu11 -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
 ##Pi1: ARMGNU = $(CROSS_COMPILER_ARM)/bin/arm-eabi
 ##Pi1: LINKERFILE = rpi32.ld
 ##Pi1: SMARTSTART = SmartStart32.S
