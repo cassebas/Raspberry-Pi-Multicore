@@ -8,6 +8,8 @@
 
 /* definition of performance monitor control registers and such */
 #include "armv8_pm.h"
+/* our own synthetic benchmark for testing purposes */
+#include "synthetic_bench.h"
 
 
 static inline uint64_t armv8pmu_pmcr_read(void)
@@ -176,29 +178,34 @@ void task1A(void* pParam) {
     unsigned int cycles_begin, cycles_end, time, pmcr;
     unsigned int iter=0;
 	enable_counters();
+
+	// Initialize the array for the synthetic benchmark
+	volatile bigstruct_t mydata[SYNBENCH_DATASIZE];
+
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
 			dir = -dir;
 		}
-		// Measure the progress function
+		DoProgress(Dc, step, total, 10, 130, GetScreenWidth() - 20, 20, col);
+
 		pmcr = armv8pmu_pmcr_read();
 		cycles_begin = read_counter();
-		DoProgress(Dc, step, total, 10, 130, GetScreenWidth() - 20, 20, col);
+		array_access_linear(mydata);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
 		xTaskDelay(35);
 		sprintf(&buf[0],
-				"Core 0 Load: %3i%% Task count: %2i Cycle count: %u",
+				"Core 0 Load: %3i%% Task count: %2i Cycle count: %12u",
 				xLoadPercentCPU(),
 				xTaskGetNumberOfTasks(),
 				time);
 		TextOut(Dc, 20, 80, &buf[0], strlen(&buf[0]));
 
 		if (step % 10 == 1) {
-			sprintf(&buf[0], "Core 0 PMCR: %u Cycle count: %u iteration: %u\n\r", pmcr, time, ++iter);
+			sprintf(&buf[0], "Core 0 PMCR: %u Cycle count: %12u iteration: %12u\n\r", pmcr, time, ++iter);
 			pl011_uart_puts(buf);
         }
 	}
@@ -214,29 +221,34 @@ void task2A(void* pParam) {
     unsigned int cycles_begin, cycles_end, time, pmcr;
     unsigned int iter=0;
 	enable_counters();
+
+	// Initialize the array for the synthetic benchmark
+	volatile bigstruct_t mydata[SYNBENCH_DATASIZE];
+
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
 			dir = -dir;
 		}
-		// Measure the progress function
+		DoProgress(Dc, step, total, 10, 230, GetScreenWidth() - 20, 20, col);
+
 		pmcr = armv8pmu_pmcr_read();
 		cycles_begin = read_counter();
-		DoProgress(Dc, step, total, 10, 230, GetScreenWidth() - 20, 20, col);
+		array_access_linear(mydata);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
 		xTaskDelay(37);
 		sprintf(&buf[0],
-				"Core 1 Load: %3i%% Task count: %2i Cycle count: %u",
+				"Core 1 Load: %3i%% Task count: %2i Cycle count: %12u",
 				xLoadPercentCPU(),
 				xTaskGetNumberOfTasks(),
 				time);
 		TextOut(Dc, 20, 180, &buf[0], strlen(&buf[0]));
 
 		if (step % 10 == 2) {
-			sprintf(&buf[0], "Core 1 PMCR: %u Cycle count: %u iteration: %u\n\r", pmcr, time, ++iter);
+			sprintf(&buf[0], "Core 1 PMCR: %u Cycle count: %12u iteration: %u\n\r", pmcr, time, ++iter);
 			pl011_uart_puts(buf);
         }
 	}
@@ -252,29 +264,34 @@ void task3A(void* pParam) {
     unsigned int cycles_begin, cycles_end, time, pmcr;
     unsigned int iter=0;
 	enable_counters();
+
+	// Initialize the array for the synthetic benchmark
+	volatile bigstruct_t mydata[SYNBENCH_DATASIZE];
+
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
 			dir = -dir;
 		}
-		// Measure the progress function
+		DoProgress(Dc, step, total, 10, 330, GetScreenWidth() - 20, 20, col);
+
 		pmcr = armv8pmu_pmcr_read();
 		cycles_begin = read_counter();
-		DoProgress(Dc, step, total, 10, 330, GetScreenWidth() - 20, 20, col);
+		array_access_linear(mydata);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
 		xTaskDelay(39);
 		sprintf(&buf[0],
-				"Core 2 Load: %3i%% Task count: %2i Cycle count: %u",
+				"Core 2 Load: %3i%% Task count: %2i Cycle count: %12u",
 				xLoadPercentCPU(),
 				xTaskGetNumberOfTasks(),
 				time);
 		TextOut(Dc, 20, 280, &buf[0], strlen(&buf[0]));
 
 		if (step % 10 == 3) {
-			sprintf(&buf[0], "Core 2 PMCR: %u Cycle count: %u iteration: %u\n\r", pmcr, time, ++iter);
+			sprintf(&buf[0], "Core 2 PMCR: %u Cycle count: %12u iteration: %u\n\r", pmcr, time, ++iter);
 			pl011_uart_puts(buf);
         }
 	}
@@ -290,6 +307,10 @@ void task4A(void* pParam) {
     unsigned int cycles_begin, cycles_end, time, pmcr;
     unsigned int iter=0;
 	enable_counters();
+
+	// Initialize the array for the synthetic benchmark
+	volatile bigstruct_t mydata[SYNBENCH_DATASIZE];
+
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -297,23 +318,24 @@ void task4A(void* pParam) {
 			dir = -dir;
 
 		}
-		// Measure the progress function
+		DoProgress(Dc, step, total, 10, 430, GetScreenWidth() - 20, 20, col);
+
 		pmcr = armv8pmu_pmcr_read();
 		cycles_begin = read_counter();
-		DoProgress(Dc, step, total, 10, 430, GetScreenWidth() - 20, 20, col);
+		array_access_linear(mydata);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
 		xTaskDelay(41);
 		sprintf(&buf[0],
-				"Core 3 Load: %3i%% Task count: %2i Cycle count: %u",
+				"Core 3 Load: %3i%% Task count: %2i Cycle count: %12u",
 				xLoadPercentCPU(),
 				xTaskGetNumberOfTasks(),
 				time);
 		TextOut(Dc, 20, 380, &buf[0], strlen(&buf[0]));
 
 		if (step % 10 == 4) {
-			sprintf(&buf[0], "Core 3 PMCR: %u Cycle count: %u iteration: %u\n\r", pmcr, time, ++iter);
+			sprintf(&buf[0], "Core 3 PMCR: %u Cycle count: %12u iteration: %u\n\r", pmcr, time, ++iter);
 			pl011_uart_puts(buf);
         }
 	}
@@ -335,8 +357,8 @@ void main (void)
     } else {
         printf("UART could not be initialized!\n");
     }
+    pl011_uart_puts("Initializing xRTOS\n");
 
-    pl011_uart_puts("Initializing xRTOS\n\0");
 	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
 
 	/* Core 0 tasks */
