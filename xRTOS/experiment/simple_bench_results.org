@@ -1,0 +1,60 @@
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
+#+OPTIONS: author:t broken-links:nil c:nil creator:nil
+#+OPTIONS: d:(not "LOGBOOK") date:t e:t email:nil f:t inline:t num:nil
+#+OPTIONS: p:nil pri:nil prop:nil stat:t tags:t tasks:t tex:t
+#+OPTIONS: timestamp:t title:t toc:nil todo:t |:t
+#+TITLE: Real simple benchmark results
+#+SUBTITLE: Linear array access with corunners
+#+AUTHOR: Caspar Treijtel
+#+EMAIL: c.treijtel@student.tudelft.nl
+#+LANGUAGE: en
+#+SELECT_TAGS: export
+#+EXCLUDE_TAGS: noexport
+#+CREATOR: Emacs 26.3 (Org mode 9.1.9)
+#+LATEX_CLASS: article
+#+LATEX_CLASS_OPTIONS:
+#+LATEX_HEADER: \usepackage[margin=1in]{geometry}
+#+LATEX_HEADER_EXTRA:
+#+DESCRIPTION:
+#+KEYWORDS:
+#+SUBTITLE:
+#+LATEX_COMPILER: pdflatex
+#+DATE: \today
+
+* Stastistical summaries --- number of cycles
+
+|----------+--------+---------+---------|
+|          | 1 core | 2 cores | 4 cores |
+|----------+--------+---------+---------|
+| #samples |    204 |     199 |     194 |
+| median   |  37972 |   38198 |   43004 |
+| mean     |  37956 |   77051 |  156021 |
+| stddev   |    609 |  269162 |  446146 |
+| min      |  36248 |   36238 |   36351 |
+| 25%      |  37874 |   37976 |   40188 |
+| 50%      |  37972 |   38198 |   43004 |
+| 75%      |  38072 |   42590 |   47445 |
+| max      |  44528 | 2456896 | 2471587 |
+|----------+--------+---------+---------|
+
+\pagebreak
+* Boxplots
+** 1 core (no corunners)
+
+#+CAPTION: Boxplot - 1 core, no corunners
+#+NAME:   fig:boxplot-1core
+[[./array_access_linear_1cores_preemptive.png]]
+
+\pagebreak
+** 2 cores (1 corunner)
+
+#+CAPTION: Boxplot - 2 cores, 1 corunner
+#+NAME:   fig:boxplot-2cores
+[[./array_access_linear_2cores_preemptive.png]]
+
+\pagebreak
+** 4 cores (3 corunners)
+
+#+CAPTION: Boxplot - 4 cores, 3 corunners
+#+NAME:   fig:boxplot-4cores
+[[./array_access_linear_4cores_preemptive.png]]
