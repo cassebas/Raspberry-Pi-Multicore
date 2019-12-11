@@ -10,7 +10,13 @@
 #include "armv8_pm.h"
 /* our own synthetic benchmark for testing purposes */
 #include "synthetic_bench.h"
+#include "malardalen.h"
 
+/* For Mälardalen bsort100 benchmark */
+int Array1[MAXDIM];
+int Array2[MAXDIM];
+int Array3[MAXDIM];
+int Array4[MAXDIM];
 
 static inline uint64_t armv8pmu_pmcr_read(void)
 {
@@ -192,7 +198,8 @@ void task1A(void* pParam) {
 
 		pmcr = armv8pmu_pmcr_read();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
+		// array_access_linear(mydata);
+		bsort100_BubbleSort(Array1);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -235,7 +242,8 @@ void task2A(void* pParam) {
 
 		pmcr = armv8pmu_pmcr_read();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
+		// array_access_linear(mydata);
+		bsort100_BubbleSort(Array2);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -278,7 +286,8 @@ void task3A(void* pParam) {
 
 		pmcr = armv8pmu_pmcr_read();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
+		// array_access_linear(mydata);
+		bsort100_BubbleSort(Array3);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -322,7 +331,8 @@ void task4A(void* pParam) {
 
 		pmcr = armv8pmu_pmcr_read();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
+		// array_access_linear(mydata);
+		bsort100_BubbleSort(Array4);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -361,21 +371,27 @@ void main (void)
 
 	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
 
+	/* Initialize the bsort100 arrays */
+	bsort100_Initialize(Array1);
+	bsort100_Initialize(Array2);
+	/* bsort100_Initialize(Array3); */
+	/* bsort100_Initialize(Array4); */
+
 	/* Core 0 tasks */
-	xTaskCreate(0, task1, "Core0-1", 512, NULL, 4, NULL);
+	/* xTaskCreate(0, task1, "Core0-1", 512, NULL, 4, NULL); */
 	xTaskCreate(0, task1A, "Core0-2", 512, NULL, 2, NULL);
 
 	/* Core 1 tasks */
-	xTaskCreate(1, task2, "Core1-1", 512, NULL, 2, NULL);
+	/* xTaskCreate(1, task2, "Core1-1", 512, NULL, 2, NULL); */
 	xTaskCreate(1, task2A, "Core1-2", 512, NULL, 2, NULL);
 	
-	/* Core 2 tasks */
-	xTaskCreate(2, task3, "Core2-1", 512, NULL, 2, NULL);
-	xTaskCreate(2, task3A, "Core2-2", 512, NULL, 2, NULL);
+	/* /\* Core 2 tasks *\/ */
+	/* xTaskCreate(2, task3, "Core2-1", 512, NULL, 2, NULL); */
+	/* xTaskCreate(2, task3A, "Core2-2", 512, NULL, 2, NULL); */
 
-	/* Core 3 tasks */
-	xTaskCreate(3, task4, "Core3-1", 512, NULL, 2, NULL);
-	xTaskCreate(3, task4A, "Core3-2", 512, NULL, 2, NULL);
+	/* /\* Core 3 tasks *\/ */
+	/* xTaskCreate(3, task4, "Core3-1", 512, NULL, 2, NULL); */
+	/* xTaskCreate(3, task4A, "Core3-2", 512, NULL, 2, NULL); */
 
 	/* Start scheduler */
 	xTaskStartScheduler();
