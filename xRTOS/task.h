@@ -59,6 +59,8 @@ unsigned int xTaskGetNumberOfTasks (void);
 .--------------------------------------------------------------------------*/
 unsigned int xLoadPercentCPU(void);
 
+RegType_t getOSTickCounter(void);
+
 #ifdef __cplusplus
 }
 #endif

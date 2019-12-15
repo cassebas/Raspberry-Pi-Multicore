@@ -405,6 +405,11 @@ void xTickISR(void)
 	EL0_Timer_Set(m_nClockTicksPerHZTick);							// Set EL0 timer again for timer tick period
 }
 
+RegType_t getOSTickCounter()
+{
+	struct CoreControlBlock* ccb = &coreCB[getCoreID()];
+	return ccb->OSTickCounter;
+}
 
 
 
