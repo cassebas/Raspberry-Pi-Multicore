@@ -382,9 +382,14 @@ void xSchedule (void)
 		if (ccb->uxSchedulerSuspended == 0)							// Core scheduler not suspended
 		{
 			struct TaskControlBlock* next = ccb->pxCurrentTCB->next;
-			if (next)												// Check current task has a next ready task
-				ccb->pxCurrentTCB = next;							// Simply load next ready
-				else ccb->pxCurrentTCB = ccb->readyTasks.head;		// No next ready so load readyTasks head
+			// Check current task has a next ready task with same or higher prio
+			while (next && ccb->pxCurrentTCB->uxPriority > next->uxPriority)
+				next = next->next;
+
+			if (next)
+				ccb->pxCurrentTCB = next;						// Simply load next ready
+			else
+				ccb->pxCurrentTCB = ccb->readyTasks.head;		// No next ready so load readyTasks head
 		}
 	}
 }
