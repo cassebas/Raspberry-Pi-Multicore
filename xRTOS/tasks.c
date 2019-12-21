@@ -2,6 +2,8 @@
 #include "xRTOS.h"
 #include "rpi-smartstart.h"
 #include "task.h"
+#include <stdio.h>
+#include <stdarg.h>
 
 /*
  * Macros used by vListTask to indicate which state a task is in.
@@ -108,6 +110,15 @@ static struct CoreControlBlock
 		volatile unsigned uxSchedulerSuspended : 16;		/*< Context switches are held pending while the scheduler is suspended.  */
 		unsigned xSchedulerRunning : 1;						/*< Set to 1 if the scheduler is running on this core */
 		unsigned xCoreBlockInitialized : 1;					/*< Set to 1 if the core block has been initialized */
+		/* /\* Synchronization mechanism for agreeing to start on specific OSTickCounter value *\/ */
+		/* unsigned OSTickStart; */
+		/* Synchronization mechanism for agreeing to start at the same time */
+		volatile unsigned CoreState : 3;
+		volatile unsigned SyncScheduler : 1;
+		volatile unsigned SyncOffset;
+		/* UART printing lock, level l==-1 means not waiting, l>=0 means waiting at level=l */
+		volatile int UARTlock_level : 4;
+		volatile int UARTlock_last_to_enter : 4;
 	};
 } coreCB[MAX_CPU_CORES] = { 0 };
 
@@ -218,6 +229,16 @@ void xRTOS_Init (void)
 	{
 		RPi_coreCB_PTR[i] = &coreCB[i];								// Set the core block pointers in the smartstart system needed by irq and swi vectors
 		coreCB[i].xCoreBlockInitialized = 1;						// Set the core block initialzied flag to state this has been done
+
+		/* Initialize the synchronization variables */
+		coreCB[i].UARTlock_last_to_enter = -1;
+		coreCB[i].UARTlock_level = -1;
+
+		// Initialize the states of the cores to inactive. If a core is started
+		// by task creation, its state will be set to active.
+		coreCB[i].CoreState = INACTIVE;
+		coreCB[i].SyncScheduler = 0;
+		coreCB[i].SyncOffset = 0;
 	}
 }
 
@@ -259,6 +280,8 @@ void xTaskCreate (uint8_t corenum,									// The core number to run task on
 		task->taskState = tskREADY_CHAR;							// Set the read char state
 		AddTaskToList(&cb->readyTasks, task);						// Add task to read task lits
 		if (pxCreatedTask) (*pxCreatedTask) = task;
+		// Set the core's state to active
+		cb->CoreState = ACTIVE;
 		CoreExitCritical();											// Exiting core critical area
 	}
 }
@@ -360,6 +383,8 @@ void xTaskIncrementTick (void)
 			{
 				if (ccb->OSTickCounter >= task->ReleaseTime)		// Check if release time is up
 				{
+					// But only do the following if the task is *not* INACTIVE
+					// TODO add conditional for these statements
 					RemoveTaskFromList(&ccb->delayedTasks, task);	// Remove the task from delay list
 					task->taskState = tskREADY_CHAR;				// Set the read char state
 					AddTaskToList(&ccb->readyTasks, task);			// Add the task to the ready list
@@ -376,7 +401,8 @@ void xTaskIncrementTick (void)
  */
 void xSchedule (void)
 {
-	struct CoreControlBlock* ccb = &coreCB[getCoreID()];			// Pointer to core control block
+	int coreID = getCoreID();
+	struct CoreControlBlock* ccb = &coreCB[coreID];			// Pointer to core control block
 	if (ccb->xCoreBlockInitialized == 1)							// Check the core block is initialized  
 	{
 		if (ccb->uxSchedulerSuspended == 0)							// Core scheduler not suspended
@@ -390,6 +416,38 @@ void xSchedule (void)
 				ccb->pxCurrentTCB = next;						// Simply load next ready
 			else
 				ccb->pxCurrentTCB = ccb->readyTasks.head;		// No next ready so load readyTasks head
+
+			// CT: in our situation, the head will always be the 'Core' task.
+			// But we'll leave the code above just as it is for now.
+			// Here comes the synchronization mechanism.
+			if (ccb->SyncScheduler) {
+				if (coreID == 0) {
+					// we are master
+					if (ccb->CoreState == ACTIVE)
+						ccb->CoreState = WAITING;
+					else if (ccb->CoreState == WAITING)
+						ccb->CoreState = TIMER_SET;
+					else if (ccb->CoreState == TIMER_SET)
+						ccb->CoreState = RUNNING;
+					else if (ccb->CoreState == RUNNING)
+						ccb->CoreState = ACTIVE;
+				} else {
+					// we are slave
+					if (ccb->CoreState == TIMER_SET) {
+						if (ccb->SyncOffset > 0)
+							ccb->SyncOffset--;
+						else
+							ccb->CoreState = RUNNING;
+					} else {
+						char buf[32];
+						log_debug(coreID, buf,
+								  "Slave in scheduler sync mechanism, state == %s\n\r",
+								  ccb->CoreState);
+					}
+				}
+
+				ccb->SyncScheduler = 0;
+			}
 		}
 	}
 }
@@ -405,12 +463,152 @@ void xTickISR(void)
 	EL0_Timer_Set(m_nClockTicksPerHZTick);							// Set EL0 timer again for timer tick period
 }
 
+void sync_master()
+{
+	char buf[32];
+	int coreID = getCoreID();
+	struct CoreControlBlock* ccb = &coreCB[coreID];
+	struct CoreControlBlock* ccbslave;
+	int sync_ready;
+
+	log_debug(coreID, buf, "Master starting synchronization - core ID=%d\n\r", coreID);
+
+	// Notify the scheduler that we're ready for synchronization
+	ccb->SyncScheduler = 1;
+
+	// Next state will be WAITING, to be set from the next tick (ISR)
+	while (ccb->CoreState != WAITING)
+		;
+
+	log_debug(coreID, buf, "Master state changed to waiting - core ID=%d\n\r", coreID);
+
+	// Master is now in waiting state, we must wait for *all* cores to
+	// be in waiting state also
+	sync_ready = 0;
+	while (!sync_ready) {
+		sync_ready = 1;
+		for (int i=1; i<MAX_CPU_CORES; i++) {
+			ccbslave = &coreCB[i];
+			if (ccbslave->CoreState)
+				sync_ready = (sync_ready && ccbslave->CoreState == WAITING);
+		}
+	}
+
+
+	// All slaves are also waiting now, we can wait for our state to be
+	// set to TIMER_SET. Notify the scheduler that again, we're ready for
+	// synchronization
+	ccb->SyncScheduler = 1;
+
+	// Next state will be TIMER_SET, to be set by the scheduler.
+	while (ccb->CoreState != TIMER_SET)
+		;
+
+	log_debug(coreID, buf, "Master state changed to timer_set - core ID=%d\n\r", coreID);
+
+	// Notify the scheduler that again, we're ready for synchronization
+	ccb->SyncScheduler = 1;
+
+	// All set, wait for final signal from scheduler
+	while (ccb->CoreState != RUNNING)
+		;
+
+	log_debug(coreID, buf, "Master finished synchronization - core ID=%d\n\r", coreID);
+}
+
+void sync_slave(int offset)
+{
+	char buf[32];
+	int master = 0;
+	int coreID = getCoreID();
+	struct CoreControlBlock* ccb = &coreCB[coreID];
+	struct CoreControlBlock* ccbmaster = &coreCB[master];
+
+	log_debug(coreID, buf, "Slave starting synchronization - core ID=%d\n\r", coreID);
+
+	ccb->CoreState = WAITING;
+
+	// Now wait for the master to pick up all slaves waiting.
+	while (ccbmaster->CoreState != TIMER_SET)
+		;
+
+	// Master has changed it's state to TIMER_SET
+	ccb->CoreState = TIMER_SET;
+
+	log_debug(coreID, buf, "Slave has set timer_set state - core ID=%d\n\r", coreID);
+
+	// Wait for the scheduler to change our status to RUNNING
+	ccb->SyncOffset = offset;
+	ccb->SyncScheduler = 1;
+
+	while (ccb->CoreState != RUNNING)
+		;
+
+	log_debug(coreID, buf, "Slave finished synchronization - core ID=%d\n\r", coreID);
+}
+
+void sync_reset()
+{
+	char buf[32];
+	int coreID = getCoreID();
+	struct CoreControlBlock* ccb = &coreCB[coreID];
+
+	// Add statements for activating a task again after being put to INACTIVE state
+	// place SyncScheduler=1 for the scheduler to move task back to active state
+
+	// State should be running
+	if (ccb->CoreState != RUNNING)
+		log_debug(coreID, buf, "Sync reset while not running! - core ID=%d\n\r", coreID);
+
+	ccb->CoreState = ACTIVE;
+}
+
 RegType_t getOSTickCounter()
 {
 	struct CoreControlBlock* ccb = &coreCB[getCoreID()];
 	return ccb->OSTickCounter;
 }
 
+void print_uart(unsigned int corenum, char *buf, const char *fmt, ...)
+{
+	va_list args;
 
+	/*
+	 * Code to make the printing to the UART reentrant: we'll make a lock
+	 * according to a variation of Peterson's algorithm: the filter algorithm.
+	 * This makes sure that the actual * printing is done within a critical section.
+	 */
+	struct CoreControlBlock* ccb = &coreCB[corenum];
+	struct CoreControlBlock* ccb_level;
+	struct CoreControlBlock* ccb_other;
+	int last_to_enter, higher_level, other_core;
 
+	for (int level=0; level<MAX_CPU_CORES-1; level++) {
+		ccb->UARTlock_level = level;
+		ccb_level = &coreCB[level];
+		ccb_level->UARTlock_last_to_enter = corenum;
+		last_to_enter = 1;
+		higher_level = 1;
+		while (last_to_enter && higher_level) {
+			last_to_enter = (ccb_level->UARTlock_last_to_enter == corenum);
+			higher_level = 0;
+			other_core = 0;
+			while (!higher_level && other_core < MAX_CPU_CORES) {
+				if (other_core != corenum) {
+					ccb_other = &coreCB[other_core];
+					higher_level = (ccb_other->UARTlock_level >= level);
+				}
+				other_core++;
+			}
+		}
+	}
 
+	/* Critical section */
+	va_start(args, fmt);
+	vsprintf(buf, fmt, args);
+	pl011_uart_puts(buf);
+	va_end(args);
+
+	/* End of critical section */
+	ccb->UARTlock_level = -1;
+}
