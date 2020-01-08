@@ -253,6 +253,7 @@ void xTaskCreate (uint8_t corenum,									// The core number to run task on
 				  uint8_t uxPriority,								// Priority of the task
 				  TaskHandle_t* const pxCreatedTask)				// A pointer to return the task handle (NULL if not required)
 {
+	char buf[32];
 	int i;
 	for (i = 0; (i < MAX_TASKS_PER_CORE) && (coreCB[corenum].coreTCB[i].inUse != 0); i++) {};
 	if (i < MAX_TASKS_PER_CORE)
@@ -280,8 +281,14 @@ void xTaskCreate (uint8_t corenum,									// The core number to run task on
 		task->taskState = tskREADY_CHAR;							// Set the read char state
 		AddTaskToList(&cb->readyTasks, task);						// Add task to read task lits
 		if (pxCreatedTask) (*pxCreatedTask) = task;
-		// Set the core's state to active
-		cb->CoreState = ACTIVE;
+
+		if (pcName != configIDLE_TASK_NAME) {
+			// Set the core's state to active
+			log_debug(corenum, buf, "Setting state to active core=%d task name=%s\n\r",
+					  corenum, pcName);
+			cb->CoreState = ACTIVE;
+		}
+
 		CoreExitCritical();											// Exiting core critical area
 	}
 }
@@ -489,8 +496,12 @@ void sync_master()
 		sync_ready = 1;
 		for (int i=1; i<MAX_CPU_CORES; i++) {
 			ccbslave = &coreCB[i];
+			log_debug(0, buf, "slave %d state=%d\n\r", i, ccbslave->CoreState);
 			if (ccbslave->CoreState)
 				sync_ready = (sync_ready && ccbslave->CoreState == WAITING);
+			else
+				log_debug(0, buf, "Slave %d is inactive, state=%d\n\r",
+						  i, ccbslave->CoreState);
 		}
 	}
 
