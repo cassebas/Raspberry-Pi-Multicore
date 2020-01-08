@@ -10,7 +10,13 @@
 #include "armv8_pm.h"
 /* our own synthetic benchmark for testing purposes */
 #include "synthetic_bench.h"
+#include "malardalen.h"
 
+/* For Mälardalen bsort100 benchmark */
+int Array1[MAXDIM];
+int Array2[MAXDIM];
+int Array3[MAXDIM];
+int Array4[MAXDIM];
 
 static inline uint64_t armv8pmu_pmcr_read(void)
 {
@@ -127,7 +133,8 @@ void core0(void* pParam) {
 
 		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
+		// array_access_linear(mydata);
+		bsort100_BubbleSort(Array1);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -176,7 +183,8 @@ void core1(void* pParam) {
 
 		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
+		// array_access_linear(mydata);
+		bsort100_BubbleSort(Array2);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -225,7 +233,8 @@ void core2(void* pParam) {
 
 		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
+		// array_access_linear(mydata);
+		bsort100_BubbleSort(Array3);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -275,7 +284,8 @@ void core3(void* pParam) {
 
 		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
+		// array_access_linear(mydata);
+		bsort100_BubbleSort(Array4);
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -322,6 +332,12 @@ void main (void)
 
     log_info(0, buf, "%s\n\r", "Initializing xRTOS");
 	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
+
+	/* Initialize the bsort100 arrays */
+	bsort100_Initialize(Array1);
+	bsort100_Initialize(Array2);
+	bsort100_Initialize(Array3);
+	bsort100_Initialize(Array4);
 
 	/* Core 0 task */
 	xTaskCreate(0, core0, "Core0", 512, NULL, 2, NULL);
