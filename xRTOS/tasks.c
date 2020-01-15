@@ -438,13 +438,16 @@ void xSchedule (void)
 						ccb->CoreState = RUNNING;
 					else if (ccb->CoreState == RUNNING)
 						ccb->CoreState = ACTIVE;
+					ccb->SyncScheduler = 0;
 				} else {
 					// we are slave
 					if (ccb->CoreState == TIMER_SET) {
 						if (ccb->SyncOffset > 0)
 							ccb->SyncOffset--;
-						else
+						else {
 							ccb->CoreState = RUNNING;
+							ccb->SyncScheduler = 0;
+						}
 					} else {
 						char buf[32];
 						log_debug(coreID, buf,
@@ -452,8 +455,6 @@ void xSchedule (void)
 								  ccb->CoreState);
 					}
 				}
-
-				ccb->SyncScheduler = 0;
 			}
 		}
 	}
