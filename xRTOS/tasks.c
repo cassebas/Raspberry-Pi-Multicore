@@ -282,7 +282,7 @@ void xTaskCreate (uint8_t corenum,									// The core number to run task on
 		AddTaskToList(&cb->readyTasks, task);						// Add task to read task lits
 		if (pxCreatedTask) (*pxCreatedTask) = task;
 
-		if (pcName != configIDLE_TASK_NAME) {
+		if (strcmp(pcName, configIDLE_TASK_NAME) != 0) {
 			// Set the core's state to active
 			log_debug(corenum, buf, "Setting state to active core=%d task name=%s\n\r",
 					  corenum, pcName);
