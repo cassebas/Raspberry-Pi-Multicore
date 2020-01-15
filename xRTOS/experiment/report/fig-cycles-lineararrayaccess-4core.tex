@@ -1,0 +1,79 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 4 cores
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}
+      [
+        ybar,
+        xlabel={Alignment pattern --- number of ticks for each core's starting time},
+        ylabel={Cycles},
+        flexible xticklabels from table={data/cycles-4core-lineararrayaccess.csv}{pattern}{},
+        xtick=data,
+        x tick label style={rotate=45, anchor=north east, inner sep=0mm},
+        % ytick distance=0.25,
+        % ymin=0,
+        % grid=major,
+        bar width=0.15,
+        enlarge x limits=0.5,
+        legend style={at={(0.28,0.60)},anchor=south east},
+        % nodes near coords,
+      ]
+
+      \addplot+[]
+      plot [
+        error bars/.cd,
+        y dir = both,
+        y explicit,
+      ]
+      table [
+        x expr = \coordindex,
+        y expr = \thisrow{median-lineararrayaccess-core0},
+        y error expr = \thisrow{std-lineararrayaccess-core0},
+      ] {data/cycles-4core-lineararrayaccess.csv};
+      \addlegendentry{Core 0}
+
+      \addplot+[]
+      plot [
+        error bars/.cd,
+        y dir = both,
+        y explicit,
+      ]
+      table [
+        x expr = \coordindex,
+        y expr = \thisrow{median-lineararrayaccess-core1},
+        y error expr = \thisrow{std-lineararrayaccess-core1},
+      ] {data/cycles-4core-lineararrayaccess.csv};
+      \addlegendentry{Core 1}
+
+      \addplot+[]
+      plot [
+        error bars/.cd,
+        y dir = both,
+        y explicit,
+      ]
+      table [
+        x expr = \coordindex,
+        y expr = \thisrow{median-lineararrayaccess-core2},
+        y error expr = \thisrow{std-lineararrayaccess-core2},
+      ] {data/cycles-4core-lineararrayaccess.csv};
+      \addlegendentry{Core 2}
+
+      \addplot+[]
+      plot [
+        error bars/.cd,
+        y dir = both,
+        y explicit,
+      ]
+      table [
+        x expr = \coordindex,
+        y expr = \thisrow{median-lineararrayaccess-core3},
+        y error expr = \thisrow{std-lineararrayaccess-core3},
+      ] {data/cycles-4core-lineararrayaccess.csv};
+      \addlegendentry{Core 3}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Linear array access running on 4 cores}
+  \label{fig_cycles_lineararrayaccess_4core}
+\end{figure}
