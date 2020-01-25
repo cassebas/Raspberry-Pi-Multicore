@@ -12,11 +12,82 @@
 #include "synthetic_bench.h"
 #include "malardalen.h"
 
-/* For Mälardalen bsort100 benchmark */
+#define CACHE_SIZE_BYTES 8192
+volatile int big_array_of_zeros[CACHE_SIZE_BYTES];
+
+/**
+ * These are the benchmarks:
+ * 0: mälardalen bsort 100
+ * 1: mälardalen edn
+ * 2: linear array access
+ */
+#define NR_OF_CORES 3
+#define BENCH_CONFIG_CORE0_1
+#define BENCH_CONFIG_CORE1_2
+#define BENCH_CONFIG_CORE2_3
+#define CONFIG_STRING "configuration: '123'"
+
+#define BENCH_STRING_CORE0 "benchmark: malardalen_bsort100"
+#define BENCH_STRING_CORE1 "benchmark: malardalen_edn"
+#define BENCH_STRING_CORE2 "benchmark: linear_array_access"
+#define BENCH_STRING_CORE3 ""
+
+#define BENCH_ARG_CORE0 Array1
+#define BENCH_ARG_CORE2 mydata3
+
+#define DO_BENCH_CORE0 bsort100_BubbleSort(BENCH_ARG_CORE0);
+#define DO_BENCH_CORE1 edn_Calculate();
+#define DO_BENCH_CORE2 array_access_linear(BENCH_ARG_CORE2);
+#define DO_BENCH_CORE3
+
+/**
+ * If the following macro with name BENCHMARK_CONFIG_M4 was
+ * specified on the command line, then we know the include
+ * file can be included.
+ * This is done to make sure that the include file is actually
+ * generated (which is done using m4).
+ *
+ * Usage is thus:
+ *   m4 config='123' benchmark_config.m4 > benchmark_config.h && \
+ *     make BENCHMARK_CONFIG=-DBENCHMARK_CONFIG_M4 Pi-64
+ *
+ * Or, just 
+ *   make Pi-64 in case the benchmark config is not to be set.
+ */
+#ifdef BENCHMARK_CONFIG_M4
+#include "benchmark_config.h"
+#endif
+
+/**
+ * Maybe define the needed datastructures (depending on
+ * the specific configuration of benchmarks).
+ */
+#ifdef BENCH_CONFIG_CORE0_1
 int Array1[MAXDIM];
+#endif
+#ifdef BENCH_CONFIG_CORE1_1
 int Array2[MAXDIM];
+#endif
+#ifdef BENCH_CONFIG_CORE2_1
 int Array3[MAXDIM];
+#endif
+#ifdef BENCH_CONFIG_CORE3_1
 int Array4[MAXDIM];
+#endif
+
+#ifdef BENCH_CONFIG_CORE0_3
+volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
+#endif
+#ifdef BENCH_CONFIG_CORE1_3
+volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
+#endif
+#ifdef BENCH_CONFIG_CORE2_3
+volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
+#endif
+#ifdef BENCH_CONFIG_CORE3_3
+volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
+#endif
+
 
 static inline uint64_t armv8pmu_pmcr_read(void)
 {
@@ -79,12 +150,15 @@ static void disable_counters()
 }
 
 
+
 static bool lit = false;
 void Flash_LED(void)
 {
 	if (lit) lit = false; else lit = true;							// Flip lit flag
 	set_Activity_LED(lit);											// Turn LED on/off as per new flag
 }
+
+
 
 void DoProgress(HDC dc, int step, int total, int x, int y, int barWth, int barHt,  COLORREF col)
 {
@@ -105,6 +179,21 @@ void DoProgress(HDC dc, int step, int total, int x, int y, int barWth, int barHt
 }
 
 
+/**
+ * This function writes a big amount of data to memory, in an attempt to
+ * clear the L1 cache of the running core.
+ * 
+ * The L1 cache is 32KiB, so we need 8192 integers (assuming 4 bytes per int)
+ */
+void clear_cache()
+{
+	big_array_of_zeros[0] = 0;
+	for (int i=1; i<CACHE_SIZE_BYTES; i++) {
+		big_array_of_zeros[i] = big_array_of_zeros[i-1];
+	}
+}
+
+
 void core0(void* pParam) {
 	char buf[32];
 	HDC Dc = CreateExternalDC(5);
@@ -118,9 +207,6 @@ void core0(void* pParam) {
 	RegType_t ostick;
 	enable_counters();
 
-	/* // Initialize the array for the synthetic benchmark */
-	/* volatile bigstruct_t mydata[SYNBENCH_DATASIZE]; */
-
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -129,13 +215,14 @@ void core0(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 100, GetScreenWidth()-20, 20, col);
 
-		/* This is core0, we are master for the synchroniztion between cores */
+		clear_cache();
+
+		/* This is core0, we are master for the synchronization between cores */
 		sync_master();
 
 		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
-		/* array_access_linear(mydata); */
-		bsort100_BubbleSort(Array1);
+		DO_BENCH_CORE0
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -151,7 +238,8 @@ void core0(void* pParam) {
 		TextOut(Dc, 20, 80, &buf[0], strlen(&buf[0]));
 
 		log_info(0, buf,
-				 "Core 0 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+				 "%s %s cores: %d Core 0 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+				 CONFIG_STRING, BENCH_STRING_CORE0, NR_OF_CORES,
 				 ostick, time, ++iter, offset);
 	}
 }
@@ -169,9 +257,6 @@ void core1(void* pParam) {
 	RegType_t ostick;
 	enable_counters();
 
-	// Initialize the array for the synthetic benchmark
-	volatile bigstruct_t mydata[SYNBENCH_DATASIZE];
-
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -180,13 +265,14 @@ void core1(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 200, GetScreenWidth() - 20, 20, col);
 
+		clear_cache();
+
 		/* This is core1, we are slave for the synchronization between cores */
 		sync_slave(offset);
 
 		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
-		/* bsort100_BubbleSort(Array2); */
+		DO_BENCH_CORE1
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -202,7 +288,8 @@ void core1(void* pParam) {
 		TextOut(Dc, 20, 180, &buf[0], strlen(&buf[0]));
 
 		log_info(1, buf,
-				 "Core 1 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+				 "%s %s cores: %d Core 1 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+				 CONFIG_STRING, BENCH_STRING_CORE1, NR_OF_CORES,
 				 ostick, time, ++iter, offset);
 
 		if (iter % 2000 == 0)
@@ -223,9 +310,6 @@ void core2(void* pParam) {
 	RegType_t ostick;
 	enable_counters();
 
-	// Initialize the array for the synthetic benchmark
-	volatile bigstruct_t mydata[SYNBENCH_DATASIZE];
-
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -234,13 +318,14 @@ void core2(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 300, GetScreenWidth() - 20, 20, col);
 
+		clear_cache();
+
 		/* This is core2, we are slave for the synchroniztion between cores */
 		sync_slave(offset);
 
 		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
-		/* bsort100_BubbleSort(Array3); */
+		DO_BENCH_CORE2
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -256,7 +341,8 @@ void core2(void* pParam) {
 		TextOut(Dc, 20, 280, &buf[0], strlen(&buf[0]));
 
 		log_info(2, buf,
-				 "Core 2 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+				 "%s %s cores: %d Core 2 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+				 CONFIG_STRING, BENCH_STRING_CORE2, NR_OF_CORES,
 				 ostick, time, ++iter, offset);
 
 		if (iter % 2000 == 0)
@@ -277,9 +363,6 @@ void core3(void* pParam) {
 	RegType_t ostick;
 	enable_counters();
 
-	// Initialize the array for the synthetic benchmark
-	volatile bigstruct_t mydata[SYNBENCH_DATASIZE];
-
 	while (1) {
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -289,13 +372,14 @@ void core3(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 400, GetScreenWidth() - 20, 20, col);
 
+		clear_cache();
+
 		/* This is core3, we are slave for the synchroniztion between cores */
 		sync_slave(offset);
 
 		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
-		array_access_linear(mydata);
-		/* bsort100_BubbleSort(Array4); */
+		DO_BENCH_CORE3
 		cycles_end = read_counter();
 		time = cycles_end - cycles_begin;
 
@@ -311,14 +395,14 @@ void core3(void* pParam) {
 		TextOut(Dc, 20, 380, &buf[0], strlen(&buf[0]));
 
 		log_info(3, buf,
-				 "Core 3 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+				 "%s %s cores: %d Core 3 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+				 CONFIG_STRING, BENCH_STRING_CORE3, NR_OF_CORES,
 				 ostick, time, ++iter, offset);
 
 		if (iter % 2000 == 0)
 			offset++;
 	}
 }
-
 
 void main (void)
 {
@@ -344,23 +428,37 @@ void main (void)
 
 	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
 
-	/* Initialize the bsort100 arrays */
+	/* Maybe initialize the bsort100 arrays */
+#ifdef BENCH_CONFIG_CORE0_1
 	bsort100_Initialize(Array1);
-	/* bsort100_Initialize(Array2); */
-	/* bsort100_Initialize(Array3); */
-	/* bsort100_Initialize(Array4); */
+#endif
+#ifdef BENCH_CONFIG_CORE1_1
+	bsort100_Initialize(Array2);
+#endif
+#ifdef BENCH_CONFIG_CORE2_1
+	bsort100_Initialize(Array3);
+#endif
+#ifdef BENCH_CONFIG_CORE3_1
+	bsort100_Initialize(Array4);
+#endif
 
 	/* Core 0 task */
 	xTaskCreate(0, core0, "Core0", 512, NULL, 2, NULL);
 
+#if(NR_OF_CORES >= 2)
 	/* Core 1 task */
 	xTaskCreate(1, core1, "Core1", 512, NULL, 2, NULL);
-	
-	/* /\* Core 2 task *\/ */
-	/* xTaskCreate(2, core2, "Core2", 512, NULL, 2, NULL); */
+#endif
 
-	/* /\* Core 3 task *\/ */
-	/* xTaskCreate(3, core3, "Core3", 512, NULL, 2, NULL); */
+#if(NR_OF_CORES >= 3)
+	/* Core 2 task */
+	xTaskCreate(2, core2, "Core2", 512, NULL, 2, NULL);
+#endif
+
+#if(NR_OF_CORES >= 4)
+	/* Core 3 task */
+	xTaskCreate(3, core3, "Core3", 512, NULL, 2, NULL);
+#endif
 
 	/* Start scheduler */
 	xTaskStartScheduler();
