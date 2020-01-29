@@ -12,8 +12,8 @@
 #include "synthetic_bench.h"
 #include "malardalen.h"
 
-#define CACHE_SIZE_BYTES 8192
-volatile int big_array_of_zeros[CACHE_SIZE_BYTES];
+/* cache invalidation */
+#include "iv_cache.h"
 
 /**
  * These are the benchmarks:
@@ -180,17 +180,12 @@ void DoProgress(HDC dc, int step, int total, int x, int y, int barWth, int barHt
 
 
 /**
- * This function writes a big amount of data to memory, in an attempt to
- * clear the L1 cache of the running core.
- * 
- * The L1 cache is 32KiB, so we need 8192 integers (assuming 4 bytes per int)
+ * Invalidate data cache
  */
-void clear_cache()
+void volatile clear_cache()
 {
-	big_array_of_zeros[0] = 0;
-	for (int i=1; i<CACHE_SIZE_BYTES; i++) {
-		big_array_of_zeros[i] = big_array_of_zeros[i-1];
-	}
+	__asm_flush_dcache_all();
+	__asm_invalidate_icache_all();
 }
 
 

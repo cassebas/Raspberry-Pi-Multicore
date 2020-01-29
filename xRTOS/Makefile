@@ -21,6 +21,7 @@ Pi3-64: CFLAGS = -Wall -O3 -mcpu=cortex-a53+fp+simd -ffreestanding -nostartfiles
 Pi3-64: ARMGNU = $(CROSS_COMPILER_AARCH64)/bin/aarch64-elf
 Pi3-64: LINKERFILE = rpi64.ld
 Pi3-64: SMARTSTART = SmartStart64.S
+Pi3-64: IV_CACHE = invalidate_cache.S
 Pi3-64: IMGFILE = kernel8.img
 
 Pi3: CFLAGS = -Wall -O3 -mcpu=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard -ffreestanding -nostartfiles -std=gnu11 -mno-unaligned-access -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare
@@ -62,7 +63,7 @@ MAP = kernel.map
 # The names of all object files that must be generated. Deduced from the 
 # assembly code files in source.
 
-ASMOBJS = $(patsubst $(SOURCE)/%.S,$(BUILD)/%.o,$(SMARTSTART))
+ASMOBJS = $(patsubst $(SOURCE)/%.S,$(BUILD)/%.o,$(SMARTSTART) $(IV_CACHE))
 COBJS = $(patsubst $(SOURCE)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE)/*.c))
 
 
