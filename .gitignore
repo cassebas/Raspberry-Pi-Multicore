@@ -2,3 +2,4 @@
 **/DiskImg/*.img
 kernel.*
 **/*.o
+**/benchmark_config.h

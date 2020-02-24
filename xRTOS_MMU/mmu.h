@@ -5,7 +5,7 @@
 extern "C" {									// Put extern C directive wrapper around
 #endif
 #include <stdint.h>								// Needed for uint8_t, uint32_t, etc
-#include "rpi-SmartStart.h"						// Needed for RegType_t
+#include "rpi-smartstart.h"						// Needed for RegType_t
 
 #if __aarch64__ == 1
 #define MT_DEVICE_NGNRNE	0
