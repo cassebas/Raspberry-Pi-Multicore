@@ -3,6 +3,7 @@
 */
 
 #include "malardalen.h"
+#include <stdlib.h>
 
 /*
  * bsort100: Malardalen's Bubblesort definitions.
@@ -20,6 +21,7 @@ int factor;
 void bsort100_Initialize(int Array[])
 {
 	int  Index, fact;
+	static int seed;
 
 #ifdef WORSTCASE
 	factor = -1;
@@ -27,9 +29,11 @@ void bsort100_Initialize(int Array[])
 	factor = 1;
 #endif
 
+	srand(++seed);
+
 	fact = factor;
 	for (Index = 1; Index <= NUMELEMS; Index ++) {
-		Array[Index] = Index * fact/* * KNOWN_VALUE*/;
+		Array[Index] = rand() * fact/* * KNOWN_VALUE*/;
 	}
 }
 

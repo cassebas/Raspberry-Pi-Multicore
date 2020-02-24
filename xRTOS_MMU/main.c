@@ -223,6 +223,10 @@ void core0(void* pParam) {
 	enable_counters();
 
 	while (1) {
+#ifdef BENCH_CONFIG_CORE0_1
+		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
+		bsort100_Initialize(Array1);
+#endif
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -276,6 +280,10 @@ void core1(void* pParam) {
 	enable_counters();
 
 	while (1) {
+#ifdef BENCH_CONFIG_CORE1_1
+		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
+		bsort100_Initialize(Array2);
+#endif
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -332,6 +340,10 @@ void core2(void* pParam) {
 	enable_counters();
 
 	while (1) {
+#ifdef BENCH_CONFIG_CORE2_1
+		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
+		bsort100_Initialize(Array3);
+#endif
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -388,6 +400,10 @@ void core3(void* pParam) {
 	enable_counters();
 
 	while (1) {
+#ifdef BENCH_CONFIG_CORE3_1
+		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
+		bsort100_Initialize(Array4);
+#endif
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -455,19 +471,6 @@ void main (void)
 
 	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
 
-	/* Maybe initialize the bsort100 arrays */
-#ifdef BENCH_CONFIG_CORE0_1
-	bsort100_Initialize(Array1);
-#endif
-#ifdef BENCH_CONFIG_CORE1_1
-	bsort100_Initialize(Array2);
-#endif
-#ifdef BENCH_CONFIG_CORE2_1
-	bsort100_Initialize(Array3);
-#endif
-#ifdef BENCH_CONFIG_CORE3_1
-	bsort100_Initialize(Array4);
-#endif
 
 
 #ifdef DISABLE_CACHE
