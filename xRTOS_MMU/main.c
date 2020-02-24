@@ -20,6 +20,7 @@
  * 0: mälardalen bsort 100
  * 1: mälardalen edn
  * 2: linear array access
+ * 3: random array access
  */
 #define NR_OF_CORES 3
 #define BENCH_CONFIG_CORE0_1
@@ -30,7 +31,7 @@
 #define BENCH_STRING_CORE0 "benchmark: malardalen_bsort100"
 #define BENCH_STRING_CORE1 "benchmark: malardalen_edn"
 #define BENCH_STRING_CORE2 "benchmark: linear_array_access"
-#define BENCH_STRING_CORE3 ""
+#define BENCH_STRING_CORE3 "benchmark: random_array_access"
 
 #define BENCH_ARG_CORE0 Array1
 #define BENCH_ARG_CORE2 mydata3
@@ -77,15 +78,35 @@ int Array4[MAXDIM];
 
 #ifdef BENCH_CONFIG_CORE0_3
 volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
+#else
+	#ifdef BENCH_CONFIG_CORE0_4
+	volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
+	volatile int myrandidx1[SYNBENCH_DATASIZE];
+	#endif
 #endif
 #ifdef BENCH_CONFIG_CORE1_3
 volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
+#else
+	#ifdef BENCH_CONFIG_CORE1_4
+	volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
+	volatile int myrandidx2[SYNBENCH_DATASIZE];
+	#endif
 #endif
 #ifdef BENCH_CONFIG_CORE2_3
 volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
+#else
+	#ifdef BENCH_CONFIG_CORE2_4
+	volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
+	volatile int myrandidx3[SYNBENCH_DATASIZE];
+	#endif
 #endif
 #ifdef BENCH_CONFIG_CORE3_3
 volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
+#else
+	#ifdef BENCH_CONFIG_CORE3_4
+	volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
+	volatile int myrandidx4[SYNBENCH_DATASIZE];
+	#endif
 #endif
 
 
@@ -227,6 +248,9 @@ void core0(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array1);
 #endif
+#ifdef BENCH_CONFIG_CORE0_4
+		array_access_randomize(myrandidx1);
+#endif
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -283,6 +307,9 @@ void core1(void* pParam) {
 #ifdef BENCH_CONFIG_CORE1_1
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array2);
+#endif
+#ifdef BENCH_CONFIG_CORE1_4
+		array_access_randomize(myrandidx2);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -344,6 +371,9 @@ void core2(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array3);
 #endif
+#ifdef BENCH_CONFIG_CORE2_4
+		array_access_randomize(myrandidx3);
+#endif
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -403,6 +433,9 @@ void core3(void* pParam) {
 #ifdef BENCH_CONFIG_CORE3_1
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array4);
+#endif
+#ifdef BENCH_CONFIG_CORE3_4
+		array_access_randomize(myrandidx4);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
