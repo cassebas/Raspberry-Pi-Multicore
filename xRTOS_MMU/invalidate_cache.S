@@ -214,3 +214,24 @@ __asm_invalidate_icache_all:
 	isb	sy
 	ret
 .size __asm_invalidate_icache_all, .-__asm_invalidate_icache_all
+
+
+/*
+ * void __asm_cache_disable(void)
+ *
+ * Disable both L1 and L2 data caches (cannot be disabled independently).
+ */
+.section .text.__asm_cache_disable, "ax", %progbits
+.balign 4
+.globl __asm_cache_disable
+.type __asm_cache_disable, %function
+__asm_cache_disable:
+    mrs x0, sctlr_el1           /* Read SCRTLR_EL1 into x0 */
+    mov x1, #1                  /* Load 0b1 into x1 */
+    lsl x2, x1, #12             /* Shift left 12 for setting bit [12] in register x2 */
+    lsl x3, x1, #2              /* Shift left 2 for setting bit [2] in register x3 */
+    add x1, x2, x3              /* Add both bits and save result in register x1 */
+        bic x2, x0, x1              /* Bit clear [2] and [12] -> D/I Cache enable */
+    msr sctlr_el1, x2           /* Write w2 to SCTLR_EL1 */
+        ret
+.size __asm_cache_disable, .-__asm_cache_disable

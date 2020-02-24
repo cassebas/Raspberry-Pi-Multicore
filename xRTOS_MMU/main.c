@@ -180,12 +180,32 @@ void DoProgress(HDC dc, int step, int total, int x, int y, int barWth, int barHt
 
 
 /**
- * Invalidate data cache
+ * Invalidate data and instruction caches, all levels.
  */
-void volatile clear_cache()
+void volatile invalidate_cache()
 {
-	__asm_flush_dcache_all();
+	__asm_invalidate_dcache_all();
 	__asm_invalidate_icache_all();
+}
+
+/**
+ * Invalidate data and instruction caches, single level.
+ *   level = 1 => L1 cache
+ *   level = 2 => L2 cache
+ */
+void volatile invalidate_data_cache(int level)
+{
+	// second parameter of __asm_dcache_level is:
+	//  0 clean & invalidate, 1 invalidate only
+	__asm_dcache_level(level-1, 1);
+}
+
+/**
+ * Disable data entirely.
+ */
+void volatile disable_cache()
+{
+	__asm_cache_disable();
 }
 
 
@@ -210,7 +230,10 @@ void core0(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 100, GetScreenWidth()-20, 20, col);
 
-		clear_cache();
+#ifndef DISABLE_CACHE
+		/* Master gets to invalidate the complete cache */
+		invalidate_cache();
+#endif
 
 		/* This is core0, we are master for the synchronization between cores */
 		sync_master();
@@ -260,7 +283,10 @@ void core1(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 200, GetScreenWidth() - 20, 20, col);
 
-		clear_cache();
+#ifndef DISABLE_CACHE
+		/* Slave only invalidates its own L1 cache */
+		invalidate_data_cache(1);
+#endif
 
 		/* This is core1, we are slave for the synchronization between cores */
 		sync_slave(offset);
@@ -313,7 +339,10 @@ void core2(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 300, GetScreenWidth() - 20, 20, col);
 
-		clear_cache();
+#ifndef DISABLE_CACHE
+		/* Slave only invalidates its own L1 cache */
+		invalidate_data_cache(1);
+#endif
 
 		/* This is core2, we are slave for the synchroniztion between cores */
 		sync_slave(offset);
@@ -367,7 +396,10 @@ void core3(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 400, GetScreenWidth() - 20, 20, col);
 
-		clear_cache();
+#ifndef DISABLE_CACHE
+		/* Slave only invalidates its own L1 cache */
+		invalidate_data_cache(1);
+#endif
 
 		/* This is core3, we are slave for the synchroniztion between cores */
 		sync_slave(offset);
@@ -437,6 +469,14 @@ void main (void)
 	bsort100_Initialize(Array4);
 #endif
 
+
+#ifdef DISABLE_CACHE
+	// Maybe disable cache completely:
+	disable_cache();
+	log_info(0, buf, "%s\n\r", "Cache is disabled.");
+#endif
+
+
 	/* Core 0 task */
 	xTaskCreate(0, core0, "Core0", 512, NULL, 2, NULL);
 
@@ -454,6 +494,7 @@ void main (void)
 	/* Core 3 task */
 	xTaskCreate(3, core3, "Core3", 512, NULL, 2, NULL);
 #endif
+
 
 	/* Start scheduler */
 	xTaskStartScheduler();

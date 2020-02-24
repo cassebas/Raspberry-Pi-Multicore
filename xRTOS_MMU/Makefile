@@ -17,7 +17,7 @@ TOOLCHAIN_BASE = $(HOME)/local/share
 CROSS_COMPILER_ARM = $(TOOLCHAIN_BASE)/gcc-arm-eabi-8.3
 CROSS_COMPILER_AARCH64 = $(TOOLCHAIN_BASE)/gcc-aarch64-elf-8.3
 
-Pi3-64: CFLAGS = -Wall -O3 -mcpu=cortex-a53+fp+simd -ffreestanding -nostartfiles -std=gnu11 -mstrict-align -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare $(BENCHMARK_CONFIG)
+Pi3-64: CFLAGS = -Wall -O3 -mcpu=cortex-a53+fp+simd -ffreestanding -nostartfiles -std=gnu11 -mstrict-align -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare $(BENCHMARK_CONFIG) $(DISABLE_CACHE)
 Pi3-64: ARMGNU = $(CROSS_COMPILER_AARCH64)/bin/aarch64-elf
 Pi3-64: LINKERFILE = rpi64.ld
 Pi3-64: SMARTSTART = SmartStart64.S
