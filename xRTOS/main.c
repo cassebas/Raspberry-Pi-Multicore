@@ -190,7 +190,7 @@ void volatile clear_cache()
 
 
 void core0(void* pParam) {
-	char buf[32];
+	char buf[256];
 	HDC Dc = CreateExternalDC(5);
 	COLORREF col = 0xFF00FFFF;
 	int total = 1000;
@@ -240,7 +240,7 @@ void core0(void* pParam) {
 }
 
 void core1(void* pParam) {
-	char buf[32];
+	char buf[256];
 	HDC Dc = CreateExternalDC(6);
 	COLORREF col = 0xFFFFFFFF;
 	int total = 1000;
@@ -293,7 +293,7 @@ void core1(void* pParam) {
 }
 
 void core2(void* pParam) {
-	char buf[32];
+	char buf[256];
 	HDC Dc = CreateExternalDC(7);
 	COLORREF col = 0xFF7F7F7F;
 	int total = 1000;
@@ -346,7 +346,7 @@ void core2(void* pParam) {
 }
 
 void core3(void* pParam) {
-	char buf[32];
+	char buf[256];
 	HDC Dc = CreateExternalDC(8);
 	COLORREF col = 0xFFFF00FF;
 	int total = 1000;
@@ -401,7 +401,7 @@ void core3(void* pParam) {
 
 void main (void)
 {
-	char buf[32];
+	char buf[256];
 
 	Init_EmbStdio(WriteText);										// Initialize embedded stdio
 	PiConsole_Init(0, 0, 0, printf);								// Auto resolution console, message to screen
