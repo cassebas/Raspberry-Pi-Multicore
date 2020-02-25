@@ -259,8 +259,10 @@ void core0(void* pParam) {
 		DoProgress(Dc, step, total, 10, 100, GetScreenWidth()-20, 20, col);
 
 #ifndef DISABLE_CACHE
+	#ifndef NO_CACHE_MGMT
 		/* Master gets to invalidate the complete cache */
 		invalidate_cache();
+	#endif
 #endif
 
 		/* This is core0, we are master for the synchronization between cores */
@@ -319,8 +321,10 @@ void core1(void* pParam) {
 		DoProgress(Dc, step, total, 10, 200, GetScreenWidth() - 20, 20, col);
 
 #ifndef DISABLE_CACHE
+	#ifndef NO_CACHE_MGMT
 		/* Slave only invalidates its own L1 cache */
 		invalidate_data_cache(1);
+	#endif
 #endif
 
 		/* This is core1, we are slave for the synchronization between cores */
@@ -382,8 +386,10 @@ void core2(void* pParam) {
 		DoProgress(Dc, step, total, 10, 300, GetScreenWidth() - 20, 20, col);
 
 #ifndef DISABLE_CACHE
+	#ifndef NO_CACHE_MGMT
 		/* Slave only invalidates its own L1 cache */
 		invalidate_data_cache(1);
+	#endif
 #endif
 
 		/* This is core2, we are slave for the synchroniztion between cores */
@@ -446,8 +452,10 @@ void core3(void* pParam) {
 		DoProgress(Dc, step, total, 10, 400, GetScreenWidth() - 20, 20, col);
 
 #ifndef DISABLE_CACHE
+	#ifndef NO_CACHE_MGMT
 		/* Slave only invalidates its own L1 cache */
 		invalidate_data_cache(1);
+	#endif
 #endif
 
 		/* This is core3, we are slave for the synchroniztion between cores */
