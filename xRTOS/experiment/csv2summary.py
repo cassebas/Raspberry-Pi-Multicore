@@ -7,7 +7,9 @@ from itertools import product
 
 
 benchmarks = ['malardalenbsort100',
-              'lineararrayaccess']
+              'malardalenedn',
+              'lineararrayaccess',
+              'randomarrayaccess']
 
 
 @click.command()
@@ -58,7 +60,7 @@ def main(input_directory, output_directory):
                 if len(set(prod)) == 1:
                     # All the same benchmarks, simple case
                     bench = prod[0]
-                    bench_idx = benchmarks.index(bench)
+                    bench_idx = benchmarks.index(bench) + 1
                     pattern = '\'' + str(bench_idx) * cores + '\''
 
                     # First construct the complete pivot table where this specific benchmark,
@@ -77,10 +79,9 @@ def main(input_directory, output_directory):
                     # the pivot table contains only the rows that are relevant to the exact
                     # (ordered) combination of benchmarks running on specific cores.
                     bench_list = list(prod)
-                    print('\n\n\n{}'.format(bench_list))
                     pattern = '\''
                     for i in range(cores):
-                        bench_idx = benchmarks.index(bench_list[i])
+                        bench_idx = benchmarks.index(bench_list[i]) + 1
                         pattern += str(bench_idx)
                     pattern += '\''
 
@@ -104,10 +105,6 @@ def main(input_directory, output_directory):
                                            bench_str + '.csv')
                             outfile = join(output_directory, output_file)
                             pvs_cb.to_csv(outfile, index=True, sep=' ')
-                    else:
-                        print('This combination of benchmarks was not run:',
-                              ' '.join(prod))
-
     else:
         print('Warning: directory {}'.format(input_directory), end=' ')
         print('does not have any log files!')
