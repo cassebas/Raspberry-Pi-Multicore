@@ -1,0 +1,40 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 1 core
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}
+      [
+        ybar,
+        xlabel={Alignment pattern --- number of ticks for each core's starting time},
+        ylabel={Cycles},
+        flexible xticklabels from table={data/cycles-1core-randomarrayaccess.csv}{pattern}{},
+        xtick=data,
+        x tick label style={rotate=45, anchor=north east, inner sep=0mm},
+        % ytick distance=0.25,
+        % ymin=0,
+        % grid=major,
+        bar width=0.3,
+        enlarge x limits=0.5,
+        legend style={at={(0.98,0.70)},anchor=south east},
+        % nodes near coords,
+      ]
+
+      \addplot+[]
+      plot [
+        error bars/.cd,
+        y dir = both,
+        y explicit,
+      ]
+      table [
+        x expr = \coordindex,
+        y expr = \thisrow{median-randomarrayaccess-core0},
+        y error expr = \thisrow{std-randomarrayaccess-core0},
+      ] {data/cycles-1core-randomarrayaccess.csv};
+      \addlegendentry{Core 0}
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Random array access running on 1 core}
+  \label{fig_cycles_randomarrayaccess_1core}
+\end{figure}
