@@ -37,7 +37,7 @@
 #include <stdbool.h>			// C standard unit needed for bool and true/false
 #include <stdint.h>				// C standard unit needed for uint8_t, uint32_t, etc
 #include <stdarg.h>				// C standard unit needed for variadic functions
-#include "rpi-SmartStart.h"		// This units header
+#include "rpi-smartstart.h"		// This units header
 
 /***************************************************************************}
 {       PRIVATE INTERNAL RASPBERRY PI REGISTER STRUCTURE DEFINITIONS        }

@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <stdatomic.h>
-#include "rpi-SmartStart.h"
+#include "rpi-smartstart.h"
 #include "semaphore.h"
 
 #define MAX_SEMAPHORE  100

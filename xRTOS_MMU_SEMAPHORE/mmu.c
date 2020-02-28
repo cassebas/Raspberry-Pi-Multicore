@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "rpi-SmartStart.h"
+#include "rpi-smartstart.h"
 #include "mmu.h"
 
 #if __aarch64__ == 1
