@@ -8,7 +8,8 @@
 #ifndef SYNTHETIC_BENCH_H
 #define SYNTHETIC_BENCH_H
 
-#define SYNBENCH_DATASIZE 250
+#define MAX_SYNBENCH_DATASIZE 450
+#define SYNBENCH_DATASIZE 450
 
 /**
 Synthetic benchmark inspired by the paper `Predictable and Efficient Virtual Addressing for
@@ -25,7 +26,7 @@ typedef struct bigstruct {
 
 
 void array_access_linear(volatile bigstruct_t* data);
-void array_access_randomize(volatile int* idx);
+void array_access_randomize(volatile int* idx, int corenum, int iter);
 void array_access_random(volatile bigstruct_t* data, volatile int* idx);
 void array_access_alternate(volatile bigstruct_t* data);
 

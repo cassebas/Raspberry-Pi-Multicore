@@ -19,6 +19,11 @@ CROSS_COMPILER_AARCH64 = $(TOOLCHAIN_BASE)/gcc-aarch64-elf-8.3
 RASPBERRY_PI_NETWORKBOOT = $(HOME)/git/Raspberry-Pi-Networkboot
 INSTALL_DIR = $(RASPBERRY_PI_NETWORKBOOT)/tftp
 
+RANDOM_SETS_H = random_sets.h
+
+$(RANDOM_SETS_H):
+	../experiment/make_random_set_arrays.sh $@
+
 install: Pi3-64
 	cp -p DiskImg/kernel8.img $(INSTALL_DIR)
 .PHONY: install
@@ -73,7 +78,7 @@ ASMOBJS = $(patsubst $(SOURCE)/%.S,$(BUILD)/%.o,$(SMARTSTART) $(IV_CACHE))
 COBJS = $(patsubst $(SOURCE)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE)/*.c))
 
 
-Pi3-64: kernel.elf
+Pi3-64: $(RANDOM_SETS_H) kernel.elf
 BINARY = $(IMGFILE)
 .PHONY: Pi3-64
 
@@ -109,6 +114,7 @@ kernel.elf: $(ASMOBJS) $(COBJS)
 
 # cleanup temp files
 clean:
+	$(RM) $(RANDOM_SETS_H) 
 	$(RM) $(MAP) 
 	$(RM) kernel.elf 
 	$(RM) $(LIST) 

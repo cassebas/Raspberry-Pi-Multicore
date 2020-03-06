@@ -3,3 +3,4 @@
 kernel.*
 **/*.o
 **/benchmark_config.h
+**/random_sets.h

@@ -238,9 +238,9 @@ void core0(void* pParam) {
 	int step = 0;
 	int dir = 1;
     unsigned int cycles_begin, cycles_end, time;
-    unsigned int iter=0;
+    unsigned int iter=1;
     unsigned int offset=0;
-	RegType_t ostick;
+	int corenum=0;
 	enable_counters();
 
 	while (1) {
@@ -249,7 +249,7 @@ void core0(void* pParam) {
 		bsort100_Initialize(Array1);
 #endif
 #ifdef BENCH_CONFIG_CORE0_4
-		array_access_randomize(myrandidx1);
+		array_access_randomize(myrandidx1, corenum, iter);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -268,7 +268,6 @@ void core0(void* pParam) {
 		/* This is core0, we are master for the synchronization between cores */
 		sync_master();
 
-		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
 		DO_BENCH_CORE0
 		cycles_end = read_counter();
@@ -285,10 +284,10 @@ void core0(void* pParam) {
 				time);
 		TextOut(Dc, 20, 80, &buf[0], strlen(&buf[0]));
 
-		log_info(0, buf,
-				 "%s %s cores: %d Core 0 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+		log_info(corenum, buf,
+				 "%s %s cores: %d Core 0 Cycle count: %12u iteration: %u offset: %d\n\r",
 				 CONFIG_STRING, BENCH_STRING_CORE0, NR_OF_CORES,
-				 ostick, time, ++iter, offset);
+				 time, iter++, offset);
 	}
 }
 
@@ -300,9 +299,9 @@ void core1(void* pParam) {
 	int step = 0;
 	int dir = 1;
     unsigned int cycles_begin, cycles_end, time;
-    unsigned int iter=0;
+    unsigned int iter=1;
     unsigned int offset=0;
-	RegType_t ostick;
+	int corenum=1;
 	enable_counters();
 
 	while (1) {
@@ -311,7 +310,7 @@ void core1(void* pParam) {
 		bsort100_Initialize(Array2);
 #endif
 #ifdef BENCH_CONFIG_CORE1_4
-		array_access_randomize(myrandidx2);
+		array_access_randomize(myrandidx2, corenum, iter);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -330,7 +329,6 @@ void core1(void* pParam) {
 		/* This is core1, we are slave for the synchronization between cores */
 		sync_slave(offset);
 
-		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
 		DO_BENCH_CORE1
 		cycles_end = read_counter();
@@ -347,10 +345,10 @@ void core1(void* pParam) {
 				time);
 		TextOut(Dc, 20, 180, &buf[0], strlen(&buf[0]));
 
-		log_info(1, buf,
-				 "%s %s cores: %d Core 1 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+		log_info(corenum, buf,
+				 "%s %s cores: %d Core 1 Cycle count: %12u iteration: %u offset: %d\n\r",
 				 CONFIG_STRING, BENCH_STRING_CORE1, NR_OF_CORES,
-				 ostick, time, ++iter, offset);
+				 time, iter++, offset);
 
 		if (iter % 2000 == 0)
 			offset++;
@@ -365,9 +363,9 @@ void core2(void* pParam) {
 	int step = 0;
 	int dir = 1;
     unsigned int cycles_begin, cycles_end, time;
-    unsigned int iter=0;
+    unsigned int iter=1;
     unsigned int offset=0;
-	RegType_t ostick;
+	int corenum=2;
 	enable_counters();
 
 	while (1) {
@@ -376,7 +374,7 @@ void core2(void* pParam) {
 		bsort100_Initialize(Array3);
 #endif
 #ifdef BENCH_CONFIG_CORE2_4
-		array_access_randomize(myrandidx3);
+		array_access_randomize(myrandidx3, corenum, iter);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -395,7 +393,6 @@ void core2(void* pParam) {
 		/* This is core2, we are slave for the synchroniztion between cores */
 		sync_slave(offset);
 
-		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
 		DO_BENCH_CORE2
 		cycles_end = read_counter();
@@ -412,10 +409,10 @@ void core2(void* pParam) {
 				time);
 		TextOut(Dc, 20, 280, &buf[0], strlen(&buf[0]));
 
-		log_info(2, buf,
-				 "%s %s cores: %d Core 2 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+		log_info(corenum, buf,
+				 "%s %s cores: %d Core 2 Cycle count: %12u iteration: %u offset: %d\n\r",
 				 CONFIG_STRING, BENCH_STRING_CORE2, NR_OF_CORES,
-				 ostick, time, ++iter, offset);
+				 time, iter++, offset);
 
 		if (iter % 2000 == 0)
 			offset++;
@@ -430,9 +427,9 @@ void core3(void* pParam) {
 	int step = 0;
 	int dir = 1;
     unsigned int cycles_begin, cycles_end, time;
-    unsigned int iter=0;
+    unsigned int iter=1;
     unsigned int offset=0;
-	RegType_t ostick;
+	int corenum=3;
 	enable_counters();
 
 	while (1) {
@@ -441,7 +438,7 @@ void core3(void* pParam) {
 		bsort100_Initialize(Array4);
 #endif
 #ifdef BENCH_CONFIG_CORE3_4
-		array_access_randomize(myrandidx4);
+		array_access_randomize(myrandidx4, corenum, iter);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -461,7 +458,6 @@ void core3(void* pParam) {
 		/* This is core3, we are slave for the synchroniztion between cores */
 		sync_slave(offset);
 
-		ostick = getOSTickCounter();
 		cycles_begin = read_counter();
 		DO_BENCH_CORE3
 		cycles_end = read_counter();
@@ -478,10 +474,10 @@ void core3(void* pParam) {
 				time);
 		TextOut(Dc, 20, 380, &buf[0], strlen(&buf[0]));
 
-		log_info(3, buf,
-				 "%s %s cores: %d Core 3 OSTick: %u Cycle count: %12u iteration: %u offset: %d\n\r",
+		log_info(corenum, buf,
+				 "%s %s cores: %d Core 3 Cycle count: %12u iteration: %u offset: %d\n\r",
 				 CONFIG_STRING, BENCH_STRING_CORE3, NR_OF_CORES,
-				 ostick, time, ++iter, offset);
+				 time, iter++, offset);
 
 		if (iter % 2000 == 0)
 			offset++;
@@ -505,7 +501,6 @@ void main (void)
     unsigned int baudrate = 115200;
     if (pl011_uart_init(baudrate)) {
         printf("UART succesfully initialized\n");
-        /* log_info(0, buf, "%s\n\r", "UART succesfully initialized"); */
     } else {
         printf("UART could not be initialized!\n");
     }

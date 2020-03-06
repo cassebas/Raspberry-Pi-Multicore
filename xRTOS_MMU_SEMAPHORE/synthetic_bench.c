@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include "synthetic_bench.h"
 
+#include "random_sets.h"
+
 void array_access_linear(volatile bigstruct_t* data)
 {
 	if (data != NULL) {
@@ -18,19 +20,16 @@ void array_access_linear(volatile bigstruct_t* data)
 	}
 }
 
-void array_access_randomize(volatile int* idx)
+void array_access_randomize(volatile int* idx, int corenum, int iter)
 {
-	static int seed;
-
-	srand(++seed);
+	int mysetidx = (iter * 4 + corenum) % MAX_SETS;
 	for (int i=0; i<SYNBENCH_DATASIZE; i++) {
-		idx[i] = rand() % SYNBENCH_DATASIZE;
+		idx[i] = random_set[mysetidx][i];
 	}
 }
 
 void array_access_random(volatile bigstruct_t* data, volatile int* idx)
 {
-	/* TODO: make array access random! */
 	if (data != NULL && idx != NULL) {
 		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
 			data[idx[i]].id;
