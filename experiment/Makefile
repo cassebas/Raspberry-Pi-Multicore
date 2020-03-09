@@ -6,8 +6,12 @@ DATA_DIR=report/data
 
 .phony: run clean
 
+define CSV2SUMMARY
+	python csv2summary.py --input-file=$(1) --output-directory=$(DATA_DIR);
+endef
+
 run: $(CSV_FILES)
-	python csv2summary.py --input-directory=$(LOG_DIR) --output-directory=$(DATA_DIR)
+	$(foreach csv_file,$(CSV_FILES),$(call CSV2SUMMARY,$(csv_file)))
 
 $(CSV_FILES): $(LOG_FILES)
 	$(eval LOG := $(patsubst %.csv,%.log,$@))

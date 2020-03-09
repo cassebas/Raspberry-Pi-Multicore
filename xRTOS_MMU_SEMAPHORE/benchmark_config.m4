@@ -24,6 +24,10 @@ define(`_forloop',
 divert`'dnl
 /* Default number of benchmarks is 4 (but can be altered on the m4-cmdline) */
 define(nr_of_benchmarks, 4)dnl
+/* Default configuration of benchmarks is '123' (but can be altered on the m4-cmdline) */
+define(config, `123')dnl
+/* Default data assignment is '0123' (but can be altered on the m4-cmdline) */
+define(dassign, `0123')dnl
 define(bench_string_core_undef, `
 #ifdef BENCH_STRING_CORE`$1'
 #undef BENCH_STRING_CORE`$1'
@@ -39,6 +43,10 @@ define(bench_config_core_undef, `
 define(do_bench_core_undef, `
 #ifdef DO_BENCH_CORE`$1'
 #undef DO_BENCH_CORE`$1'
+#endif')dnl
+define(data_assign_core_undef, `
+#ifdef DATA_ASSIGN_CORE`$1'
+#undef DATA_ASSIGN_CORE`$1'
 #endif')dnl
 define(meta1, `forloop(`i', `0', `3', `$1(i)')')dnl
 define(meta2, `forloop(`i', `0', `3', `forloop(`j', `1', nr_of_benchmarks, `$1(i`_'j)')')')dnl
@@ -87,27 +95,26 @@ define(do_bench_core_def, `
 define(do_bench_core_empty_def, `
 #define DO_BENCH_CORE`$1' $2')dnl
 dnl
-define(meta3, `forloop(`i', `0', eval(len(config) - 1), `$1(i)')')dnl
-define(meta4, `forloop(`i', len(config), 3, `$1(i)')')dnl
+define(meta3, `forloop(`i', `0', eval(len($1) - 1), `$2(i)')')dnl
+define(meta4, `forloop(`i', len($1), 3, `$2(i)')')dnl
 divert(0)dnl
 dnl
 meta1(`bench_string_core_undef')dnl
 meta1(`bench_arg_core_undef')dnl
 meta1(`do_bench_core_undef')dnl
+meta1(`data_assign_core_undef')dnl
 meta2(`bench_config_core_undef')dnl
-meta3(`bench_config_core_def')dnl
+meta3(`config', `bench_config_core_def')dnl
 dnl
-meta3(`bench_string_core_def')dnl
-ifelse(len(config), 4, `', `meta4(`bench_string_core_empty_def')')dnl
+meta3(`config', `bench_string_core_def')dnl
+ifelse(len(config), 4, `', `meta4(`config', `bench_string_core_empty_def')')dnl
 
-meta3(`bench_arg_core_def')dnl
-ifelse(len(config), 4, `', `meta4(`bench_arg_core_empty_def')')dnl
+meta3(`config', `bench_arg_core_def')dnl
+ifelse(len(config), 4, `', `meta4(`config', `bench_arg_core_empty_def')')dnl
 
-meta3(`do_bench_core_def')dnl
-ifelse(len(config), 4, `', `meta4(`do_bench_core_empty_def')')
+meta3(`config', `do_bench_core_def')dnl
+ifelse(len(config), 4, `', `meta4(`config', `do_bench_core_empty_def')')
 
-/* Default configuration of benchmarks is '123' (but can be altered on the m4-cmdline) */
-define(config, `'123'')dnl
 #ifdef CONFIG_STRING
 #undef CONFIG_STRING
 #endif
@@ -118,5 +125,20 @@ define(nr_of_cores, 4)
 #undef NR_OF_CORES
 #endif
 #define NR_OF_CORES len(config)
+
+/* The random data sets can be assigned to different cores,
+   to make sure that the data cannot be a factor in the measured
+   cycles. */dnl
+dnl
+define(data_assignment_core_def, `
+#define DATA_ASSIGN_CORE`$1' `'substr(dassign, $1, 1)')dnl
+dnl
+meta3(`dassign', `data_assignment_core_def')
+
+#ifdef DATA_ASSIGN_STRING
+#undef DATA_ASSIGN_STRING
+#endif
+#define DATA_ASSIGN_STRING "`dassign': 'dassign'"dnl
+
 
 #endif /* ~BENCHMARK_CONFIG_H */

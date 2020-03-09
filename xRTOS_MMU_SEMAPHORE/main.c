@@ -42,6 +42,15 @@
 #define DO_BENCH_CORE2 array_access_linear(BENCH_ARG_CORE2);
 #define DO_BENCH_CORE3
 
+/* The random data sets can be assigned to different cores,
+   to make sure that the data cannot be a factor in the measured
+   cycles. */
+#define DATA_ASSIGN_CORE0 0
+#define DATA_ASSIGN_CORE1 1
+#define DATA_ASSIGN_CORE2 2
+#define DATA_ASSIGN_CORE3 3
+#define DATA_ASSIGN_STRING "dassign: '0123'"
+
 /**
  * If the following macro with name BENCHMARK_CONFIG_M4 was
  * specified on the command line, then we know the include
@@ -249,7 +258,7 @@ void core0(void* pParam) {
 		bsort100_Initialize(Array1);
 #endif
 #ifdef BENCH_CONFIG_CORE0_4
-		array_access_randomize(myrandidx1, corenum, iter);
+		array_access_randomize(myrandidx1, DATA_ASSIGN_CORE0, iter);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -285,8 +294,8 @@ void core0(void* pParam) {
 		TextOut(Dc, 20, 80, &buf[0], strlen(&buf[0]));
 
 		log_info(corenum, buf,
-				 "%s %s cores: %d Core 0 Cycle count: %12u iteration: %u offset: %d\n\r",
-				 CONFIG_STRING, BENCH_STRING_CORE0, NR_OF_CORES,
+				 "%s %s %s cores: %d Core 0 Cycle count: %12u iteration: %u offset: %d\n\r",
+				 CONFIG_STRING, BENCH_STRING_CORE0, DATA_ASSIGN_STRING, NR_OF_CORES,
 				 time, iter++, offset);
 	}
 }
@@ -310,7 +319,7 @@ void core1(void* pParam) {
 		bsort100_Initialize(Array2);
 #endif
 #ifdef BENCH_CONFIG_CORE1_4
-		array_access_randomize(myrandidx2, corenum, iter);
+		array_access_randomize(myrandidx2, DATA_ASSIGN_CORE1, iter);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -346,8 +355,8 @@ void core1(void* pParam) {
 		TextOut(Dc, 20, 180, &buf[0], strlen(&buf[0]));
 
 		log_info(corenum, buf,
-				 "%s %s cores: %d Core 1 Cycle count: %12u iteration: %u offset: %d\n\r",
-				 CONFIG_STRING, BENCH_STRING_CORE1, NR_OF_CORES,
+				 "%s %s %s cores: %d Core 1 Cycle count: %12u iteration: %u offset: %d\n\r",
+				 CONFIG_STRING, BENCH_STRING_CORE1, DATA_ASSIGN_STRING, NR_OF_CORES,
 				 time, iter++, offset);
 
 		if (iter % 2000 == 0)
@@ -374,7 +383,7 @@ void core2(void* pParam) {
 		bsort100_Initialize(Array3);
 #endif
 #ifdef BENCH_CONFIG_CORE2_4
-		array_access_randomize(myrandidx3, corenum, iter);
+		array_access_randomize(myrandidx3, DATA_ASSIGN_CORE2, iter);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -410,8 +419,8 @@ void core2(void* pParam) {
 		TextOut(Dc, 20, 280, &buf[0], strlen(&buf[0]));
 
 		log_info(corenum, buf,
-				 "%s %s cores: %d Core 2 Cycle count: %12u iteration: %u offset: %d\n\r",
-				 CONFIG_STRING, BENCH_STRING_CORE2, NR_OF_CORES,
+				 "%s %s %s cores: %d Core 2 Cycle count: %12u iteration: %u offset: %d\n\r",
+				 CONFIG_STRING, BENCH_STRING_CORE2, DATA_ASSIGN_STRING, NR_OF_CORES,
 				 time, iter++, offset);
 
 		if (iter % 2000 == 0)
@@ -438,7 +447,7 @@ void core3(void* pParam) {
 		bsort100_Initialize(Array4);
 #endif
 #ifdef BENCH_CONFIG_CORE3_4
-		array_access_randomize(myrandidx4, corenum, iter);
+		array_access_randomize(myrandidx4, DATA_ASSIGN_CORE3, iter);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -475,8 +484,8 @@ void core3(void* pParam) {
 		TextOut(Dc, 20, 380, &buf[0], strlen(&buf[0]));
 
 		log_info(corenum, buf,
-				 "%s %s cores: %d Core 3 Cycle count: %12u iteration: %u offset: %d\n\r",
-				 CONFIG_STRING, BENCH_STRING_CORE3, NR_OF_CORES,
+				 "%s %s %s cores: %d Core 3 Cycle count: %12u iteration: %u offset: %d\n\r",
+				 CONFIG_STRING, BENCH_STRING_CORE3, DATA_ASSIGN_STRING, NR_OF_CORES,
 				 time, iter++, offset);
 
 		if (iter % 2000 == 0)
