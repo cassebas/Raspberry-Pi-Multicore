@@ -17,6 +17,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
+from os.path import isfile, join
 from itertools import combinations
 from itertools import combinations_with_replacement
 from itertools import permutations
@@ -24,6 +25,11 @@ from itertools import product
 
 infiles = glob.glob('output/*.csv')
 infiles
+
+benchmarks = ['malardalenbsort100',
+              'malardalenedn',
+              'lineararrayaccess',
+              'randomarrayaccess']
 
 pvs = pd.DataFrame()
 for f in infiles:
@@ -39,8 +45,65 @@ for f in infiles:
                             3: 'core3'})
     pvs = pd.concat([pvs, pv])
 pvs.sort_index(inplace=True)
-pvs.index.get_level_values(3)
+pvs.index.get_level_values(0) # cores
+pvs.index.get_level_values(1) # configuration
+pvs.index.get_level_values(2) # data assignment
+pvs.index.get_level_values(3) # alignment pattern
 pvs
+
+# + jupyter={"outputs_hidden": true}
+df = pd.read_csv('output/log-20200309.csv')
+df
+# -
+
+pv = pd.pivot_table(df,
+                    index=['cores', 'configuration', 'dassign', 'pattern'],
+                    columns=['benchmark', 'core'],
+                    values='cycles',
+                    aggfunc={'cycles': [np.median, np.std]})
+pv = pv.rename(columns={0: 'core0',
+                        1: 'core1',
+                        2: 'core2',
+                        3: 'core3'})
+pv.sort_index(inplace=True)
+pv
+
+# Output files to temporary directory tmp
+output_directory = 'tmp'
+#benchmarks = ['malardalenbsort100',
+#              'lineararrayaccess',
+#              'syntheticbench1',
+#              'randomarrayaccess']
+    for cores in range(1, 5):
+        cidx = ['core'+str(i) for i in range(cores)]
+        for config in set(pvs.index.get_level_values(1)):
+            for dassign in set(pvs.index.get_level_values(2)):
+                pv_summary = pvs.loc[(cores, [config], dassign, slice(None)), (slice(None), slice(None), cidx)]
+                pv_summary.dropna(axis=0, how='all', inplace=True)
+                pv_summary.dropna(axis=1, how='all', inplace=True)
+                if len(pv_summary.index) > 0:
+                    print('cidx ={}'.format(cidx))
+                    print('config={}, dassign={}'.format(config, dassign))
+                    print('length pv_summary={}'.format(len(pv_summary.index)))
+                    pv_summary.columns = pv_summary.columns.to_series().str.join('-')
+                    output_filename = 'cycles-{}core-config{}-dassign{}.csv'.format(cores, config, dassign)
+                    outfile = join(output_directory, output_filename)
+                    pv_summary.to_csv(outfile, index=True, sep=' ')
+            for pattern in set(pvs.index.get_level_values(3)):
+                print('pattern={}'.format(pattern))
+                pv_summary = pvs.loc[(cores, [config], slice(None), pattern),
+                                     (slice(None), slice(None), cidx)]
+                pv_summary.dropna(axis=0, how='all', inplace=True)
+                pv_summary.dropna(axis=1, how='all', inplace=True)
+                if len(pv_summary.index) > 0:
+                    print('cidx ={}'.format(cidx))
+                    print('config={}, pattern={}'.format(config, pattern))
+                    print('length pv_summary={}'.format(len(pv_summary.index)))
+                    pv_summary.columns = pv_summary.columns.to_series().str.join('-')
+                    output_filename = 'cycles-{}core-config{}-pattern{}.csv'.format(cores, config, pattern)
+                    outfile = join(output_directory, output_filename)
+                    pv_summary.to_csv(outfile, index=True, sep=' ')
+
 
 benchmarks = ['malardalenbsort100',
               'lineararrayaccess',

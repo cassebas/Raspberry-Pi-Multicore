@@ -1,8 +1,8 @@
 import click
-from os.path import isfile, join
+from os.path import basename, isfile, join
 import numpy as np
 import pandas as pd
-from itertools import product
+import re
 
 
 benchmarks = ['malardalenbsort100',
@@ -26,9 +26,23 @@ def main(input_file, output_directory):
     print('Processing input file {}.'.format(input_file))
     df = pd.read_csv(input_file)
 
-    # Construct a pivot table: benchmarks/core will be indexed as columns,
-    # to be able to easily select cycles from resulting CSV files within LaTeX.
-    #    ('cores' == nr of cores,  'core' == core number)
+    # Get the basename for the output files, a convention that is
+    # used to link input log CSV files to output summary CSV files.
+    # Pre condition for this to work: *all* log files must begin with /^log-/
+    regex = re.compile('^log-(.*).csv$')
+    m = regex.match(basename(input_file))
+    if (m):
+        logname = m.group(1)
+    else:
+        logname = 'default'
+
+    # Construct a pivot table:
+    #  - benchmarks/core will be indexed as columns,
+    #  - cores, configuration, dassign, pattern will be the index
+    # From this pivot table we can easily select the median/std cycles and
+    # output them to specific CSV files for specific benchmarks/config/dassign.
+    # These resulting CSV files are read from within LaTeX.
+    #    (Note: 'cores' == nr of cores,  'core' == core number)
     pv = pd.pivot_table(df,
                         index=['cores', 'configuration', 'dassign', 'pattern'],
                         columns=['benchmark', 'core'],
@@ -41,65 +55,40 @@ def main(input_file, output_directory):
     pv.sort_index(inplace=True)
 
     # Now output a series of CVS files that contain the summaries
+    # The index levels of the pv dataframe are:
+    #  - level 0: number of cores
+    #  - level 1: configuration string
+    #  - level 2: data assignment string
+    #  - level 3: alignment pattern string
     for cores in range(1, 5):
-        # A list of strings with the cores, like ['core0', 'core1', ..]
         cidx = ['core'+str(i) for i in range(cores)]
-        for prod in product(benchmarks, repeat=cores):
-            # prod is a tuple with the names of the benchmarks, where each
-            # tuple in the iterator is member of the cartesian product of all
-            # benchmarks. Each tuple thus can represent a specific
-            # configuration of benchmarks running on cores in a specified
-            # order.
-            if len(set(prod)) == 1:
-                # All the same benchmarks, simple case
-                bench = prod[0]
-                bench_idx = benchmarks.index(bench) + 1
-                config = '\'' + str(bench_idx) * cores + '\''
-
-                # First construct the complete pivot table where this specific
-                # benchmark, all configs and wanted cores (cidx) are listed.
-                if config in pv.index.get_level_values(1):
-                    pv_tmp = pv.loc[(cores, config, slice(None)),
-                                    (slice(None), bench, cidx)]
-                    pv_tmp.dropna(how='any', inplace=True)
-                    pv_tmp.columns = pv_tmp.columns.to_series().str.join('-')
-                    # write to CVS output file
-                    output_file = 'cycles-{}core-{}.csv'.format(cores, bench)
-                    outfile = join(output_directory, output_file)
-                    pv_tmp.to_csv(outfile, index=True, sep=' ')
-            else:
-                # Not all the same benchmarks: we have to do some tricks to
-                # make sure the pivot table contains only the rows that are
-                # relevant to the exact (ordered) combination of benchmarks
-                # running on specific cores.
-                bench_list = list(prod)
-                config = '\''
-                for i in range(cores):
-                    bench_idx = benchmarks.index(bench_list[i]) + 1
-                    config += str(bench_idx)
-                config += '\''
-
-                # pv_cb: selection of pv with all prod's benchmarks and cores
-                #        in cidx:
-                if config in pv.index.get_level_values(1):
-                    pv_cb = pv.loc[(cores, config, slice(None)),
-                                    (slice(None), bench_list[0], cidx[0])]
-                    for i in range(1, cores):
-                        pv_tmp = pv.loc[(cores, config, slice(None)),
-                                        (slice(None), bench_list[i], cidx[i])]
-                        pv_cb = pd.merge(pv_cb, pv_tmp,
-                                         left_index=True,
-                                         right_index=True)
-                    pv_cb.dropna(how='any', inplace=True)
-
-                    if len(pv_cb.index) > 0:
-                        # We have results for this configuration!
-                        pv_cb.columns = pv_cb.columns.to_series().str.join('-')
-                        bench_str = '-'.join(prod)
-                        output_file = ('cycles-{}core-'.format(cores) +
-                                       bench_str + '.csv')
-                        outfile = join(output_directory, output_file)
-                        pv_cb.to_csv(outfile, index=True, sep=' ')
+        for config in set(pv.index.get_level_values(1)):
+            for dassign in set(pv.index.get_level_values(2)):
+                try:
+                    pv_summary = pv.loc[(cores, config, dassign, slice(None)),
+                                        (slice(None), slice(None), cidx)]
+                    pv_summary.dropna(axis=0, how='all', inplace=True)
+                    pv_summary.dropna(axis=1, how='all', inplace=True)
+                    if len(pv_summary.index) > 0:
+                        pv_summary.columns = pv_summary.columns.to_series().str.join('-')
+                        output_filename = '{}-cycles-{}core-config{}-dassign{}.csv'.format(logname, cores, config, dassign)
+                        outfile = join(output_directory, output_filename)
+                        pv_summary.to_csv(outfile, index=True, sep=' ')
+                except KeyError:
+                    print('KeyError => cores={} config={} dassign={}'.format(cores, config, dassign))
+            for pattern in set(pv.index.get_level_values(3)):
+                try:
+                    pv_summary = pv.loc[(cores, config, slice(None), pattern),
+                                        (slice(None), slice(None), cidx)]
+                    pv_summary.dropna(axis=0, how='all', inplace=True)
+                    pv_summary.dropna(axis=1, how='all', inplace=True)
+                    if len(pv_summary.index) > 0:
+                        pv_summary.columns = pv_summary.columns.to_series().str.join('-')
+                        output_filename = '{}-cycles-{}core-config{}-pattern{}.csv'.format(logname, cores, config, pattern)
+                        outfile = join(output_directory, output_filename)
+                        pv_summary.to_csv(outfile, index=True, sep=' ')
+                except KeyError:
+                    print('KeyError => cores={} config={} dassign={}'.format(cores, config, dassign))
 
 
 if __name__ == "__main__":
