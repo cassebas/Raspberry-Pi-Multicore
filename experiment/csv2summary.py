@@ -11,6 +11,12 @@ benchmarks = ['malardalenbsort100',
               'randomarrayaccess']
 
 
+def remove_quotes(str):
+    str = re.sub(r'^\'', '', str)
+    str = re.sub(r'\'$', '', str)
+    return str
+
+
 @click.command()
 @click.option('--input-file',
               help='Path and filename of the input file.')
@@ -71,7 +77,9 @@ def main(input_file, output_directory):
                     pv_summary.dropna(axis=1, how='all', inplace=True)
                     if len(pv_summary.index) > 0:
                         pv_summary.columns = pv_summary.columns.to_series().str.join('-')
-                        output_filename = '{}-cycles-{}core-config{}-dassign{}.csv'.format(logname, cores, config, dassign)
+                        ca = remove_quotes(config)
+                        da = remove_quotes(dassign)
+                        output_filename = '{}-cycles-config{}-pattern{}-{}core.csv'.format(logname, ca, da, cores)
                         outfile = join(output_directory, output_filename)
                         pv_summary.to_csv(outfile, index=True, sep=' ')
                 except KeyError:
@@ -84,7 +92,9 @@ def main(input_file, output_directory):
                     pv_summary.dropna(axis=1, how='all', inplace=True)
                     if len(pv_summary.index) > 0:
                         pv_summary.columns = pv_summary.columns.to_series().str.join('-')
-                        output_filename = '{}-cycles-{}core-config{}-pattern{}.csv'.format(logname, cores, config, pattern)
+                        ca = remove_quotes(config)
+                        pa = remove_quotes(pattern)
+                        output_filename = '{}-cycles-config{}-dassign{}-{}core.csv'.format(logname, ca, pa, cores)
                         outfile = join(output_directory, output_filename)
                         pv_summary.to_csv(outfile, index=True, sep=' ')
                 except KeyError:
