@@ -8,10 +8,11 @@ changecom(%)dnl
 % 3: linear array access
 % 4: random array access
 %
-% This m4 macro file expects the following 3 parameters:
+% This m4 macro file expects the following 4 parameters:
 %  -Dfilename: filename of the CSV file containing the data
-%  -Dconfig: configuration of cores/benchmarks, like e.g. '3344'
-%  -Ddtype: type of data in the figure to plot, either 'pattern' or 'dassign'
+%  -Dconfig: configuration of benchmarks to cores, like e.g. '3344'
+%  -Dfixedtype: type of data in the figure that is constant
+%  -Dfixedconf: assignment of data or alignment pattern that is fixed
 dnl
 divert(`-1')
 define(`forloop', `pushdef(`$1', `$2')_forloop($@)popdef(`$1')')
@@ -27,12 +28,19 @@ define(bench_name, undefined)
 dnl
 dnl % These are the default parameters:
 ifdef(`config', `', `define(config, `123')')
-ifdef(`dtype', `', `define(dtype, `dassign')')
+dnl % The fixed type is the type of data that is constant in de data
+ifdef(`fixedtype', `', `define(fixedtype, `pattern')')
+dnl % The fixed configuration is the actual (constant) pattern or data assignment 
+ifdef(`fixedconf', `', `define(fixedconf, `0123')')
+dnl % The data type is the type of data that varies in de data, it is always
+dnl % the opposite of the fixed type.
+define(datatype, ifelse(fixedtype, pattern, dassign, pattern))
 dnl %   but they can be redefined on the cmd line with:
 dnl %  -Dconfig='foo' => redefine config as foo
-dnl %  -Ddtype='bar'  => redefine dtype as bar
+dnl %  -Ddatatype='bar'  => redefine datatype as bar
+dnl %  -Ddataconf='bar'  => redefine dataconf as bar
 dnl % e.g.
-dnl % m4 -Dconfig='1234' -Ddtype='pattern' maketex-cyclesummaries.m4
+dnl % m4 -Dconfig='1234' -Ddatatype='pattern' -Ddataconf='0000' maketex-cyclesummaries.m4
 dnl
 dnl % meta1 : runs a for loop from 0 to 3 where each iteration a specified macro is executed
 define(meta1, `forloop(`i', `0', `3', `$1(i)')')dnl
@@ -46,6 +54,14 @@ dnl %   parameters:
 dnl %     $1 number of the benchmark to lookup
 dnl % define(bench_name_from_config, `lookup_name(substr(config, eval($1-1), `1'))')
 define(bench_name_from_config, `lookup_name(substr(config, $1, `1'))')
+dnl
+dnl % template_xlabel
+dnl %   parameters:
+define(template_xlabel, `dnl
+ifelse(fixedtype, pattern,dnl
+`data assignment --- cores data set assignment',dnl
+`alignment pattern --- cores starting time'dnl
+)')dnl
 dnl
 dnl % template_addplot
 dnl %   parameters:
@@ -63,7 +79,7 @@ define(template_addplot, `
         x expr = \coordindex,
         y expr = \thisrow{median-$2-core$3},
         y error expr = \thisrow{std-$2-core$3},
-      ] {data/$1};
+      ] {$1};
       \addlegendentry{Core $3}
 ')
 dnl
@@ -78,15 +94,15 @@ define(template_figure, `dnl
     \begin{axis}
       [
         ybar,
-        xlabel={Alignment pattern --- number of ticks for each cores starting time},
+        xlabel={template_xlabel},
         ylabel={Cycles},
-        flexible xticklabels from table={data/$1}{dtype}{},
+        flexible xticklabels from table={$1}{datatype}{},
         xtick=data,
         x tick label style={rotate=45, anchor=north east, inner sep=0mm},
         % ytick distance=0.25,
         % ymin=0,
         % grid=major,
-        bar width=0.3,
+        bar width=0.1,
         enlarge x limits=0.5,
         legend style={at={(0.98,0.70)},anchor=south east},
         % nodes near coords,
@@ -94,9 +110,9 @@ define(template_figure, `dnl
 meta3(`config', `template_addplot', `filename')dnl
     \end{axis}
   \end{tikzpicture}
-  \caption{Benchmarks running on $2 cores}
-  \label{fig_cycles_`config'config`_'dtype`_'`$2'`cores'}
+  \caption{Benchmarks running on $2 cores configuration config}
+  \label{fig_cycles_`config'config`_'fixedtype`'fixedconf`_'`$2'`cores'}
 \end{figure}')dnl
 divert(0)dnl
 dnl
-template_figure(`filename', 4)
+template_figure(`filename', len(config))
