@@ -129,7 +129,7 @@ def do_experiments(stdscr, infile, workdir):
     uicomp = windows.UIComponents()
     menuwin = uicomp.get_menuwin()
     expwin = uicomp.get_experimentwin()
-    scrollwin = uicomp.get_scrollwin()
+    outputwin = uicomp.get_outputwin()
     uicomp.refresh()
 
     putty = Putty(menuwin)
@@ -140,8 +140,10 @@ def do_experiments(stdscr, infile, workdir):
         time.sleep(0.5)
         df = pd.read_excel(infile)
         expwin.write_status('Input file {} processed.'.format(infile))
+        time.sleep(1.0)
 
         for idx, row in df.iterrows():
+            uicomp.clear_status()
             compiled = False
             do_next = False
             if run is True:
@@ -167,6 +169,7 @@ def do_experiments(stdscr, infile, workdir):
                         compiled = True
                     elif key == ord('n'):
                         # continue with next experiment
+                        outputwin.log_message('Next experiment very long long long long long long long long long long long long long long long long long long long long phrase\n\r')
                         do_next = True
                     elif key == ord('p'):
                         # start putty
@@ -186,8 +189,6 @@ def do_experiments(stdscr, infile, workdir):
                         uicomp.refresh()
 
     stdscr.erase()
-    stdscr.addstr('Thank you, and see you next time! (press any key)')
-    stdscr.getkey()
 
 
 @click.command()

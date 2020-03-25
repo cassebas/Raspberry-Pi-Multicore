@@ -4,6 +4,7 @@ import curses
 import time
 from curses import wrapper
 from enum import Enum
+from abc import ABC
 
 
 class UIComponents:
@@ -14,7 +15,7 @@ class UIComponents:
         self.stdscr.keypad(1)
         self.menuwin = MenuWin(self.stdscr)
         self.experimentwin = ExperimentWin(self.stdscr)
-        self.scrollwin = ScrollWin(self.stdscr)
+        self.outputwin = OutputWin(self.stdscr)
         self.refresh()
 
     def refresh(self):
@@ -22,8 +23,12 @@ class UIComponents:
         (nlines, ncols) = self.stdscr.getmaxyx()
         self.menuwin.draw_window(nlines, ncols, True)
         self.experimentwin.draw_window(nlines, ncols, True)
-        self.scrollwin.draw_window(nlines, ncols, False)
-        self.scrollwin.addstr('refreshed maxy={} maxx={}'.format(nlines, ncols))
+        self.outputwin.draw_window(nlines, ncols, False)
+        self.outputwin.log_message('refreshed maxy={} maxx={}'.format(nlines, ncols))
+
+    def clear_status(self):
+        self.menuwin.write_status('')
+        self.experimentwin.write_status('')
 
     def get_menuwin(self):
         return self.menuwin
@@ -31,16 +36,15 @@ class UIComponents:
     def get_experimentwin(self):
         return self.experimentwin
 
-    def get_scrollwin(self):
-        return self.scrollwin
+    def get_outputwin(self):
+        return self.outputwin
 
 
-class Win:
+class Win(ABC):
     def draw_window(self, nlines, ncols, erase):
         if erase is True:
             self.win.erase()
-            pass
-        (self.nlines, self.myncols) = self.get_size(nlines, ncols)
+        (self.nlines, self.ncols) = self.get_size(nlines, ncols)
         (self.ypos, self.xpos) = self.get_position(nlines, ncols)
         self.win.resize(self.nlines, self.ncols)
         try:
@@ -56,6 +60,7 @@ class Win:
         (self.ypos, self.xpos) = self.get_position(ymax, xmax)
         self.win = curses.newwin(self.nlines, self.ncols, self.ypos, self.xpos)
         self.win.scrollok(self.scrollok)
+        self.win.idlok(self.scrollok)
 
     def get_window(self):
         return self.win
@@ -76,15 +81,17 @@ class Win:
         return (myypos, myxpos)
 
     def write_status(self, string):
-        (y, x) = (self.nlines - 2, 2)
-        try:
-            self.win.move(y, x)
-            self.win.clrtoeol()
-            self.win.box()
-            self.win.addstr(string)
-            self.win.refresh()
-        except curses.error:
-            pass
+        # A window that scrolls does not have a status line
+        if not self.scrollok:
+            (y, x) = (self.nlines - 2, 2)
+            try:
+                self.win.move(y, x)
+                self.win.clrtoeol()
+                self.win.box()
+                self.win.addstr(string)
+                self.win.refresh()
+            except curses.error:
+                pass
 
 
 class MenuWin(Win):
@@ -95,7 +102,7 @@ class MenuWin(Win):
         self.xcoord = 0
         self.divlines = 2
         self.divcols = 2
-        self.scrollok = True
+        self.scrollok = False
         self.new_window()
 
 
@@ -107,11 +114,11 @@ class ExperimentWin(Win):
         self.xcoord = 1
         self.divlines = 2
         self.divcols = 2
-        self.scrollok = True
+        self.scrollok = False
         self.new_window()
 
 
-class ScrollWin(Win):
+class OutputWin(Win):
     def __init__(self, stdscr):
         self.stdscr = stdscr
         self.title = "Scroll window"
@@ -119,20 +126,49 @@ class ScrollWin(Win):
         self.xcoord = 0
         self.divlines = 2
         self.divcols = 1
-        self.scrollok = False
+        self.scrollok = True
         self.new_window()
+        self.debug = 0
 
-    def addstr(self, str):
+    def log_message(self, str):
+        # plines: number of printable lines (-2 because of the box)
+        plines = self.nlines - 2
+
+        self.debug += 1
         try:
             (y, x) = self.win.getyx()
+            line_len = len(str) // self.ncols + 1
             if y < 1:
                 y = 1
-            if y >= self.nlines-1:
-                self.win.scroll()
-                y -= 1
+
+            scroll = 0
+            if y + line_len >= plines:
+                # we are too far, must scroll to make space
+                scroll = y + line_len - plines
+                self.win.scroll(scroll)
+                y -= scroll
+
+            # clear the lines where we are going to print to
+            for i in range(line_len+1):
+                self.win.move(y+i, 1)
+                self.win.clrtoeol()
+
+            # and start at the first line where we are going to print
             self.win.move(y, 1)
-            self.win.addstr('nlines={} ncols={}'.format(self.nlines,
-                                                        self.ncols))
-            self.win.addstr('y={} x={} str={}'.format(self.ypos, self.xpos, str))
+
+            # move cursor to the next line for the next print statement
+            if y + line_len <= plines:
+                ny = y + line_len
+            else:
+                ny = plines
+
+            # possibly remove newline at end of string
+            str = str.rstrip()
+            self.win.addstr(str)
+
+            self.win.move(ny, 1)
+
+            self.win.box()
+            self.win.refresh()
         except curses.error:
             pass
