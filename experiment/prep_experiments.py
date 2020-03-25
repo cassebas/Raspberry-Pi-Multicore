@@ -1,6 +1,8 @@
 import click
 import os
 from os.path import basename, isfile, join
+import subprocess
+from subprocess import CalledProcessError
 import numpy as np
 import pandas as pd
 import re
@@ -24,6 +26,41 @@ class Fields(Enum):
     DISABLE_CACHE = 4
     NO_CACHE_MGMT = 5
     FILENAME_PREFIX = 6
+
+
+class Compile:
+    def __init__(self, outputwin):
+        self.outputwin = outputwin
+        self.target_dir = 'xRTOS_MMU_SEMAPHORE'
+        self.scriptdir = os.getcwd()
+        self.working_dir = self.scriptdir + '/../' + self.target_dir
+        self.myenv = dict(os.environ, BENCHMARK_CONFIG='-DBENCHMARK_CONFIG_M4')
+        self.makecleancmd = ['make', 'clean']
+        self.makeinstallcmd = ['make', 'install']
+
+    def compile(self):
+        self.outputwin.log_message('working_dir={}'.format(self.working_dir))
+        os.chdir(self.working_dir)
+        try:
+            cp = subprocess.run(self.makecleancmd,
+                                check=True,
+                                capture_output=True,
+                                text=True,
+                                env=self.myenv)
+            self.outputwin.log_message(cp.stdout)
+            cp = subprocess.run(self.makeinstallcmd,
+                                check=True,
+                                capture_output=True,
+                                text=True,
+                                env=self.myenv)
+            text = cp.stdout.split('\n')
+            for line in text:
+                self.outputwin.log_message(line)
+        except CalledProcessError:
+            self.outputwin.log_message('Compilation subprocess resulted in an error!')
+
+        os.chdir(self.scriptdir)
+
 
 
 class Putty:
@@ -133,6 +170,7 @@ def do_experiments(stdscr, infile, workdir):
     uicomp.refresh()
 
     putty = Putty(menuwin)
+    comp = Compile(outputwin)
 
     run = True
     while run:
@@ -164,12 +202,13 @@ def do_experiments(stdscr, infile, workdir):
                     elif key == ord('c'):
                         # compile this experiment
                         menuwin.write_status('Compiling experiment')
-                        time.sleep(1)
+                        comp.compile()
+                        # time.sleep(1)
                         menuwin.write_status('Compilation done.')
                         compiled = True
                     elif key == ord('n'):
                         # continue with next experiment
-                        outputwin.log_message('Next experiment very long long long long long long long long long long long long long long long long long long long long phrase\n\r')
+                        outputwin.log_message('Next experiment selected')
                         do_next = True
                     elif key == ord('p'):
                         # start putty

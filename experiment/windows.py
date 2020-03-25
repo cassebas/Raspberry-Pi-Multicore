@@ -24,7 +24,6 @@ class UIComponents:
         self.menuwin.draw_window(nlines, ncols, True)
         self.experimentwin.draw_window(nlines, ncols, True)
         self.outputwin.draw_window(nlines, ncols, False)
-        self.outputwin.log_message('refreshed maxy={} maxx={}'.format(nlines, ncols))
 
     def clear_status(self):
         self.menuwin.write_status('')
