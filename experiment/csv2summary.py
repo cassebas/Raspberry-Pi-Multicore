@@ -79,7 +79,7 @@ def main(input_file, output_directory):
                         pv_summary.columns = pv_summary.columns.to_series().str.join('-')
                         ca = remove_quotes(config)
                         da = remove_quotes(dassign)
-                        output_filename = '{}-cycles-config{}-dassign{}-{}core.csv'.format(logname, ca, da, cores)
+                        output_filename = 'cyclessummary-{}-{}core-config{}-dassign{}.csv'.format(logname, cores, ca, da)
                         outfile = join(output_directory, output_filename)
                         pv_summary.to_csv(outfile, index=True, sep=' ')
                 except KeyError:
@@ -94,7 +94,7 @@ def main(input_file, output_directory):
                         pv_summary.columns = pv_summary.columns.to_series().str.join('-')
                         ca = remove_quotes(config)
                         pa = remove_quotes(pattern)
-                        output_filename = '{}-cycles-config{}-pattern{}-{}core.csv'.format(logname, ca, pa, cores)
+                        output_filename = 'cyclessummary-{}-{}core-config{}-pattern{}.csv'.format(logname, cores, ca, pa)
                         outfile = join(output_directory, output_filename)
                         pv_summary.to_csv(outfile, index=True, sep=' ')
                 except KeyError:

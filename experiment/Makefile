@@ -43,7 +43,7 @@ $(TEX_INPUT): $(TEX_SUMMARIES)
 	@echo $(TEX_SUMMARIES) | \
 		tr " " "\n" | \
 		sed 's/^report\///' | \
-		awk '{printf("\\input{%s}\n", $$1)}' > $@
+		awk '{printf("\\input{%s}\n", $$1)}' | sort -n > $@
 
 clean:
-	rm -f $(LOG_DIR)/*.csv
+	rm -f $(CSV_FILES) $(CSV_SUMMARIES) $(TEX_SUMMARIES) $(TEX_INPUT)

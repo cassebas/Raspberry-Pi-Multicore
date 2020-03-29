@@ -80,7 +80,7 @@ define(template_addplot, `
         y expr = \thisrow{median-$2-core$3},
         y error expr = \thisrow{std-$2-core$3},
       ] {$1};
-      \addlegendentry{Core $3}
+      \addlegendentry{{\scriptsize Core $3 --- $2}}
 ')
 dnl
 dnl % template_figure
