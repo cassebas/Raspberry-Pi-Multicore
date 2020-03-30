@@ -2,4 +2,5 @@ auto
 *.ipynb
 .ipynb_checkpoints
 .python-version
+__pycache__
 output
