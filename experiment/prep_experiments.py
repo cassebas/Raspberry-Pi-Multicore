@@ -34,20 +34,31 @@ class Compile:
         self.target_dir = 'xRTOS_MMU_SEMAPHORE'
         self.scriptdir = os.getcwd()
         self.working_dir = self.scriptdir + '/../' + self.target_dir
-        self.myenv = dict(os.environ, BENCHMARK_CONFIG='-DBENCHMARK_CONFIG_M4')
         self.makecleancmd = ['make', 'clean']
         self.makeinstallcmd = ['make', 'install']
+        self.set_environment()
+        self.set_compilation()
 
     def compile(self):
         self.outputwin.log_message('working_dir={}'.format(self.working_dir))
         os.chdir(self.working_dir)
         try:
+            # do make clean to clean up previous makes
             cp = subprocess.run(self.makecleancmd,
                                 check=True,
                                 capture_output=True,
                                 text=True,
                                 env=self.myenv)
             self.outputwin.log_message(cp.stdout)
+
+            # generate the benchmark_config.h file
+            self.outputwin.log_message('writing benchmark_config.h')
+            with open('benchmark_config.h', 'w') as outfile:
+                subprocess.run(self.makeprepcmd,
+                               stdout=outfile)
+
+            # do the actual compilation
+            self.outputwin.log_message('actual compilation')
             cp = subprocess.run(self.makeinstallcmd,
                                 check=True,
                                 capture_output=True,
@@ -56,11 +67,43 @@ class Compile:
             text = cp.stdout.split('\n')
             for line in text:
                 self.outputwin.log_message(line)
-        except CalledProcessError:
-            self.outputwin.log_message('Compilation subprocess resulted in an error!')
+        except (CalledProcessError, UnicodeDecodeError):
+            self.outputwin.log_message('Compilation subprocess resulted ' +
+                                       'in an error!')
 
         os.chdir(self.scriptdir)
 
+    def set_environment(self):
+        self.myenv = dict(os.environ,
+                          BENCHMARK_CONFIG='-DBENCHMARK_CONFIG_M4')
+
+    def set_compilation(self, config=None, dassign=None):
+        if config is not None or dassign is not None:
+            config_param = ''
+            dassign_param = ''
+            if config is not None:
+                # The python process that runs m4 cannot handle a string
+                # with quotes well, remove leading and trailing quotes.
+                self.outputwin.log_message('config={}'.format(config))
+                config = re.sub(r'^\'', '', config)
+                config = re.sub(r'\'$', '', config)
+                config_param = '-Dconfig=' + config
+                self.outputwin.log_message('config={}'.format(config))
+            if dassign is not None:
+                # Same here, remove leading and trailing quotes.
+                self.outputwin.log_message('dassign={}'.format(dassign))
+                dassign = re.sub(r'^\'', '', dassign)
+                dassign = re.sub(r'\'$', '', dassign)
+                dassign_param = '-Ddassign=' + dassign
+                self.outputwin.log_message('dassign={}'.format(dassign))
+
+            self.makeprepcmd = ['m4',
+                                config_param,
+                                dassign_param,
+                                'benchmark_config.m4']
+        else:
+            self.makeprepcmd = ['m4',
+                                'benchmark_config.m4']
 
 
 class Putty:
@@ -202,8 +245,10 @@ def do_experiments(stdscr, infile, workdir):
                     elif key == ord('c'):
                         # compile this experiment
                         menuwin.write_status('Compiling experiment')
+                        config = row['configuration of cores']
+                        dassign = row['data assignment']
+                        comp.set_compilation(config=config, dassign=dassign)
                         comp.compile()
-                        # time.sleep(1)
                         menuwin.write_status('Compilation done.')
                         compiled = True
                     elif key == ord('n'):
