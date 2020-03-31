@@ -37,6 +37,15 @@ void array_access_random(volatile bigstruct_t* data, volatile int* idx)
 	}
 }
 
+void array_write_random(volatile bigstruct_t* data, volatile int* idx)
+{
+	if (data != NULL && idx != NULL) {
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			data[idx[i]].id = i;
+		}
+	}
+}
+
 void array_access_alternate(volatile bigstruct_t* data)
 {
 	/* TODO: make array access alternate! */

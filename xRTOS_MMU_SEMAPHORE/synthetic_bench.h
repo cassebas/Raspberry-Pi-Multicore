@@ -28,6 +28,7 @@ typedef struct bigstruct {
 void array_access_linear(volatile bigstruct_t* data);
 void array_access_randomize(volatile int* idx, int corenum, int iter);
 void array_access_random(volatile bigstruct_t* data, volatile int* idx);
+void array_write_random(volatile bigstruct_t* data, volatile int* idx);
 void array_access_alternate(volatile bigstruct_t* data);
 
 #endif /* SYNTHETIC_BENCH_H */
