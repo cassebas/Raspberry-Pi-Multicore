@@ -286,7 +286,7 @@ void core0(void* pParam) {
 
 		sync_reset();
 
-		xTaskDelay(50);
+		xTaskDelay(10);
 
 		sprintf(&buf[0],
 				"Core 0 Load: %3i%% Task count: %2i Cycle count: %12u",
@@ -347,7 +347,7 @@ void core1(void* pParam) {
 
 		sync_reset();
 
-		xTaskDelay(50);
+		xTaskDelay(10);
 
 		sprintf(&buf[0],
 				"Core 1 Load: %3i%% Task count: %2i Cycle count: %12u",
@@ -411,7 +411,7 @@ void core2(void* pParam) {
 
 		sync_reset();
 
-		xTaskDelay(50);
+		xTaskDelay(10);
 
 		sprintf(&buf[0],
 				"Core 2 Load: %3i%% Task count: %2i Cycle count: %12u",
@@ -476,7 +476,7 @@ void core3(void* pParam) {
 
 		sync_reset();
 
-		xTaskDelay(50);
+		xTaskDelay(10);
 
 		sprintf(&buf[0],
 				"Core 3 Load: %3i%% Task count: %2i Cycle count: %12u",
