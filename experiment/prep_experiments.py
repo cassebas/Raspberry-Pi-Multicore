@@ -12,6 +12,8 @@ import curses
 from curses import wrapper
 import signal
 import windows
+from threading import Thread
+import serial
 
 
 benchmarks = ['malardalenbsort100',
@@ -106,57 +108,161 @@ class Compile:
                                 'benchmark_config.m4']
 
 
-class Putty:
-    def __init__(self, window):
-        self.window = window
-        self.pid = -1
+class Resetter(Thread):
+    def __init__(self, logging, menuwin, outputwin):
+        super(Resetter, self).__init__()
+        self.logging = logging
+        self.menuwin = menuwin
+        self.outputwin = outputwin
+        # default tty (can be changed in the application)
+        self.tty = '/dev/ttyUSB0'
+        self.serial = serial.Serial(self.tty, 115200)
+        # Ok to reset?
+        self.resetOK = False
+        self.min_observations = 50
+        self.last_iteration = -1
+        # start/stop thread flag
+        self.run_thread = False
+        # timeout for not receiving data anymore (seconds)
+        self.timeout = 120.0
+        self.curtime = 0.0
+        # number of seconds to sleep
+        self.timeslice = 0.5
+
+    def run(self):
+        while self.run_thread is True:
+            if self.resetOK is False:
+                # Get number of log lines
+                this_iteration = self.logging.get_iteration()
+                if this_iteration > self.last_iteration:
+                    # There is some progress, reset the curtime
+                    self.curtime = 0
+                    self.last_iteration = this_iteration
+                    # Do we have enough observations?
+                    if self.last_iteration > self.min_observations:
+                        self.set_resetOK(True)
+                else:
+                    # check for timeout
+                    self.curtime += self.timeslice
+                    if int(self.curtime) % 10 == 0:
+                        self.outputwin.log_message('Waiting {}'.format(self.curtime) +
+                                                   ' secs and counting..')
+                    if self.curtime > self.timeout:
+                        self.set_resetOK(True)
+            time.sleep(self.timeslice)
+
+    def start_thread(self):
+        self.run_thread = True
+        self.start()
+
+    def stop_thread(self):
+        self.run_thread = False
+        self.join()
+
+    def get_resetOK(self):
+        return self.resetOK
+
+    def set_resetOK(self, reset):
+        self.resetOK = reset
+        if reset is True:
+            # also reset the last_iteration back to default state
+            self.last_iteration = -1
+
+    def do_reset(self):
+        if self.resetOK:
+            self.serial.write('r'.encode())
+            self.outputwin('Resetting the Raspberry Pi now.')
+
+    def set_tty(self, name):
+        curses.echo()
+        (y, x) = self.menuwin.get_window().getyx()
+        self.menuwin.get_window().addstr('TTY {}: '.format(name))
+        tty = self.menuwin.get_window().getstr().decode()
+        self.tty = tty
+        self.serial = serial.Serial(tty, 115200)
+        curses.noecho()
+        self.menuwin.get_window().move(y, x)
+        self.menuwin.get_window().clrtobot()
+        self.menuwin.get_window().box()
+        self.menuwin.write_status('TTY {} set to {}'.format(name, tty))
+
+
+class Logging(Thread):
+    def __init__(self, menuwin, outputwin):
+        super(Logging, self).__init__()
+        # default tty (can be changed in the application)
+        self.tty = '/dev/ttyUSB1'
+        # for the monitor that reads the log
+        self.iteration = 0
+        # start/stop thread flag
+        self.run_thread = False
+        self.serial = serial.Serial(self.tty, 115200)
+        self.menuwin = menuwin
+        self.outputwin = outputwin
         self.logfile = ''
         self.path = 'output'
 
+    # Overridden from Thread.run()
+    def run(self):
+        i = 0
+        while self.run_thread is True:
+            line = self.serial.readline()
+            i += 1
+            if i % 100 == 0:
+                self.outputwin.log_message(line)
+            if len(self.logfile) > 0:
+                with open(self.logfile, 'w') as outfile:
+                    outfile.write(line)
+            try:
+                match = re.search(r'iteration: ([0-9]+)', line)
+                if match:
+                    iteration = match.group(1)
+                    if iteration > self.iteration:
+                        self.iteration = iteration
+                else:
+                    # oh oh, no match in received line
+                    self.outputwin.log_message('no match in line {}'.format(line))
+            except TypeError:
+                self.outputwin_log_message('Caught TypeError')
+
+    def start_thread(self):
+        self.run_thread = True
+        self.start()
+
+    def stop_thread(self):
+        self.run_thread = False
+        self.join()
+
+    def get_iteration(self):
+        return self.iteration
+
     def set_filename(self):
         curses.echo()
-        (y, x) = self.window.get_window().getyx()
-        self.window.get_window().addstr('Filename: ')
-        filename = self.window.get_window().getstr().decode()
+        (y, x) = self.menuwin.get_window().getyx()
+        self.menuwin.get_window().addstr('Filename: ')
+        filename = self.menuwin.get_window().getstr().decode()
         self.logfile = join(self.path, filename)
         curses.noecho()
-        self.window.get_window().move(y, x)
-        self.window.get_window().clrtobot()
-        self.window.get_window().box()
-        self.window.write_status('Output filename set to {}'.format(self.logfile))
+        self.menuwin.get_window().move(y, x)
+        self.menuwin.get_window().clrtobot()
+        self.menuwin.get_window().box()
+        self.menuwin.write_status('Output filename set to {}'.format(self.logfile))
+
+    def set_tty(self, name):
+        curses.echo()
+        (y, x) = self.menuwin.get_window().getyx()
+        self.menuwin.get_window().addstr('TTY {}: '.format(name))
+        tty = self.menuwin.get_window().getstr().decode()
+        self.tty = tty
+        self.serial = serial.Serial(tty, 115200)
+        curses.noecho()
+        self.menuwin.get_window().move(y, x)
+        self.menuwin.get_window().clrtobot()
+        self.menuwin.get_window().box()
+        self.menuwin.write_status('TTY {} set to {}'.format(name, tty))
 
     def set_path(self, path):
         self.path = path
-
-    def start(self):
-        if self.pid == -1:
-            # ok process was not started yet, start now
-            self.window.write_status('Starting putty..')
-            time.sleep(1)
-            self.pid = os.spawnlp(os.P_NOWAIT,
-                                  'putty',
-                                  'putty',
-                                  '/dev/ttyUSB0',
-                                  '-serial',
-                                  '-sercfg',
-                                  '115200,8,n,1,N',
-                                  '-log',
-                                  self.logfile)
-            self.window.write_status('Process id of putty is {}\n'.format(self.pid))
-        else:
-            # putty already active
-            self.window.write_status('Putty is already running, pid={}'.format(self.pid))
-
-    def stop(self):
-        if self.pid != -1:
-            # process was started alright, let's kill it
-            self.window.write_status('Stopping putty..')
-            time.sleep(1)
-            os.kill(self.pid, signal.SIGKILL)
-            self.pid = -1
-            self.window.write_status('Putty has been stopped.')
-        else:
-            self.window.write_status('Putty was not running, cannot stop putty.')
 
 
 flds = {
@@ -190,19 +296,16 @@ def menu_input(window):
     window.move(2, 2)
     window.addstr(' [f] Set filename for output')
     window.move(3, 2)
-    window.addstr(' [c] Compile/build experiment')
+    window.addstr(' [l] Set TTY for Raspberry Pi logging')
     window.move(4, 2)
-    window.addstr(' [n] Next experiment')
+    window.addstr(' [r] Set TTY for Arduino resetter')
     window.move(5, 2)
-    window.addstr(' [p] Start putty')
+    window.addstr(' [n] Next experiment')
     window.move(6, 2)
-    window.addstr(' [s] Stop putty')
-    window.move(7, 2)
     window.addstr(' [q] Quit application')
-    window.move(8, 2)
+    window.move(7, 2)
     window.addstr(' ---> ')
     return window.getch()
-    # return window.getkey()
 
 
 def do_experiments(stdscr, infile, workdir):
@@ -212,24 +315,53 @@ def do_experiments(stdscr, infile, workdir):
     outputwin = uicomp.get_outputwin()
     uicomp.refresh()
 
-    putty = Putty(menuwin)
     comp = Compile(outputwin)
+    logging = Logging(menuwin, outputwin)
+    logging.start_thread()
+    resetter = Resetter(logging, menuwin, outputwin)
+    resetter.start_thread()
+
+    expwin.write_status('Processing input file {}.'.format(infile))
+    time.sleep(0.5)
+    df = pd.read_excel(infile)
+    expwin.write_status('Input file {} processed.'.format(infile))
+    time.sleep(1.0)
 
     run = True
-    while run:
-        expwin.write_status('Processing input file {}.'.format(infile))
-        time.sleep(0.5)
-        df = pd.read_excel(infile)
-        expwin.write_status('Input file {} processed.'.format(infile))
-        time.sleep(1.0)
+    do_reset = False
+    for idx, row in df.iterrows():
+        uicomp.clear_status()
 
-        for idx, row in df.iterrows():
-            uicomp.clear_status()
-            compiled = False
+        if run is True:
+            # First compile this experiment
+            menuwin.write_status('Compiling experiment')
+            config = row['configuration of cores']
+            dassign = row['data assignment']
+            comp.set_compilation(config=config, dassign=dassign)
+            comp.compile()
+            menuwin.write_status('Compilation done.')
+
             do_next = False
-            if run is True:
-                while not do_next:
-                    print_experiment(expwin.get_window(), idx, row)
+
+            if do_reset is True:
+                resetter.do_reset()
+                resetter.set_resetOK(False)
+                do_reset = False
+
+            while not do_next:
+                print_experiment(expwin.get_window(), idx, row)
+
+                # check if the next experiment can be selected
+                # automatically (this is the case when enough
+                # log lines have been printed. Class Putty knows
+                # this).
+                if resetter.get_resetOK() is True:
+                    # Oh! we can do the next experiment
+                    do_reset = True
+                    do_next = True
+                    menuwin.write_status('Reset to next experiment..')
+                    time.sleep(0.5)
+                else:
                     key = menu_input(menuwin.get_window())
 
                     if key == ord('q'):
@@ -241,34 +373,18 @@ def do_experiments(stdscr, infile, workdir):
                         time.sleep(1)
                     elif key == ord('f'):
                         # Set output file
-                        putty.set_filename()
-                    elif key == ord('c'):
-                        # compile this experiment
-                        menuwin.write_status('Compiling experiment')
-                        config = row['configuration of cores']
-                        dassign = row['data assignment']
-                        comp.set_compilation(config=config, dassign=dassign)
-                        comp.compile()
-                        menuwin.write_status('Compilation done.')
-                        compiled = True
+                        logging.set_filename()
+                    elif key == ord('t'):
+                        # Set tty for logging
+                        logging.set_tty('logging')
+                    elif key == ord('T'):
+                        # Set tty for arduino
+                        resetter.set_tty('arduino')
                     elif key == ord('n'):
-                        # continue with next experiment
-                        outputwin.log_message('Next experiment selected')
+                        # manually continue with next experiment
+                        outputwin.log_message('Next experiment selected' +
+                                              ' manually')
                         do_next = True
-                    elif key == ord('p'):
-                        # start putty
-                        if compiled is False:
-                            # first compile
-                            menuwin.write_status('You need to compile this experiment first!')
-                            time.sleep(2)
-                            menuwin.write_status('')
-                        else:
-                            menuwin.write_status('Starting putty now.')
-                            putty.start()
-                            menuwin.write_status('Putty has been started.')
-                    elif key == ord('s'):
-                        # stop putty
-                        putty.stop()
                     elif key == curses.KEY_RESIZE:
                         uicomp.refresh()
 
