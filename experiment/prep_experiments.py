@@ -14,6 +14,9 @@ import signal
 import windows
 from threading import Thread
 import serial
+from warnings import warn
+import sys
+import traceback
 
 
 benchmarks = ['malardalenbsort100',
@@ -30,6 +33,23 @@ class Fields(Enum):
     FILENAME_PREFIX = 6
 
 
+class Lock:
+    def __init__(self):
+        self.flag = [False, False]
+        self.turn = False
+
+    def acquire_lock(self, process_flag):
+        self.flag[process_flag] = True
+        self.turn = process_flag
+        while self.flag[not process_flag] is True and self.turn == process_flag:
+            # busy wait
+            pass
+        # Lock has been acquired! Critical section may begin
+
+    def release_lock(self, process_flag):
+        self.flag[process_flag] = False
+
+
 class Compile:
     def __init__(self, outputwin):
         self.outputwin = outputwin
@@ -41,8 +61,9 @@ class Compile:
         self.set_environment()
         self.set_compilation()
 
-    def compile(self):
-        self.outputwin.log_message('working_dir={}'.format(self.working_dir))
+    def compile(self, lock, pflag):
+        self.outputwin.log_message('working_dir={}'.format(self.working_dir),
+                                   lock, pflag)
         os.chdir(self.working_dir)
         try:
             # do make clean to clean up previous makes
@@ -51,16 +72,18 @@ class Compile:
                                 capture_output=True,
                                 text=True,
                                 env=self.myenv)
-            self.outputwin.log_message(cp.stdout)
+            self.outputwin.log_message(cp.stdout, lock, pflag)
 
             # generate the benchmark_config.h file
-            self.outputwin.log_message('writing benchmark_config.h')
+            self.outputwin.log_message('writing benchmark_config.h',
+                                       lock, pflag)
             with open('benchmark_config.h', 'w') as outfile:
                 subprocess.run(self.makeprepcmd,
                                stdout=outfile)
 
             # do the actual compilation
-            self.outputwin.log_message('actual compilation')
+            self.outputwin.log_message('actual compilation',
+                                       lock, pflag)
             cp = subprocess.run(self.makeinstallcmd,
                                 check=True,
                                 capture_output=True,
@@ -68,10 +91,11 @@ class Compile:
                                 env=self.myenv)
             text = cp.stdout.split('\n')
             for line in text:
-                self.outputwin.log_message(line)
+                self.outputwin.log_message(line, lock, pflag)
         except (CalledProcessError, UnicodeDecodeError):
             self.outputwin.log_message('Compilation subprocess resulted ' +
-                                       'in an error!')
+                                       'in an error!',
+                                       lock, pflag)
 
         os.chdir(self.scriptdir)
 
@@ -108,30 +132,90 @@ class Compile:
                                 'benchmark_config.m4']
 
 
-class Resetter(Thread):
-    def __init__(self, logging, menuwin, outputwin):
-        super(Resetter, self).__init__()
-        self.logging = logging
-        self.menuwin = menuwin
-        self.outputwin = outputwin
-        # default tty (can be changed in the application)
-        self.tty = '/dev/ttyUSB0'
-        self.serial = serial.Serial(self.tty, 115200)
-        # Ok to reset?
-        self.resetOK = False
-        self.min_observations = 50
-        self.last_iteration = -1
+class UIthread(Thread):
+    def __init__(self, uicomp):
+        super(UIthread, self).__init__()
+        self.settings = dict()
+        self.uicomp = uicomp
+        self.menuwin = uicomp.get_menuwin()
+        self.expwin = uicomp.get_experimentwin()
+        self.outputwin = uicomp.get_outputwin()
+
         # start/stop thread flag
         self.run_thread = False
+
+    def ui_input_setting(self, name, lock, pflag):
+        # critical section, first acquire lock
+        lock.acquire_lock(pflag)
+
+        curses.echo()
+        (y, x) = self.menuwin.get_window().getyx()
+        self.menuwin.get_window().addstr('{}: '.format(name))
+        self.settings[name] = self.menuwin.get_window().getstr().decode()
+        self.process_setting(name)
+        # self.logfile = join(self.path, filename)
+        # # open logfile for writing
+        # self.filehandle = open(self.logfile, 'wb')
+        curses.noecho()
+        self.menuwin.get_window().move(y, x)
+        self.menuwin.get_window().clrtobot()
+        self.menuwin.get_window().box()
+        self.menuwin.write_status('{} set to {}'.format(name,
+                                                        self.settings[name]))
+        # critical section end, release lock
+        lock.release_lock(pflag)
+
+    def process_setting(self, name):
+        # abstract method, implementation in subclass if needed
+        pass
+
+    def set_lock(self, lock, process_flag):
+        self.lock = lock
+        self.pflag = process_flag
+
+    def start_thread(self):
+        self.run_thread = True
+        self.start()
+
+    def stop_thread(self):
+        self.run_thread = False
+        self.cleanup()
+
+    def cleanup():
+        # abstract method, implementation in subclass if needed
+        pass
+
+    def connect_to_serial(self, baud, timeout=None):
+        try:
+            self.serial = serial.Serial(self.settings['tty'],
+                                        baud, timeout=timeout)
+            self.connected = True
+        except Exception:
+            warn('Could not connect to serial port ' +
+                 ' {}'.format(self.settings['tty']))
+            warn(traceback.format_exception(*sys.exc_info()))
+
+
+class Resetter(UIthread):
+    def __init__(self, uicomp, logging):
+        super(Resetter, self).__init__(uicomp)
+        self.logging = logging
+        # default tty (can be changed in the application)
+        self.settings['tty'] = '/dev/ttyUSB0'
+        # Flag for other thread to detect reset condition
+        self.resetflag = False
+        self.min_observations = 50
+        self.last_iteration = -1
         # timeout for not receiving data anymore (seconds)
-        self.timeout = 120.0
+        self.timeout = 40.0
         self.curtime = 0.0
         # number of seconds to sleep
         self.timeslice = 0.5
+        self.connected = False
 
     def run(self):
         while self.run_thread is True:
-            if self.resetOK is False:
+            if self.resetflag is False and self.connected is True:
                 # Get number of log lines
                 this_iteration = self.logging.get_iteration()
                 if this_iteration > self.last_iteration:
@@ -140,129 +224,171 @@ class Resetter(Thread):
                     self.last_iteration = this_iteration
                     # Do we have enough observations?
                     if self.last_iteration > self.min_observations:
-                        self.set_resetOK(True)
+                        self.outputwin.log_message('Enough observations read.',
+                                                   self.lock, self.pflag)
+                        self.outputwin.log_message('Setting reset flag to True.',
+                                                   self.lock, self.pflag)
+                        self.set_resetflag(True)
+                        self.do_reset()
                 else:
                     # check for timeout
                     self.curtime += self.timeslice
-                    if int(self.curtime) % 10 == 0:
+                    if int(self.curtime * 2) % 20 == 0:
                         self.outputwin.log_message('Waiting {}'.format(self.curtime) +
-                                                   ' secs and counting..')
+                                                   ' secs and counting..',
+                                                   self.lock, self.pflag)
                     if self.curtime > self.timeout:
-                        self.set_resetOK(True)
+                        self.outputwin.log_message('Timeout reached.',
+                                                   self.lock, self.pflag)
+                        self.outputwin.log_message('Setting reset flag to True.',
+                                                   self.lock, self.pflag)
+                        self.set_resetflag(True)
+                        self.do_reset()
             time.sleep(self.timeslice)
 
-    def start_thread(self):
-        self.run_thread = True
-        self.start()
+    def get_resetflag(self):
+        return self.resetflag
 
-    def stop_thread(self):
-        self.run_thread = False
-        self.join()
+    def set_resetflag(self, reset):
+        self.resetflag = reset
 
-    def get_resetOK(self):
-        return self.resetOK
+    def do_reset(self, manual=False):
+        # If manual is True, this method is called by main thread,
+        # that means that we must use the other flag (main's) for the
+        # mutual exclusion lock.
+        pflag = not self.pflag if manual else self.pflag
 
-    def set_resetOK(self, reset):
-        self.resetOK = reset
-        if reset is True:
-            # also reset the last_iteration back to default state
-            self.last_iteration = -1
-
-    def do_reset(self):
-        if self.resetOK:
-            self.serial.write('r'.encode())
-            self.outputwin('Resetting the Raspberry Pi now.')
-
-    def set_tty(self, name):
-        curses.echo()
-        (y, x) = self.menuwin.get_window().getyx()
-        self.menuwin.get_window().addstr('TTY {}: '.format(name))
-        tty = self.menuwin.get_window().getstr().decode()
-        self.tty = tty
-        self.serial = serial.Serial(tty, 115200)
-        curses.noecho()
-        self.menuwin.get_window().move(y, x)
-        self.menuwin.get_window().clrtobot()
-        self.menuwin.get_window().box()
-        self.menuwin.write_status('TTY {} set to {}'.format(name, tty))
+        self.outputwin.log_message('Resetting the Raspberry Pi now.',
+                                   self.lock, pflag)
+        self.serial.write('r'.encode())
+        self.curtime = 0
+        # also reset the last_iteration back to default state
+        self.last_iteration = -1
 
 
-class Logging(Thread):
-    def __init__(self, menuwin, outputwin):
-        super(Logging, self).__init__()
+class Logging(UIthread):
+    def __init__(self, uicomp):
+        super(Logging, self).__init__(uicomp)
         # default tty (can be changed in the application)
-        self.tty = '/dev/ttyUSB1'
+        self.settings['tty'] = '/dev/ttyUSB1'
         # for the monitor that reads the log
         self.iteration = 0
         # start/stop thread flag
         self.run_thread = False
-        self.serial = serial.Serial(self.tty, 115200)
-        self.menuwin = menuwin
-        self.outputwin = outputwin
         self.logfile = ''
-        self.path = 'output'
+        self.filehandle = None
+        self.connected = False
 
     # Overridden from Thread.run()
     def run(self):
-        i = 0
+        # i = 0
         while self.run_thread is True:
-            line = self.serial.readline()
-            i += 1
-            if i % 100 == 0:
-                self.outputwin.log_message(line)
-            if len(self.logfile) > 0:
-                with open(self.logfile, 'w') as outfile:
-                    outfile.write(line)
-            try:
-                match = re.search(r'iteration: ([0-9]+)', line)
-                if match:
-                    iteration = match.group(1)
-                    if iteration > self.iteration:
-                        self.iteration = iteration
-                else:
-                    # oh oh, no match in received line
-                    self.outputwin.log_message('no match in line {}'.format(line))
-            except TypeError:
-                self.outputwin_log_message('Caught TypeError')
-
-    def start_thread(self):
-        self.run_thread = True
-        self.start()
-
-    def stop_thread(self):
-        self.run_thread = False
-        self.join()
+            if self.connected is True:
+                # readline is only temporarily blocking, timeout is set
+                line = self.serial.readline()
+                # i += 1
+                # if i % 100 == 0:
+                #     self.outputwin.log_message(line)
+                if self.filehandle is not None:
+                    self.filehandle.write(line)
+                try:
+                    match = re.search(r'iteration: ([0-9]+)', line)
+                    if match:
+                        iteration = match.group(1)
+                        if iteration > self.iteration:
+                            self.iteration = iteration
+                    # else:
+                    #     # oh oh, no match in received line
+                    #     self.outputwin.log_message('no match in line {}'.format(line))
+                except TypeError:
+                    warn('Caught TypeError')
+            else:
+                time.sleep(0.5)
 
     def get_iteration(self):
         return self.iteration
 
-    def set_filename(self):
-        curses.echo()
-        (y, x) = self.menuwin.get_window().getyx()
-        self.menuwin.get_window().addstr('Filename: ')
-        filename = self.menuwin.get_window().getstr().decode()
-        self.logfile = join(self.path, filename)
-        curses.noecho()
-        self.menuwin.get_window().move(y, x)
-        self.menuwin.get_window().clrtobot()
-        self.menuwin.get_window().box()
-        self.menuwin.write_status('Output filename set to {}'.format(self.logfile))
+    def process_setting(self, name):
+        # implementation of abstract method
+        # open logfile for writing
+        try:
+            self.filehandle = open(self.settings[name], 'wb')
+        except Exception:
+            warn('Could not open file ' +
+                 '{}'.format(self.settings[name]))
 
-    def set_tty(self, name):
-        curses.echo()
-        (y, x) = self.menuwin.get_window().getyx()
-        self.menuwin.get_window().addstr('TTY {}: '.format(name))
-        tty = self.menuwin.get_window().getstr().decode()
-        self.tty = tty
-        self.serial = serial.Serial(tty, 115200)
-        curses.noecho()
-        self.menuwin.get_window().move(y, x)
-        self.menuwin.get_window().clrtobot()
-        self.menuwin.get_window().box()
-        self.menuwin.write_status('TTY {} set to {}'.format(name, tty))
 
-    def set_path(self, path):
-        self.path = path
+class MenuThread(UIthread):
+    def __init__(self, uicomp):
+        super(MenuThread, self).__init__(uicomp)
+        # initialize
+        self.menu_option = None
+        self.menu_set = {'flrcnRq'}
+        self.input_flag = False
+        self.status_message = None
+
+    # Overridden from Thread.run()
+    def run(self):
+        while self.run_thread is True:
+            self.menu_input()
+            time.sleep(0.5)
+            # if not self.input_flag:
+            #     self.menu_input()
+            # else:
+            #     time.sleep(0.1)
+
+    def menu_input(self):
+        # critical section, first acquire lock
+        self.lock.acquire_lock(self.pflag)
+
+        window = self.menuwin.get_window()
+        window.erase()
+        window.box()
+        window.move(1, 2)
+        window.addstr('Menu:')
+        window.move(2, 2)
+        window.addstr(' [f] Set filename for output')
+        window.move(3, 2)
+        window.addstr(' [l] Set TTY for Raspberry Pi logging')
+        window.move(4, 2)
+        window.addstr(' [r] Set TTY for Arduino resetter')
+        window.move(5, 2)
+        window.addstr(' [c] Connect to serial ports')
+        window.move(6, 2)
+        window.addstr(' [n] Next experiment')
+        window.move(7, 2)
+        window.addstr(' [R] Reset Raspberry Pi manually')
+        window.move(8, 2)
+        window.addstr(' [q] Quit application')
+        window.move(9, 2)
+        window.addstr(' ---> ')
+        key = window.getch()
+
+        # if key == curses.KEY_RESIZE:
+        #     self.uicomp.refresh()
+
+        # critical section end, release lock
+        self.lock.release_lock(self.pflag)
+
+        if key > 0 and set(chr(key)).issubset(self.menu_set):
+            # We got a valid input, set flag for handling the input
+            self.menu_option = key
+            self.input_flag = True
+
+    def get_menu_input(self):
+        if self.input_flag is True:
+            # return valid input
+            return self.menu_option
+        else:
+            # No valid input
+            return None
+
+    def reset_input_flag(self):
+        self.input_flag = False
+        self.menu_option = None
+
+    # def set_status_message(self, status_message):
+    #     self.status_message = status_message
 
 
 flds = {
@@ -290,24 +416,6 @@ def print_experiment(window, idx, row):
     window.refresh()
 
 
-def menu_input(window):
-    window.move(1, 2)
-    window.addstr('Menu:')
-    window.move(2, 2)
-    window.addstr(' [f] Set filename for output')
-    window.move(3, 2)
-    window.addstr(' [l] Set TTY for Raspberry Pi logging')
-    window.move(4, 2)
-    window.addstr(' [r] Set TTY for Arduino resetter')
-    window.move(5, 2)
-    window.addstr(' [n] Next experiment')
-    window.move(6, 2)
-    window.addstr(' [q] Quit application')
-    window.move(7, 2)
-    window.addstr(' ---> ')
-    return window.getch()
-
-
 def do_experiments(stdscr, infile, workdir):
     uicomp = windows.UIComponents()
     menuwin = uicomp.get_menuwin()
@@ -315,79 +423,132 @@ def do_experiments(stdscr, infile, workdir):
     outputwin = uicomp.get_outputwin()
     uicomp.refresh()
 
+    # Mutual exclusion mechaninism for writing to UI screen
+    # There are 2 threads writing to UI screen, the main thread (this one)
+    # and the MenuThread object.
+    # Both processes are identified by their process flag (pflag)
+    pflag_main = False
+    pflag_menu = True
+    pflag_resetter = True
+    menulock = Lock()
+    outputlock = Lock()
+
     comp = Compile(outputwin)
-    logging = Logging(menuwin, outputwin)
+
+    logging = Logging(uicomp)
     logging.start_thread()
-    resetter = Resetter(logging, menuwin, outputwin)
+
+    resetter = Resetter(uicomp, logging)
+    resetter.set_lock(outputlock, pflag_resetter)
     resetter.start_thread()
 
+    menuthread = MenuThread(uicomp)
+    menuthread.set_lock(menulock, pflag_menu)
+    menuthread.start_thread()
+
     expwin.write_status('Processing input file {}.'.format(infile))
+
     time.sleep(0.5)
+
     df = pd.read_excel(infile)
     expwin.write_status('Input file {} processed.'.format(infile))
+
     time.sleep(1.0)
 
     run = True
-    do_reset = False
     for idx, row in df.iterrows():
-        uicomp.clear_status()
+        print_experiment(expwin.get_window(), idx, row)
+        # uicomp.clear_status(lock, pflag_main)
 
         if run is True:
             # First compile this experiment
-            menuwin.write_status('Compiling experiment')
+            expwin.write_status('Compiling experiment')
+
             config = row['configuration of cores']
             dassign = row['data assignment']
             comp.set_compilation(config=config, dassign=dassign)
-            comp.compile()
-            menuwin.write_status('Compilation done.')
+            comp.compile(outputlock, pflag_main)
+            expwin.write_status('Compilation done.')
 
             do_next = False
 
-            if do_reset is True:
-                resetter.do_reset()
-                resetter.set_resetOK(False)
-                do_reset = False
-
             while not do_next:
-                print_experiment(expwin.get_window(), idx, row)
+                # # Wait a bit to avoid spinlocking while waiting for user input
+                # time.sleep(0.5)
 
                 # check if the next experiment can be selected
                 # automatically (this is the case when enough
-                # log lines have been printed. Class Putty knows
-                # this).
-                if resetter.get_resetOK() is True:
-                    # Oh! we can do the next experiment
-                    do_reset = True
-                    do_next = True
-                    menuwin.write_status('Reset to next experiment..')
+                # log lines have been printed or if a timeout has
+                # been reached.
+                if resetter.get_resetflag() is True:
+                    # Oh! The resetter has reset the Pi. We should move on
+                    # to the next experiment
+
+                    # reset the reset flag
+                    resetter.set_resetflag(False)
+                    expwin.write_status('Detected reset, ' +
+                                        ' repeat same experiment..',
+                                        menulock, pflag_main)
                     time.sleep(0.5)
                 else:
-                    key = menu_input(menuwin.get_window())
+                    # Not yet a reset condition, move on to the menu
+                    # and wait for input.
+                    action = menuthread.get_menu_input()
 
-                    if key == ord('q'):
-                        run = False
-                        do_next = True
-                        menuwin.write_status('Stopping..')
-                        time.sleep(0.5)
-                        menuwin.write_status('Stopping.. bye now!')
-                        time.sleep(1)
-                    elif key == ord('f'):
-                        # Set output file
-                        logging.set_filename()
-                    elif key == ord('t'):
-                        # Set tty for logging
-                        logging.set_tty('logging')
-                    elif key == ord('T'):
-                        # Set tty for arduino
-                        resetter.set_tty('arduino')
-                    elif key == ord('n'):
-                        # manually continue with next experiment
-                        outputwin.log_message('Next experiment selected' +
-                                              ' manually')
-                        do_next = True
-                    elif key == curses.KEY_RESIZE:
-                        uicomp.refresh()
+                    if action is not None:
+                        # reset the menu input flag for next input
+                        menuthread.reset_input_flag()
 
+                        if action == ord('q'):
+                            run = False
+                            do_next = True
+                        elif action == ord('f'):
+                            # Set output file
+                            logging.ui_input_setting('filename',
+                                                     menulock, pflag_main)
+                        elif action == ord('l'):
+                            # Set tty for logging
+                            logging.ui_input_setting('tty logging',
+                                                     menulock, pflag_main)
+                        elif action == ord('r'):
+                            # Set tty for resetter
+                            resetter.ui_input_setting('tty arduino',
+                                                      menulock, pflag_main)
+                        elif action == ord('c'):
+                            # Connect to serial ports
+                            menulock.acquire_lock(pflag_main)
+                            menuwin.write_status('Connecting to both serial ports..')
+                            time.sleep(0.2)
+                            resetter.connect_to_serial(9600)
+                            logging.connect_to_serial(115200, timeout=0.5)
+                            menuwin.write_status('Connected.')
+                            menulock.release_lock(pflag_main)
+                        elif action == ord('R'):
+                            # Manually reset Raspberry Pi
+                            menuwin.write_status('Resetting Raspberry Pi manually..',
+                                                 menulock, pflag_main)
+                            resetter.do_reset(manual=True)
+                            menuwin.write_status('Raspberry Pi manually reset.',
+                                                 menulock, pflag_main)
+                        elif action == ord('n'):
+                            # manually continue with next experiment
+                            do_next = True
+                            outputwin.log_message('Next experiment selected' +
+                                                  ' manually',
+                                                  menulock, pflag_main)
+                            # Manually reset Raspberry Pi
+                            menuwin.write_status('Resetting Raspberry Pi manually..',
+                                                 menulock, pflag_main)
+                            resetter.do_reset(manual=True)
+                            menuwin.write_status('Raspberry Pi manually reset.',
+                                                 menulock, pflag_main)
+
+    menuwin.write_status('Stopping..',
+                         menulock, pflag_main)
+    time.sleep(0.5)
+    menuwin.write_status('Stopping.. bye now!',
+                         menulock, pflag_main)
+    time.sleep(1)
     stdscr.erase()
 
 

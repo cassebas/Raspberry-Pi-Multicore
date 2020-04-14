@@ -25,9 +25,9 @@ class UIComponents:
         self.experimentwin.draw_window(nlines, ncols, True)
         self.outputwin.draw_window(nlines, ncols, False)
 
-    def clear_status(self):
-        self.menuwin.write_status('')
-        self.experimentwin.write_status('')
+    def clear_status(self, lock=None, pflag=None):
+        self.menuwin.write_status('', lock, pflag)
+        self.experimentwin.write_status('', lock, pflag)
 
     def get_menuwin(self):
         return self.menuwin
@@ -60,6 +60,7 @@ class Win(ABC):
         self.win = curses.newwin(self.nlines, self.ncols, self.ypos, self.xpos)
         self.win.scrollok(self.scrollok)
         self.win.idlok(self.scrollok)
+        self.win.nodelay(self.nodelay)
 
     def get_window(self):
         return self.win
@@ -79,8 +80,11 @@ class Win(ABC):
             myxpos = 0
         return (myypos, myxpos)
 
-    def write_status(self, string):
-        # A window that scrolls does not have a status line
+    def write_status(self, string, lock=None, pflag=None):
+        if lock is not None:
+            lock.acquire_lock(pflag)
+
+        # A window that scrolls does not have a notification line
         if not self.scrollok:
             (y, x) = (self.nlines - 2, 2)
             try:
@@ -92,6 +96,9 @@ class Win(ABC):
             except curses.error:
                 pass
 
+        if lock is not None:
+            lock.release_lock(pflag)
+
 
 class MenuWin(Win):
     def __init__(self, stdscr):
@@ -102,7 +109,9 @@ class MenuWin(Win):
         self.divlines = 2
         self.divcols = 2
         self.scrollok = False
+        self.nodelay = False
         self.new_window()
+        # self.win.timeout(200)
 
 
 class ExperimentWin(Win):
@@ -114,6 +123,7 @@ class ExperimentWin(Win):
         self.divlines = 2
         self.divcols = 2
         self.scrollok = False
+        self.nodelay = False
         self.new_window()
 
 
@@ -126,10 +136,14 @@ class OutputWin(Win):
         self.divlines = 2
         self.divcols = 1
         self.scrollok = True
+        self.nodelay = False
         self.new_window()
         self.debug = 0
 
-    def log_message(self, str):
+    def log_message(self, str, lock=None, pflag=None):
+        if lock is not None:
+            lock.acquire_lock(pflag)
+
         # plines: number of printable lines (-2 because of the box)
         plines = self.nlines - 2
 
@@ -171,3 +185,6 @@ class OutputWin(Win):
             self.win.refresh()
         except curses.error:
             pass
+
+        if lock is not None:
+            lock.release_lock(pflag)
