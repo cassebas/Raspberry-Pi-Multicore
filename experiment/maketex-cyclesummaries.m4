@@ -7,6 +7,7 @@ changecom(%)dnl
 % 2: mälardalen edn
 % 3: linear array access
 % 4: random array access
+% 5: random array write
 %
 % This m4 macro file expects the following 4 parameters:
 %  -Dfilename: filename of the CSV file containing the data
@@ -24,6 +25,7 @@ define(bench_name1, malardalenbsort100)dnl
 define(bench_name2, malardalenedn)dnl
 define(bench_name3, lineararrayaccess)dnl
 define(bench_name4, randomarrayaccess)dnl
+define(bench_name5, randomarraywrite)dnl
 define(bench_name, undefined)
 dnl
 dnl % These are the default parameters:
@@ -104,7 +106,7 @@ define(template_figure, `dnl
         % grid=major,
         bar width=0.1,
         enlarge x limits=0.5,
-        legend style={at={(0.98,0.70)},anchor=south east},
+        legend style={at={(1.48,0.70)},anchor=south east},
         % nodes near coords,
       ]
 meta3(`config', `template_addplot', `filename')dnl
