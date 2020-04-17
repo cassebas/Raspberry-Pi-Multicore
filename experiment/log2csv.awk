@@ -2,7 +2,7 @@ BEGIN {
     print "configuration,benchmark,dassign,cores,pattern,core,cycles,iteration,offset"
 }
 {
-    if (length($15) > 0) {
+    if (length($15) > 0 && NF == 19) {
         # remove underscores from benchmark name, it hurts LaTeX
         gsub("_", "", $6)
 
