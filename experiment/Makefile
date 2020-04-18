@@ -3,29 +3,43 @@ LOG_DIR=output
 TXT_LOGS=$(shell find $(LOG_DIR) -name "*.log")
 CSV_LOGS=$(patsubst %.log,%.csv,$(TXT_LOGS))
 DATA_DIR=report/data
+IMG_DIR=report/img
 
-CSV_SUMMARIES=$(shell find $(DATA_DIR) -name "*.csv")
+CSV_SUMMARIES=$(shell find $(DATA_DIR) -name "cyclessummary-*.csv")
 TEX_SUMMARIES=$(patsubst %.csv,%.tex,$(CSV_SUMMARIES))
 TEX_SUMMARIES_COMBINED=report/input-figures.tex
 
-.phony: all csv_summaries tex_summaries_combined clean
+CSV_DATA=$(shell find $(DATA_DIR) -name "cyclesdata-*.csv")
+PNG_DATA=$(patsubst %.csv,%.png,$(CSV_DATA))
+
+.phony: all csv_summaries csv_data tex_summaries_combined clean
 
 # Macro that will generate all summary data files in CSV format
-define LOG2DATA_AND_SUMMARIES
+define LOG2_SUMMARIES
 	python log2data_and_summaries.py --input-file=$(1) --output-directory=$(DATA_DIR) --output-mode=summary;
+endef
+
+# Macro that will generate all linear chart data files in CSV format
+define LOG2_DATA
+	python log2data_and_summaries.py --input-file=$(1) --output-directory=$(DATA_DIR) --output-mode=data;
 endef
 
 # Recursive call to make, to make sure that csv_summaries is fully
 # completed before tex_summaries_combined is executed.
-all: csv_summaries
-	make tex_summaries_combined
+all: csv_summaries csv_data
+	make tex_summaries_combined png_data
 
 # $(CSV_SUMMARIES) cannot be a target, because the exact .csv files with
-# summary data aren't know beforehand. The python scripts extracts them
+# summary data aren't known beforehand. The python scripts extracts them
 # from the data contained in the .csv log files.
-#csv_summaries: $(CSV_LOGS) $(TEX_SUMMARIES) $(TEX_SUMMARIES_COMBINED)
 csv_summaries: $(CSV_LOGS)
-	$(foreach csv_file,$(CSV_LOGS),$(call LOG2DATA_AND_SUMMARIES,$(csv_file)))
+	$(foreach csv_file,$(CSV_LOGS),$(call LOG2_SUMMARIES,$(csv_file)))
+
+# $(CSV_DATA) cannot be a target, because the exact .csv files with
+# the data aren't known beforehand. The python scripts extracts them
+# from the data contained in the .csv log files.
+csv_data: $(CSV_LOGS)
+	$(foreach csv_file,$(CSV_LOGS),$(call LOG2DATA,$(csv_file)))
 
 # Implicit target: simple 1 to 1 translation for .log to .csv using AWK
 $(CSV_LOGS): $(TXT_LOGS)
@@ -60,5 +74,14 @@ $(TEX_SUMMARIES_COMBINED): $(TEX_SUMMARIES)
 		awk '{printf("\\input{%s}\n", $$1)}' | sort -n | \
 		awk '{printf("%s\n\\clearpage\n", $$0)}' > $@
 
+png_data: $(PNG_DATA)
+
+# This can be an implicit target, because all CSV_SUMMARIES are known by now
+# For each *.csv summary, a .tex file is generated with a pgfplot figure, that
+# is to be included into a larger LaTeX file.
+$(PNG_DATA): $(CSV_DATA)
+	$(eval CSV := $(patsubst %.png,%.csv,$@))
+	python data2linearchart.py --input-file=$(CSV) --output-directory=$(IMG_DIR) --maximum-observations=250
+
 clean:
-	rm -f $(CSV_LOGS) $(CSV_SUMMARIES) $(TEX_SUMMARIES) $(TEX_SUMMARIES_COMBINED)
+	rm -f $(CSV_LOGS) $(CSV_DATA) $(CSV_SUMMARIES) $(TEX_SUMMARIES) $(TEX_SUMMARIES_COMBINED) $(PNG_DATA)
