@@ -25,19 +25,46 @@ from itertools import product
 infiles = glob.glob('output/*.csv')
 infiles
 
-df = pd.read_csv('output/20200225-array_access_random-NO_CACHE_MGMT-2core.csv')
-df = df.iloc[0:50,:]
-df['movingav'] = df.loc[:,'cycles'].rolling(window=3).mean()
+# +
+f = 'output/testlog.csv'
+df = pd.read_csv(f)
+df = df.set_index(keys=['cores', 'configuration', 'dassign', 'pattern'])
+df.sort_index(inplace=True)
+df.dropna(axis=0, how='all', inplace=True)
+df.dropna(axis=1, how='all', inplace=True)
+
+df.index.get_level_values(0) # number of cores
+df.index.get_level_values(1) # configuration string
+df.index.get_level_values(2) # data assignment string
+df.index.get_level_values(3) # alignment pattern string
 df
-#lines = df.plot.line(y='cycles')
-plt.figure(figsize=[13,3])
-plt.grid(True)
-plt.plot(df['cycles'], label='Number of cycles')
-#plt.plot(df['movingav'], label='Moving average')
-plt.legend(loc=1)
 
 # +
-df1 = pd.read_csv('output/20200226-array_access_random-1core.csv')
+df = pd.read_csv('example_linearcharts/cyclesdata-default-4core-config4455-dassign0123-pattern0000.csv',
+                sep=' ')
+df = df.iloc[:10000,:]
+
+df_core1 = df.loc[df['core']==0]
+df_core1 = df_core1.set_index(['iteration'])
+df_core2 = df.loc[df['core']==1]
+df_core2 = df_core2.set_index(['iteration'])
+df_core3 = df.loc[df['core']==2]
+df_core3 = df_core3.set_index(['iteration'])
+df_core4 = df.loc[df['core']==3]
+df_core4 = df_core4.set_index(keys=['iteration'])
+#df_core4['movingav'] = df_core4.loc[:,'cycles'].rolling(window=5).mean()
+
+plt.figure(figsize=[10,5])
+plt.grid(True)
+plt.plot(df_core1['cycles'], label='Cycles core1')
+plt.plot(df_core2['cycles'], label='Cycles core2')
+plt.plot(df_core3['cycles'], label='Cycles core3')
+plt.plot(df_core4['cycles'], label='Cycles core4')
+plt.legend(loc=1)
+df.configuration.unique()[0]
+
+# +
+df1 = pd.read_csv('example_linearcharts/20200226-array_access_random-1core.csv')
 df1 = df1.iloc[:100,:]
 df1['movingav'] = df1.loc[:,'cycles'].rolling(window=20).mean()
 
@@ -47,7 +74,7 @@ plt.plot(df1['movingav'], label='Moving average core1')
 plt.legend(loc=1)
 
 # +
-df2 = pd.read_csv('output/20200226-array_access_random-2core.csv')
+df2 = pd.read_csv('example_linearcharts/20200226-array_access_random-2core.csv')
 df2 = df2.iloc[:100,:]
 df2['movingav'] = df2.loc[:,'cycles'].rolling(window=20).mean()
 df2_core1 = df2.loc[df2['core']==0]
@@ -62,12 +89,12 @@ plt.plot(df2_core2['movingav'], label='Moving average core2')
 plt.legend(loc=1)
 
 # +
-df3 = pd.read_csv('output/20200226-array_access_random-3core.csv')
+df3 = pd.read_csv('example_linearcharts/20200226-array_access_random-3core.csv')
 df3 = df3.iloc[:100,:]
-df3['movingav'] = df3.loc[:,'cycles'].rolling(window=20).mean()
+df3['movingav'] = df3.loc[:,'cycles'].rolling(window=5).mean()
 df3_core1 = df3.loc[df3['core']==0]
 df3_core1['movingav'] = df3_core1.loc[:,'cycles'].rolling(window=10).mean()
-df3_core2 = df3.loc[df4['core']==1]
+df3_core2 = df3.loc[df3['core']==1]
 df3_core2['movingav'] = df3_core2.loc[:,'cycles'].rolling(window=10).mean()
 df3_core3 = df3.loc[df3['core']==2]
 df3_core3['movingav'] = df3_core3.loc[:,'cycles'].rolling(window=10).mean()
@@ -78,9 +105,10 @@ plt.plot(df3_core1['movingav'], label='Moving average core1')
 plt.plot(df3_core2['movingav'], label='Moving average core2')
 plt.plot(df3_core3['movingav'], label='Moving average core3')
 plt.legend(loc=1)
+df3
 
 # +
-df4 = pd.read_csv('output/20200228-4444-4core.csv')
+df4 = pd.read_csv('example_linearcharts/20200228-4444-4core.csv')
 df4 = df4.iloc[:1000,:]
 df4_core1 = df4.loc[df4['core']==0]
 df4_core1['movingav'] = df4_core1.loc[:,'cycles'].rolling(window=100).mean()

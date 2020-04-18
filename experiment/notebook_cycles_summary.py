@@ -29,8 +29,10 @@ infiles
 benchmarks = ['malardalenbsort100',
               'malardalenedn',
               'lineararrayaccess',
-              'randomarrayaccess']
+              'randomarrayaccess',
+              'randonarraywrite']
 
+# + jupyter={"outputs_hidden": true}
 pvs = pd.DataFrame()
 for f in infiles:
     df = pd.read_csv(f)
@@ -67,6 +69,9 @@ pv = pv.rename(columns={0: 'core0',
                         3: 'core3'})
 pv.sort_index(inplace=True)
 pv
+pv.loc[(2, "'44'", "'01'", slice(None)), (slice(None))]
+pv.columns.to_series().str.join('-')
+#pv.columns
 
 # Output files to temporary directory tmp
 output_directory = 'tmp'
