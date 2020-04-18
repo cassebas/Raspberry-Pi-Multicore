@@ -11,8 +11,8 @@ TEX_SUMMARIES_COMBINED=report/input-figures.tex
 .phony: all csv_summaries tex_summaries_combined clean
 
 # Macro that will generate all summary data files in CSV format
-define LOG2SUMMARIES
-	python log2summaries.py --input-file=$(1) --output-directory=$(DATA_DIR);
+define LOG2DATA_AND_SUMMARIES
+	python log2data_and_summaries.py --input-file=$(1) --output-directory=$(DATA_DIR) --output-mode=summary;
 endef
 
 # Recursive call to make, to make sure that csv_summaries is fully
@@ -25,7 +25,7 @@ all: csv_summaries
 # from the data contained in the .csv log files.
 #csv_summaries: $(CSV_LOGS) $(TEX_SUMMARIES) $(TEX_SUMMARIES_COMBINED)
 csv_summaries: $(CSV_LOGS)
-	$(foreach csv_file,$(CSV_LOGS),$(call LOG2SUMMARIES,$(csv_file)))
+	$(foreach csv_file,$(CSV_LOGS),$(call LOG2DATA_AND_SUMMARIES,$(csv_file)))
 
 # Implicit target: simple 1 to 1 translation for .log to .csv using AWK
 $(CSV_LOGS): $(TXT_LOGS)
