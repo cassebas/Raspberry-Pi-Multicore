@@ -11,6 +11,7 @@
 #define MAX_SYNBENCH_DATASIZE 450
 #define SYNBENCH_DATASIZE 450
 
+#define BIGSTRUCT_DATASIZE 511
 /**
 Synthetic benchmark inspired by the paper `Predictable and Efficient Virtual Addressing for
  Safety-Critical Real-Time Systems', written by Bennet and Audsley (2001).
@@ -21,7 +22,7 @@ Synthetic benchmark inspired by the paper `Predictable and Efficient Virtual Add
  */
 typedef struct bigstruct {
 	int id;
-	int data[511];
+	int data[BIGSTRUCT_DATASIZE];
 } bigstruct_t;
 
 
