@@ -11,8 +11,9 @@ TEX_SUMMARIES_COMBINED=report/input-figures.tex
 
 CSV_DATA=$(shell find $(DATA_DIR) -name "cyclesdata-*.csv")
 PNG_DATA=$(patsubst %.csv,%.png,$(CSV_DATA))
+PNG_DATA_CLEAN=$(shell find $(IMG_DIR) -name "cyclesdata-*.png")
 
-.phony: all csv_summaries csv_data tex_summaries_combined clean
+.phony: all csv_summaries csv_data tex_summaries_combined png_data clean
 
 # Macro that will generate all summary data files in CSV format
 define LOG2_SUMMARIES
@@ -39,7 +40,7 @@ csv_summaries: $(CSV_LOGS)
 # the data aren't known beforehand. The python scripts extracts them
 # from the data contained in the .csv log files.
 csv_data: $(CSV_LOGS)
-	$(foreach csv_file,$(CSV_LOGS),$(call LOG2DATA,$(csv_file)))
+	$(foreach csv_file,$(CSV_LOGS),$(call LOG2_DATA,$(csv_file)))
 
 # Implicit target: simple 1 to 1 translation for .log to .csv using AWK
 $(CSV_LOGS): $(TXT_LOGS)
@@ -81,7 +82,7 @@ png_data: $(PNG_DATA)
 # is to be included into a larger LaTeX file.
 $(PNG_DATA): $(CSV_DATA)
 	$(eval CSV := $(patsubst %.png,%.csv,$@))
-	python data2linearchart.py --input-file=$(CSV) --output-directory=$(IMG_DIR) --maximum-observations=250
+	python data2linearchart.py --input-file=$(CSV) --output-directory=$(IMG_DIR) --maximum-observations=250 --movingaverage-window=25
 
 clean:
-	rm -f $(CSV_LOGS) $(CSV_DATA) $(CSV_SUMMARIES) $(TEX_SUMMARIES) $(TEX_SUMMARIES_COMBINED) $(PNG_DATA)
+	rm -f $(CSV_LOGS) $(CSV_DATA) $(CSV_SUMMARIES) $(TEX_SUMMARIES) $(TEX_SUMMARIES_COMBINED) $(PNG_DATA_CLEAN)

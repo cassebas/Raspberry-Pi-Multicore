@@ -36,8 +36,13 @@ def remove_quotes(quoted):
 @click.option('--maximum-observations',
               default=250,
               help='Maximum number of observations to plot.')
+@click.option('--movingaverage-window',
+              default=0,
+              help='Size of the moving average window, 0=no moving average (default)')
 @click_log.simple_verbosity_option(logger)
-def main(input_file, output_directory, maximum_observations):
+def main(input_file, output_directory, maximum_observations,
+         movingaverage_window):
+
     if not isfile(input_file):
         logger.error('Input file {}'.format(input_file) +
                      ' does not exist!')
@@ -47,6 +52,13 @@ def main(input_file, output_directory, maximum_observations):
     if not isdir(output_directory):
         logger.error('Output directory {}'.format(output_directory) +
                      ' does not exist!')
+        logger.info('Exiting program due to error.')
+        exit(1)
+
+    win = movingaverage_window
+    if win < 0:
+        logger.error('Moving average window is negative ' +
+                     '({}), it must be 0 or greater.'.format(win))
         logger.info('Exiting program due to error.')
         exit(1)
 
@@ -103,8 +115,18 @@ def main(input_file, output_directory, maximum_observations):
     for corenum in range(cores):
         dfcore = df.loc[df['core'] == corenum]
         dfcore = dfcore.set_index(['iteration'])
-        label = 'core{} - {}'.format(corenum, benchmarks[corenum])
-        plt.plot(dfcore['cycles'], label=label)
+        if win > 0:
+            dfcore['mav'] = dfcore.loc[:, 'cycles']
+            dfcore['mav'] = dfcore['mav'].rolling(window=win).mean()
+            label = 'moving average (win={}) '.format(win)
+            field2plot = 'mav'
+        else:
+            label = ''
+            field2plot = 'cycles'
+        label += 'core{} - {}'.format(corenum, benchmarks[corenum])
+        plt.xlabel('Iteration number')
+        plt.ylabel('Number of cycles')
+        plt.plot(dfcore[field2plot], label=label)
     plt.legend(loc=1)
 
     output_filename = 'cycles{}-{}-'.format('data', logname)
