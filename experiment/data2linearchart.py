@@ -68,7 +68,7 @@ def main(input_file, output_directory, maximum_observations,
     # Get the basename for the output files, a convention that is
     # used to link input log CSV files to output summary CSV files.
     # Pre condition for this to work: *all* log files must begin with /^log-/
-    regex = re.compile('^log-(.*).csv$')
+    regex = re.compile('^cyclesdata-(.*)-.*.csv$')
     m = regex.match(basename(input_file))
     if (m):
         logname = m.group(1)
@@ -124,7 +124,7 @@ def main(input_file, output_directory, maximum_observations,
             label = ''
             field2plot = 'cycles'
         label += 'core{} - {}'.format(corenum, benchmarks[corenum])
-        plt.xlabel('Iteration number')
+        plt.xlabel('Iteration')
         plt.ylabel('Number of cycles')
         plt.plot(dfcore[field2plot], label=label)
     plt.legend(loc=1)
