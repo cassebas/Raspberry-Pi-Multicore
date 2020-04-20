@@ -29,29 +29,31 @@ infiles
 benchmarks = ['malardalenbsort100',
               'malardalenedn',
               'lineararrayaccess',
+              'lineararraywrite',
               'randomarrayaccess',
               'randonarraywrite']
 
-# + jupyter={"outputs_hidden": true}
+# +
 pvs = pd.DataFrame()
-for f in infiles:
-    df = pd.read_csv(f)
-    pv = pd.pivot_table(df,
-                        index=['cores', 'configuration', 'dassign', 'pattern'],
-                        columns=['benchmark', 'core'],
-                        values='cycles',
-                        aggfunc={'cycles': [np.median, np.std]})
-    pv = pv.rename(columns={0: 'core0',
-                            1: 'core1',
-                            2: 'core2',
-                            3: 'core3'})
-    pvs = pd.concat([pvs, pv])
-pvs.sort_index(inplace=True)
-pvs.index.get_level_values(0) # cores
-pvs.index.get_level_values(1) # configuration
-pvs.index.get_level_values(2) # data assignment
-pvs.index.get_level_values(3) # alignment pattern
-pvs
+f='output/log-20200420_sbdatasizes.csv'
+#f='output/testlog.csv'
+df = pd.read_csv(f, sep=',')
+pv = pd.pivot_table(df,
+                    index=['label', 'cores', 'configuration', 'pattern'],
+                    columns=['benchmark', 'core'],
+                    values='cycles',
+                    aggfunc={'cycles': [np.median, np.std]})
+pv = pv.rename(columns={0: 'core0',
+                        1: 'core1',
+                        2: 'core2',
+                        3: 'core3'})
+
+pv.sort_index(inplace=True)
+pv.index.get_level_values(0) # cores
+pv.index.get_level_values(1) # configuration
+pv.index.get_level_values(2) # data assignment
+pv.index.get_level_values(3) # alignment pattern
+pv
 
 # + jupyter={"outputs_hidden": true}
 df = pd.read_csv('output/log-20200309.csv')

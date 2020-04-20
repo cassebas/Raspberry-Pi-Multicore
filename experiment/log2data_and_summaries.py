@@ -18,21 +18,13 @@ def remove_quotes(quoted):
     return quoted
 
 
-def export_dataframe(df, output_mode, axis0, axis1, data_type,
-                     logname, output_directory):
-    # assert the data_type is either dassign or pattern
-    if data_type is not None:
-        if data_type != 'dassign' and data_type != 'pattern':
-            logger.warning('Illegal datatype {} found.'.format(data_type))
-
+def export_dataframe(df, output_mode, axis0, axis1, output_directory):
     # axis0 is a tuple containing:
-    #   output_mode==summary, data_type==dassign
-    #     (cores, config, dassign, slice(None))
-    #   output_mode==summary, data_type==pattern
-    #     (cores, config, slice(None), pattern)
+    #   output_mode==summary
+    #     (label, cores, config, slice(None))
     #   output_mode==data
-    #     (cores, config, dassign, pattern)
-    (cores, config, dassign, pattern) = axis0
+    #     (label, cores, config, pattern)
+    (label, cores, config, pattern) = axis0
 
     try:
         df_exp = df.loc[axis0, axis1]
@@ -43,27 +35,24 @@ def export_dataframe(df, output_mode, axis0, axis1, data_type,
                 df_exp.columns = df_exp.columns.to_series().str.join('-')
 
             config = remove_quotes(config)
-            dassign = remove_quotes(dassign)
             pattern = remove_quotes(pattern)
 
-            output_filename = 'cycles{}-{}-'.format(output_mode, logname)
-            output_filename += '{}core-config{}-'.format(cores, config)
+            output_filename = 'cycles{}-{}-'.format(output_mode, label)
+            output_filename += '{}core-config{}'.format(cores, config)
 
             if output_mode == 'data':
-                output_filename += '{}{}-'.format('dassign', dassign)
-                output_filename += '{}{}.csv'.format('pattern', pattern)
+                output_filename += '-{}{}.csv'.format('pattern', pattern)
             else:
-                if data_type == 'dassign':
-                    output_filename += '{}{}.csv'.format(data_type, dassign)
-                else:
-                    output_filename += '{}{}.csv'.format(data_type, pattern)
+                output_filename += '.csv'
             logger.debug('output_filename={}'.format(output_filename))
 
             outfile = join(output_directory, output_filename)
             df_exp.to_csv(outfile, index=True, sep=' ')
+        else:
+            logger.warning('Trying to export an empty dataframe.')
     except KeyError:
-        logger.warning('KeyError => cores={} '.format(cores) +
-                       ' config={} dassign={}'.format(config, dassign))
+        logger.warning('KeyError => label={} '.format(label) +
+                       'cores={} config={}'.format(cores, config))
 
 
 @click.command()
@@ -112,10 +101,10 @@ def main(input_file, output_directory, output_mode):
     # These resulting CSV files are read from within LaTeX.
     #    (Note: 'cores' == nr of cores,  'core' == core number)
     if output_mode == 'data':
-        df = df.set_index(keys=['cores', 'configuration', 'dassign', 'pattern'])
+        df = df.set_index(keys=['label', 'cores', 'configuration', 'pattern'])
     elif output_mode == 'summary':
         df = pd.pivot_table(df,
-                            index=['cores', 'configuration', 'dassign',
+                            index=['label', 'cores', 'configuration',
                                    'pattern'],
                             columns=['benchmark', 'core'],
                             values='cycles',
@@ -134,55 +123,33 @@ def main(input_file, output_directory, output_mode):
 
     # Now output a series of CVS files that contain the summaries
     # The index levels of the df dataframe are:
-    #  - level 0: number of cores
-    #  - level 1: configuration string
-    #  - level 2: data assignment string
+    #  - level 0: label of experiment
+    #  - level 1: number of cores
+    #  - level 2: configuration string
     #  - level 3: alignment pattern string
-    cores_list = df.index.get_level_values(0)
-    core_min = cores_list[0]
-    core_max = cores_list[-1]
-    logger.debug('cores_list={}'.format(cores_list))
 
-    for cores in set(cores_list):
-        for core_number in range(core_min, core_max+1):
-            cidx = ['core'+str(i) for i in range(core_number)]
-        logger.debug('cidx={}.'.format(cidx))
+    axis1 = (slice(None))
+    for label in df.index.get_level_values(0):
+        logger.debug('label={}'.format(label))
 
-        if output_mode == 'data':
-            axis1 = (slice(None))
-        else:
-            axis1 = (slice(None), slice(None), cidx)
+        cores_list = df.index.get_level_values(1)
+        logger.debug('cores_list={}'.format(cores_list))
+        for cores in set(cores_list):
+            logger.debug('cores={}.'.format(cores))
 
-        # df_sub index levels:
-        #  - level 0: configuration string
-        #  - level 1: data assignment string
-        #  - level 2: alignment pattern string
-        df_sub = df.loc[cores]
+            for config in set(df.index.get_level_values(2)):
+                logger.debug('config={}.'.format(config))
 
-        for config in set(df_sub.index.get_level_values(0)):
-            logger.debug('config={}.'.format(config))
-
-            if output_mode != 'data':
-                for dassign in set(df_sub.index.get_level_values(1)):
-                    logger.debug('dassign={}.'.format(dassign))
-                    axis0 = (cores, config, dassign, slice(None))
+                if output_mode != 'data':
+                    axis0 = (label, cores, config, slice(None))
                     export_dataframe(df, output_mode, axis0, axis1,
-                                     'dassign', logname, output_directory)
-
-                for pattern in set(df_sub.index.get_level_values(2)):
-                    logger.debug('pattern={}.'.format(pattern))
-                    axis0 = (cores, config, slice(None), pattern)
-                    export_dataframe(df, output_mode, axis0, axis1,
-                                     'pattern', logname, output_directory)
-
-            else:  # output_mode == 'data':
-                for dassign in set(df_sub.index.get_level_values(1)):
-                    logger.debug('dassign={}.'.format(dassign))
-                    for pattern in set(df_sub.index.get_level_values(2)):
+                                     output_directory)
+                else:  # output_mode == 'data':
+                    for pattern in set(df.index.get_level_values(3)):
                         logger.debug('pattern={}'.format(pattern))
-                        axis0 = (cores, config, dassign, pattern)
+                        axis0 = (label, cores, config, pattern)
                         export_dataframe(df, output_mode, axis0, axis1,
-                                         None, logname, output_directory)
+                                         output_directory)
 
 
 if __name__ == "__main__":

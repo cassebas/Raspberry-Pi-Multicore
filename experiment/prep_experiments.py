@@ -23,11 +23,12 @@ click_log.basic_config(logger)
 
 
 class Fields(Enum):
+    EXP_LABEL = 1
     CONFIG = 2
     DASSIGN = 3
     DISABLE_CACHE = 4
     NO_CACHE_MGMT = 5
-    FILENAME_PREFIX = 6
+    SB_DATASIZE = 6
 
 
 class Compile:
@@ -79,33 +80,42 @@ class Compile:
         self.myenv = dict(os.environ,
                           BENCHMARK_CONFIG='-DBENCHMARK_CONFIG_M4')
 
-    def set_compilation(self, config=None, dassign=None):
-        if config is not None or dassign is not None:
-            config_param = ''
-            dassign_param = ''
-            if config is not None:
-                # The python process that runs m4 cannot handle a string
-                # with quotes well, remove leading and trailing quotes.
-                logger.debug('config={}'.format(config))
-                config = re.sub(r'^\'', '', config)
-                config = re.sub(r'\'$', '', config)
-                config_param = '-Dconfig=' + config
-                logger.debug('config={}'.format(config))
-            if dassign is not None:
-                # Same here, remove leading and trailing quotes.
-                logger.debug('dassign={}'.format(dassign))
-                dassign = re.sub(r'^\'', '', dassign)
-                dassign = re.sub(r'\'$', '', dassign)
-                dassign_param = '-Ddassign=' + dassign
-                logger.debug('dassign={}'.format(dassign))
+    def set_compilation(self, config=None, dassign=None, label=None,
+                        datasize=None):
+        config_param = ''
+        dassign_param = ''
+        label_param = ''
+        datasize_param = ''
+        if config is not None:
+            # The python process that runs m4 cannot handle a string
+            # with quotes well, remove leading and trailing quotes.
+            logger.debug('config={}'.format(config))
+            config = re.sub(r'^\'', '', config)
+            config = re.sub(r'\'$', '', config)
+            config_param = '-Dconfig=' + config
+            logger.debug('config={}'.format(config))
+        if dassign is not None:
+            # Same here, remove leading and trailing quotes.
+            logger.debug('dassign={}'.format(dassign))
+            dassign = re.sub(r'^\'', '', dassign)
+            dassign = re.sub(r'\'$', '', dassign)
+            dassign_param = '-Ddassign=' + dassign
+            logger.debug('dassign={}'.format(dassign))
+        if label is not None:
+            logger.debug('label={}'.format(label))
+            label_param = '-Dexp_label={}'.format(label)
+        if datasize is not None:
+            logger.debug('datasize={}'.format(datasize))
+            datasize_param = '-Dsynbench_datasize={}'.format(datasize)
 
-            self.makeprepcmd = ['m4',
-                                config_param,
-                                dassign_param,
-                                'benchmark_config.m4']
-        else:
-            self.makeprepcmd = ['m4',
-                                'benchmark_config.m4']
+        self.makeprepcmd = ['m4',
+                            config_param,
+                            dassign_param,
+                            label_param,
+                            datasize_param,
+                            'benchmark_config.m4']
+
+        logger.debug('makeprepcmd={}'.format(self.makeprepcmd))
 
 
 class SerialThread(Thread):
@@ -289,11 +299,12 @@ class LogProcessor(SerialThread):
 
 
 flds = {
+    Fields.EXP_LABEL: 'experiment label',
     Fields.CONFIG: 'configuration of cores',
     Fields.DASSIGN: 'data assignment',
     Fields.DISABLE_CACHE: 'disable cache',
     Fields.NO_CACHE_MGMT: 'no cache management',
-    Fields.FILENAME_PREFIX: 'filename prefix',
+    Fields.SB_DATASIZE: 'synbench datasize',
 }
 
 
@@ -320,7 +331,10 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging):
                     'experiment nr is {}.'.format(i))
         config = row[flds[Fields.CONFIG]]
         dassign = row[flds[Fields.DASSIGN]]
-        comp.set_compilation(config=config, dassign=dassign)
+        label = row[flds[Fields.EXP_LABEL]]
+        datasize = row[flds[Fields.SB_DATASIZE]]
+        comp.set_compilation(config=config, dassign=dassign,
+                             label=label, datasize=datasize)
         comp.compile()
 
         logger.info('Compilation done.')

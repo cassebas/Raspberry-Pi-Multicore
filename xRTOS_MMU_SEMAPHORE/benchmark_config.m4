@@ -148,5 +148,19 @@ meta3(`dassign', `data_assignment_core_def')
 #endif
 #define DATA_ASSIGN_STRING "`dassign': 'dassign'"dnl
 
+dnl maybe redefine the size of the array that is used in the
+dnl synthetic benchmarks.
+ifdef(`synbench_datasize', `', `define(synbench_datasize, `10240')')
+#ifdef SYNBENCH_DATASIZE
+#undef SYNBENCH_DATASIZE
+#define SYNBENCH_DATASIZE synbench_datasize
+#endif
+dnl
+dnl maybe use a label that is used by the data visualization scripts
+ifdef(`exp_label', `', `define(exp_label, `default')')
+#ifdef EXP_LABEL
+#undef EXP_LABEL
+#define EXP_LABEL "exp_label"
+#endif
 
 #endif /* ~BENCHMARK_CONFIG_H */

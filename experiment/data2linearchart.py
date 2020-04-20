@@ -39,7 +39,8 @@ def remove_quotes(quoted):
               help='Maximum number of observations to plot.')
 @click.option('--movingaverage-window',
               default=0,
-              help='Size of the moving average window, 0=no moving average (default)')
+              help='Size of the moving average window, 0=no moving average ' +
+                   ' (default)')
 @click_log.simple_verbosity_option(logger)
 def main(input_file, output_directory, maximum_observations,
          movingaverage_window):
@@ -77,6 +78,13 @@ def main(input_file, output_directory, maximum_observations,
         logname = 'default'
     logger.debug('Found logname {}.'.format(logname))
 
+    # Get experiment label
+    experiment_labels = df.label.unique()
+    if len(experiment_labels) != 1:
+        logger.warning('The uniqueness of the label is not 1!')
+    exp_label = experiment_labels[0]
+    logger.debug('experiment label={}'.format(exp_label))
+
     # Find out number of cores
     cores_list = df.cores.unique()
     if len(cores_list) != 1:
@@ -96,12 +104,6 @@ def main(input_file, output_directory, maximum_observations,
         logger.warning('Length of config string is not equal number of cores!')
     logger.debug('config={}'.format(config))
 
-    dassign_list = df.dassign.unique()
-    if len(dassign_list) != 1:
-        logger.warning('The uniqueness of the dassign column values is not 1!')
-    dassign = remove_quotes(dassign_list[0])
-    logger.debug('dassign={}'.format(dassign))
-
     pattern_list = df.pattern.unique()
     if len(pattern_list) != 1:
         logger.warning('The uniqueness of the pattern column values is not 1!')
@@ -111,8 +113,17 @@ def main(input_file, output_directory, maximum_observations,
     benchmarks = [benchmark_list[int(b)-1] for b in config]
     logger.debug('benchmarks={}'.format(benchmarks))
 
-    plt.figure(figsize=[10, 5])
-    plt.grid(True)
+    fig, ax = plt.subplots(cores, 1, sharey=True)
+    left = 0.145  # the left side of the subplots of the figure
+    right = 0.95  # the right side of the subplots of the figure
+    bottom = 0.15 # the bottom of the subplots of the figure
+    top = 0.9     # the top of the subplots of the figure
+    wspace = 0.3  # the amount of width reserved for space between subplots,
+                  # expressed as a fraction of the average axis width
+    hspace = 0.35 # the amount of height reserved for space between subplots,
+                  # expressed as a fraction of the average axis height
+    fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top,
+                        wspace=wspace, hspace=hspace)
     for corenum in range(cores):
         dfcore = df.loc[df['core'] == corenum]
         dfcore = dfcore.set_index(['iteration'])
@@ -125,14 +136,15 @@ def main(input_file, output_directory, maximum_observations,
             label = ''
             field2plot = 'cycles'
         label += 'core{} - {}'.format(corenum, benchmarks[corenum])
-        plt.xlabel('Iteration')
-        plt.ylabel('Number of cycles')
-        plt.plot(dfcore[field2plot], label=label)
-    plt.legend(loc=1)
+        ax[corenum].set_ylabel('Cycles')
+        ax[corenum].plot(dfcore.index, dfcore[field2plot], label=label)
+        ax[corenum].legend(loc=1)
+        ax[corenum].grid(True)
+    ax[0].set_title(exp_label)
+    ax[cores-1].set_xlabel('Iteration')
 
     output_filename = 'cycles{}-{}-'.format('data', logname)
     output_filename += '{}core-config{}-'.format(cores, config)
-    output_filename += '{}{}-'.format('dassign', dassign)
     output_filename += '{}{}.png'.format('pattern', pattern)
     logger.debug('output_filename={}'.format(output_filename))
     outfile = join(output_directory, output_filename)

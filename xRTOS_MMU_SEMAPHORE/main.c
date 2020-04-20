@@ -51,6 +51,8 @@
 #define DATA_ASSIGN_CORE3 3
 #define DATA_ASSIGN_STRING "dassign: '0123'"
 
+#define EXP_LABEL "DEFAULT"
+
 /**
  * If the following macro with name BENCHMARK_CONFIG_M4 was
  * specified on the command line, then we know the include
@@ -294,8 +296,8 @@ void core0(void* pParam) {
 		TextOut(Dc, 20, 80, &buf[0], strlen(&buf[0]));
 
 		log_info(corenum, buf,
-				 "%s %s %s cores: %d Core 0 Cycle count: %12u iteration: %u offset: %d\n\r",
-				 CONFIG_STRING, BENCH_STRING_CORE0, DATA_ASSIGN_STRING, NR_OF_CORES,
+				 "%s %s %s %s cores: %d Core 0 Cycle count: %12u iteration: %u offset: %d\n\r",
+				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE0, DATA_ASSIGN_STRING, NR_OF_CORES,
 				 time, iter++, offset);
 	}
 }
@@ -355,8 +357,8 @@ void core1(void* pParam) {
 		TextOut(Dc, 20, 180, &buf[0], strlen(&buf[0]));
 
 		log_info(corenum, buf,
-				 "%s %s %s cores: %d Core 1 Cycle count: %12u iteration: %u offset: %d\n\r",
-				 CONFIG_STRING, BENCH_STRING_CORE1, DATA_ASSIGN_STRING, NR_OF_CORES,
+				 "%s %s %s %s cores: %d Core 1 Cycle count: %12u iteration: %u offset: %d\n\r",
+				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE1, DATA_ASSIGN_STRING, NR_OF_CORES,
 				 time, iter++, offset);
 
 		if (iter % 2000 == 0)
@@ -419,8 +421,8 @@ void core2(void* pParam) {
 		TextOut(Dc, 20, 280, &buf[0], strlen(&buf[0]));
 
 		log_info(corenum, buf,
-				 "%s %s %s cores: %d Core 2 Cycle count: %12u iteration: %u offset: %d\n\r",
-				 CONFIG_STRING, BENCH_STRING_CORE2, DATA_ASSIGN_STRING, NR_OF_CORES,
+				 "%s %s %s %s cores: %d Core 2 Cycle count: %12u iteration: %u offset: %d\n\r",
+				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE2, DATA_ASSIGN_STRING, NR_OF_CORES,
 				 time, iter++, offset);
 
 		if (iter % 2000 == 0)
@@ -484,8 +486,8 @@ void core3(void* pParam) {
 		TextOut(Dc, 20, 380, &buf[0], strlen(&buf[0]));
 
 		log_info(corenum, buf,
-				 "%s %s %s cores: %d Core 3 Cycle count: %12u iteration: %u offset: %d\n\r",
-				 CONFIG_STRING, BENCH_STRING_CORE3, DATA_ASSIGN_STRING, NR_OF_CORES,
+				 "%s %s %s %s cores: %d Core 3 Cycle count: %12u iteration: %u offset: %d\n\r",
+				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE3, DATA_ASSIGN_STRING, NR_OF_CORES,
 				 time, iter++, offset);
 
 		if (iter % 2000 == 0)
