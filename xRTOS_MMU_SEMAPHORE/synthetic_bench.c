@@ -9,45 +9,49 @@
 #include <stdlib.h>
 #include "synthetic_bench.h"
 
-#include "random_sets.h"
-
 void array_access_linear(volatile bigstruct_t* data)
 {
+	volatile int sum = 0;
 	if (data != NULL) {
 		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			data[i].id;
+			sum += data[i].id;
 		}
 	}
 }
 
-void array_access_randomize(volatile int* idx, int corenum, int iter)
+void array_write_linear(volatile bigstruct_t* data)
 {
-	int mysetidx = (iter * 4 + corenum) % MAX_SETS;
+	if (data != NULL) {
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			data[i].id = 0xff;
+		}
+	}
+}
+
+void array_access_randomize(volatile int* idx, int corenum)
+{
+	int seed = corenum + 1;
+	srand(seed);
 	for (int i=0; i<SYNBENCH_DATASIZE; i++) {
-		idx[i] = random_set[mysetidx][i];
+		idx[i] = rand() % SYNBENCH_DATASIZE;
 	}
 }
 
 void array_access_random(volatile bigstruct_t* data, volatile int* idx)
 {
+	volatile int sum = 0;
 	if (data != NULL && idx != NULL) {
 		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			data[idx[i]].id;
+			sum += data[idx[i]].id;
 		}
 	}
 }
 
 void array_write_random(volatile bigstruct_t* data, volatile int* idx)
 {
-	static int seed;
-	srand(++seed);
-
 	if (data != NULL && idx != NULL) {
 		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			data[idx[i]].id = i;
-			for (int j=0; j<BIGSTRUCT_DATASIZE; ++j) {
-				data[idx[i]].data[j] = rand();
-			}
+			data[idx[i]].id = 0xff;
 		}
 	}
 }

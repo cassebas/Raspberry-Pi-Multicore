@@ -9,8 +9,9 @@ changecom(/*,*/)dnl
  * 1: mälardalen bsort 100
  * 2: mälardalen edn
  * 3: linear array access
- * 4: random array access
- * 5: random array write
+ * 4: linear array write
+ * 5: random array access
+ * 6: random array write
  *
  * The BENCH_CONFIG definition prescribes the specific benchmarks running
  * on the specific cores. If only one benchmark runs on multiple cores, the
@@ -23,8 +24,8 @@ define(`forloop', `pushdef(`$1', `$2')_forloop($@)popdef(`$1')')
 define(`_forloop',
 `$4`'ifelse($1, `$3', `', `define(`$1', incr($1))$0($@)')')
 divert`'dnl
-/* Default number of benchmarks is 4 (but can be altered on the m4-cmdline) */
-define(nr_of_benchmarks, 5)dnl
+/* Default number of benchmarks is 6 (but can be altered on the m4-cmdline) */
+define(nr_of_benchmarks, 6)dnl
 /* Default configuration of benchmarks is '123' (but can be altered on the m4-cmdline) */
 define(config, `123')dnl
 /* Default data assignment is '0123' (but can be altered on the m4-cmdline) */
@@ -58,22 +59,25 @@ dnl
 define(bench_name1, malardalen_bsort100)dnl
 define(bench_name2, malardalen_edn)dnl
 define(bench_name3, linear_array_access)dnl
-define(bench_name4, random_array_access)dnl
-define(bench_name5, random_array_write)dnl
+define(bench_name4, linear_array_write)dnl
+define(bench_name5, random_array_access)dnl
+define(bench_name6, random_array_write)dnl
 define(lookup_name, bench_name$1)dnl
 
 define(bench_arg1, Array$1)dnl
 define(bench_arg2)dnl
 define(bench_arg3, mydata$1)dnl
-define(bench_arg4, `mydata$1, myrandidx$1')dnl
+define(bench_arg4, mydata$1)dnl
 define(bench_arg5, `mydata$1, myrandidx$1')dnl
+define(bench_arg6, `mydata$1, myrandidx$1')dnl
 define(lookup_arg, bench_arg$1($2))dnl
 
 define(do_bench1, bsort100_BubbleSort(BENCH_ARG_CORE`$1');)dnl
 define(do_bench2, edn_Calculate();)dnl
 define(do_bench3, array_access_linear(BENCH_ARG_CORE`$1');)dnl
-define(do_bench4, array_access_random(BENCH_ARG_CORE`$1');)dnl
-define(do_bench5, array_write_random(BENCH_ARG_CORE`$1');)dnl
+define(do_bench4, array_write_linear(BENCH_ARG_CORE`$1');)dnl
+define(do_bench5, array_access_random(BENCH_ARG_CORE`$1');)dnl
+define(do_bench6, array_write_random(BENCH_ARG_CORE`$1');)dnl
 define(lookup_bench, do_bench$1($2))dnl
 /**
  * Macro for generation of the defines that describe the

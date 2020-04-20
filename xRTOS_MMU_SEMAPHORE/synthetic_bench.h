@@ -8,10 +8,15 @@
 #ifndef SYNTHETIC_BENCH_H
 #define SYNTHETIC_BENCH_H
 
-#define MAX_SYNBENCH_DATASIZE 450
-#define SYNBENCH_DATASIZE 450
-
-#define BIGSTRUCT_DATASIZE 511
+/**
+ * We want to use a data structure that consists of more than
+ * 512KB (size of L2 cache). We'll use 10,240 arrays of 64 bytes
+ * large. The 64 bytes is chosen because we want to touch as
+ * many cache lines as possible, with a jump of 64 bytes each
+ * iteration, we try to fill the L2 as soon as possible.
+ */
+#define SYNBENCH_DATASIZE 10240
+#define BIGSTRUCT_DATASIZE 63 // line size 64 bytes
 /**
 Synthetic benchmark inspired by the paper `Predictable and Efficient Virtual Addressing for
  Safety-Critical Real-Time Systems', written by Bennet and Audsley (2001).
@@ -27,7 +32,8 @@ typedef struct bigstruct {
 
 
 void array_access_linear(volatile bigstruct_t* data);
-void array_access_randomize(volatile int* idx, int corenum, int iter);
+void array_write_linear(volatile bigstruct_t* data);
+void array_access_randomize(volatile int* idx, int corenum);
 void array_access_random(volatile bigstruct_t* data, volatile int* idx);
 void array_write_random(volatile bigstruct_t* data, volatile int* idx);
 void array_access_alternate(volatile bigstruct_t* data);

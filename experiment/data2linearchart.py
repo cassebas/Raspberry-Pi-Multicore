@@ -15,6 +15,7 @@ click_log.basic_config(logger)
 benchmark_list = ['malardalen bsort100',
                   'malardalen edn',
                   'linear array access',
+                  'linear array write',
                   'random array access',
                   'random array write']
 

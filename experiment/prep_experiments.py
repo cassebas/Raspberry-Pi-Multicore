@@ -21,11 +21,6 @@ import sys
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
 
-benchmarks = ['malardalenbsort100',
-              'malardalenedn',
-              'lineararrayaccess',
-              'randomarrayaccess']
-
 
 class Fields(Enum):
     CONFIG = 2

@@ -6,8 +6,9 @@ changecom(%)dnl
 % 1: mälardalen bsort 100
 % 2: mälardalen edn
 % 3: linear array access
-% 4: random array access
-% 5: random array write
+% 4: linear array write
+% 5: random array access
+% 6: random array write
 %
 % This m4 macro file expects the following 4 parameters:
 %  -Dfilename: filename of the CSV file containing the data
@@ -20,12 +21,13 @@ define(`forloop', `pushdef(`$1', `$2')_forloop($@)popdef(`$1')')
 define(`_forloop',
 `$4`'ifelse($1, `$3', `', `define(`$1', incr($1))$0($@)')')
 dnl
-define(nr_of_benchmarks, 4)dnl
+define(nr_of_benchmarks, 6)dnl
 define(bench_name1, malardalenbsort100)dnl
 define(bench_name2, malardalenedn)dnl
 define(bench_name3, lineararrayaccess)dnl
-define(bench_name4, randomarrayaccess)dnl
-define(bench_name5, randomarraywrite)dnl
+define(bench_name4, lineararraywrite)dnl
+define(bench_name5, randomarrayaccess)dnl
+define(bench_name6, randomarraywrite)dnl
 define(bench_name, undefined)
 dnl
 dnl % These are the default parameters:

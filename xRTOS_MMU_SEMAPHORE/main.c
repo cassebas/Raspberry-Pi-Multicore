@@ -32,8 +32,7 @@
 #define BENCH_STRING_CORE0 "benchmark: malardalen_bsort100"
 #define BENCH_STRING_CORE1 "benchmark: malardalen_edn"
 #define BENCH_STRING_CORE2 "benchmark: linear_array_access"
-#define BENCH_STRING_CORE3 "benchmark: random_array_access"
-#define BENCH_STRING_CORE4 "benchmark: random_array_write"
+#define BENCH_STRING_CORE3 ""
 
 #define BENCH_ARG_CORE0 Array1
 #define BENCH_ARG_CORE2 mydata3
@@ -42,7 +41,6 @@
 #define DO_BENCH_CORE1 edn_Calculate();
 #define DO_BENCH_CORE2 array_access_linear(BENCH_ARG_CORE2);
 #define DO_BENCH_CORE3
-#define DO_BENCH_CORE4
 
 /* The random data sets can be assigned to different cores,
    to make sure that the data cannot be a factor in the measured
@@ -88,34 +86,34 @@ int Array3[MAXDIM];
 int Array4[MAXDIM];
 #endif
 
-#ifdef BENCH_CONFIG_CORE0_3
+#if defined BENCH_CONFIG_CORE0_3 || defined BENCH_CONFIG_CORE0_4
 volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
 #else
-	#if defined BENCH_CONFIG_CORE0_4 || defined BENCH_CONFIG_CORE0_5
+	#if defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
 	volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
 	volatile int myrandidx1[SYNBENCH_DATASIZE];
 	#endif
 #endif
-#ifdef BENCH_CONFIG_CORE1_3
+#if defined BENCH_CONFIG_CORE1_3 || defined BENCH_CONFIG_CORE1_4
 volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
 #else
-	#if defined BENCH_CONFIG_CORE1_4 || defined BENCH_CONFIG_CORE1_5
+	#if defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
 	volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
 	volatile int myrandidx2[SYNBENCH_DATASIZE];
 	#endif
 #endif
-#ifdef BENCH_CONFIG_CORE2_3
+#if defined BENCH_CONFIG_CORE2_3 || defined BENCH_CONFIG_CORE2_4
 volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
 #else
-	#if defined BENCH_CONFIG_CORE2_4 || defined BENCH_CONFIG_CORE2_5
+	#if defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
 	volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
 	volatile int myrandidx3[SYNBENCH_DATASIZE];
 	#endif
 #endif
-#ifdef BENCH_CONFIG_CORE3_3
+#if defined BENCH_CONFIG_CORE3_3 || defined BENCH_CONFIG_CORE3_4
 volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
 #else
-	#if defined BENCH_CONFIG_CORE3_4 || defined BENCH_CONFIG_CORE3_5
+	#if defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
 	volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
 	volatile int myrandidx4[SYNBENCH_DATASIZE];
 	#endif
@@ -259,8 +257,8 @@ void core0(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array1);
 #endif
-#if defined BENCH_CONFIG_CORE0_4 || defined BENCH_CONFIG_CORE0_5
-		array_access_randomize(myrandidx1, DATA_ASSIGN_CORE0, iter);
+#if defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
+		array_access_randomize(myrandidx1, DATA_ASSIGN_CORE0);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -320,8 +318,8 @@ void core1(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array2);
 #endif
-#if defined BENCH_CONFIG_CORE1_4 || defined BENCH_CONFIG_CORE1_5
-		array_access_randomize(myrandidx2, DATA_ASSIGN_CORE1, iter);
+#if defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
+		array_access_randomize(myrandidx2, DATA_ASSIGN_CORE1);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -384,8 +382,8 @@ void core2(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array3);
 #endif
-#if defined BENCH_CONFIG_CORE2_4 || defined BENCH_CONFIG_CORE2_5
-		array_access_randomize(myrandidx3, DATA_ASSIGN_CORE2, iter);
+#if defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
+		array_access_randomize(myrandidx3, DATA_ASSIGN_CORE2);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -448,8 +446,8 @@ void core3(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array4);
 #endif
-#if defined BENCH_CONFIG_CORE3_4 || defined BENCH_CONFIG_CORE3_5
-		array_access_randomize(myrandidx4, DATA_ASSIGN_CORE3, iter);
+#if defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
+		array_access_randomize(myrandidx4, DATA_ASSIGN_CORE3);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
