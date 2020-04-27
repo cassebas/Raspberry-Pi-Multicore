@@ -26,18 +26,52 @@ infiles = glob.glob('output/*.csv')
 infiles
 
 # +
+pmu_event_names = {
+    3: 'L1D_CACHE_REFILL',
+    4: 'L1D_CACHE',
+    16: 'BR_MIS_PRED',
+    18: 'BR_PRED',
+    19: 'MEM_ACCESS',
+    21: 'L1D_CACHE_WB',
+    22: 'L2D_CACHE',
+    23: 'L2D_CACHE_REFILL',
+    24: 'L2D_CACHE_WB',
+    25: 'BUS_ACCESS',
+}
+
+def event_number2name(number):
+    if number in pmu_event_names.keys():
+        return pmu_event_names[number]
+    else:
+        return ""
+#print(cycles_task['cycles'].describe().apply(lambda x: format(x, 'f')))
+
+
+# -
+
+f = 'output/testlog-20200427-events.csv'
+df = pd.read_csv(f)
+df['eventname'] = df['eventtype'].apply(event_number2name)
+df_events = df.set_index(keys=['core', 'iteration'])
+#df_events = df.pivot(index=['core', 'iteration'],
+#                     columns=['eventname'],
+#                     values=['eventname', 'eventcount'])
+df_events
+
+# +
 f = 'output/testlog.csv'
 df = pd.read_csv(f)
-df = df.set_index(keys=['cores', 'configuration', 'dassign', 'pattern'])
-df.sort_index(inplace=True)
-df.dropna(axis=0, how='all', inplace=True)
-df.dropna(axis=1, how='all', inplace=True)
+#df['cores'] = df['core'].astype('int32')
+df2 = df.set_index(keys=['label', 'cores', 'configuration', 'pattern'])
+df2.sort_index(inplace=True)
+df2.dropna(axis=0, how='all', inplace=True)
+df2.dropna(axis=1, how='all', inplace=True)
 
-df.index.get_level_values(0) # number of cores
-df.index.get_level_values(1) # configuration string
-df.index.get_level_values(2) # data assignment string
-df.index.get_level_values(3) # alignment pattern string
-df
+df2.index.get_level_values(0) # label
+df2.index.get_level_values(1) # number of cores
+df2.index.get_level_values(2) # configuration string
+df2.index.get_level_values(3) # alignment pattern string
+df2
 
 # +
 df = pd.read_csv('example_linearcharts/cyclesdata-default-4core-config4455-dassign0123-pattern0000.csv',

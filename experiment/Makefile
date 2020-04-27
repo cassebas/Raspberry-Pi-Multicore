@@ -1,7 +1,8 @@
 # Convert log files to CSV with observations, 1 line per core
 LOG_DIR=output
 TXT_LOGS=$(shell find $(LOG_DIR) -name "*.log")
-CSV_LOGS=$(patsubst %.log,%.csv,$(TXT_LOGS))
+CSV_CYCLE_LOGS=$(patsubst %.log,%-cycles.csv,$(TXT_LOGS))
+CSV_EVENT_LOGS=$(patsubst %.log,%-events.csv,$(TXT_LOGS))
 DATA_DIR=report/data
 IMG_DIR=report/img
 
@@ -33,19 +34,24 @@ all: csv_summaries csv_data
 # $(CSV_SUMMARIES) cannot be a target, because the exact .csv files with
 # summary data aren't known beforehand. The python scripts extracts them
 # from the data contained in the .csv log files.
-csv_summaries: $(CSV_LOGS)
-	$(foreach csv_file,$(CSV_LOGS),$(call LOG2_SUMMARIES,$(csv_file)))
+csv_summaries: $(CSV_CYCLE_LOGS)
+	$(foreach csv_file,$(CSV_CYCLE_LOGS),$(call LOG2_SUMMARIES,$(csv_file)))
 
 # $(CSV_DATA) cannot be a target, because the exact .csv files with
 # the data aren't known beforehand. The python scripts extracts them
 # from the data contained in the .csv log files.
-csv_data: $(CSV_LOGS)
-	$(foreach csv_file,$(CSV_LOGS),$(call LOG2_DATA,$(csv_file)))
+csv_data: $(CSV_CYCLE_LOGS) $(CSV_EVENT_LOGS)
+	$(foreach csv_file,$(CSV_CYCLE_LOGS),$(call LOG2_DATA,$(csv_file)))
 
-# Implicit target: simple 1 to 1 translation for .log to .csv using AWK
-$(CSV_LOGS): $(TXT_LOGS)
-	$(eval LOG := $(patsubst %.csv,%.log,$@))
-	awk -f log2csv.awk $(LOG) > $@
+# Implicit target: simple 1 to 1 translation for -cycles.log to .csv using AWK
+$(CSV_CYCLE_LOGS): $(TXT_LOGS)
+	$(eval CYCLE_LOG := $(patsubst %-cycles.csv,%.log,$@))
+	awk -f log2csv-cyclecount.awk $(CYCLE_LOG) > $@
+
+# Implicit target: simple 1 to 1 translation for -events.log to .csv using AWK
+$(CSV_EVENT_LOGS): $(TXT_LOGS)
+	$(eval EVENT_LOG := $(patsubst %-events.csv,%.log,$@))
+	awk -f log2csv-eventcount.awk $(EVENT_LOG) > $@
 
 # This can be an implicit target, because all CSV_SUMMARIES are known by now
 # For each *.csv summary, a .tex file is generated with a pgfplot figure, that
@@ -82,7 +88,7 @@ png_data: $(PNG_DATA)
 # is to be included into a larger LaTeX file.
 $(PNG_DATA): $(CSV_DATA)
 	$(eval CSV := $(patsubst %.png,%.csv,$@))
-	python data2linearchart.py --input-file=$(CSV) --output-directory=$(IMG_DIR) --maximum-observations=250 --movingaverage-window=25
+	python data2linearchart.py --input-file=$(CSV) --output-directory=$(IMG_DIR) --maximum-observations=250 --movingaverage-window=0
 
 clean:
-	rm -f $(CSV_LOGS) $(CSV_DATA) $(CSV_SUMMARIES) $(TEX_SUMMARIES) $(TEX_SUMMARIES_COMBINED) $(PNG_DATA_CLEAN)
+	rm -f $(CSV_CYCLE_LOGS) $(CSV_EVENT_LOGS) $(CSV_DATA) $(CSV_SUMMARIES) $(TEX_SUMMARIES) $(TEX_SUMMARIES_COMBINED) $(PNG_DATA_CLEAN)

@@ -94,6 +94,20 @@ def main(input_file, output_directory, maximum_observations,
     rowcount = maximum_observations * cores
     df = df.iloc[:rowcount, ]
 
+    # Get the event types (now hardcoded 2 events present in the data)
+    event1_list = df.event1_type.unique()
+    if len(event1_list) != 1:
+        logger.warning('The uniqueness of the event type 1 is not 1!')
+    event1_type = event1_list[0]
+    logger.debug('event1_type={}'.format(event1_type))
+
+    # Get the event types (now hardcoded 2 events present in the data)
+    event2_list = df.event2_type.unique()
+    if len(event2_list) != 1:
+        logger.warning('The uniqueness of the event type 2 is not 1!')
+    event2_type = event2_list[0]
+    logger.debug('event2_type={}'.format(event2_type))
+
     configuration_list = df.configuration.unique()
     if len(configuration_list) != 1:
         logger.warning('The uniqueness of the number of configurations ' +
@@ -113,14 +127,14 @@ def main(input_file, output_directory, maximum_observations,
     benchmarks = [benchmark_list[int(b)-1] for b in config]
     logger.debug('benchmarks={}'.format(benchmarks))
 
-    fig, ax = plt.subplots(cores, 1, sharey=True)
+    fig, ax = plt.subplots(cores, 1, sharey=True, figsize=(20,15))
     left = 0.145  # the left side of the subplots of the figure
-    right = 0.95  # the right side of the subplots of the figure
+    right = 0.92  # the right side of the subplots of the figure
     bottom = 0.15 # the bottom of the subplots of the figure
     top = 0.9     # the top of the subplots of the figure
     wspace = 0.3  # the amount of width reserved for space between subplots,
                   # expressed as a fraction of the average axis width
-    hspace = 0.35 # the amount of height reserved for space between subplots,
+    hspace = 0.5  # the amount of height reserved for space between subplots,
                   # expressed as a fraction of the average axis height
     fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top,
                         wspace=wspace, hspace=hspace)
@@ -137,9 +151,20 @@ def main(input_file, output_directory, maximum_observations,
             field2plot = 'cycles'
         label += 'core{} - {}'.format(corenum, benchmarks[corenum])
         ax[corenum].set_ylabel('Cycles')
-        ax[corenum].plot(dfcore.index, dfcore[field2plot], label=label)
+        ax[corenum].plot(dfcore.index, dfcore[field2plot], label=label,
+                         color='blue')
         ax[corenum].legend(loc=1)
         ax[corenum].grid(True)
+        # plot the two event types that were also measured
+        ax2 = ax[corenum].twinx()
+        ax2.plot(dfcore.index, dfcore['event1_value'], color='green',
+                 label=event1_type)
+        ax2.set_ylabel(event1_type)
+        ax2.legend(loc=0)
+        ax2.plot(dfcore.index, dfcore['event2_value'], color='red',
+                 label=event2_type)
+        ax2.set_ylabel(event2_type)
+        ax2.legend(loc=0)
     ax[0].set_title(exp_label)
     ax[cores-1].set_xlabel('Iteration')
 

@@ -1,7 +1,7 @@
 import click
 import click_log
 import logging
-from os.path import basename, isfile, isdir, join
+from os.path import basename, isfile, isdir, join, dirname
 import numpy as np
 import pandas as pd
 import re
@@ -9,6 +9,20 @@ import re
 
 logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
+
+
+pmu_event_names = {
+    3: 'L1D_CACHE_REFILL',
+    4: 'L1D_CACHE',
+    16: 'BR_MIS_PRED',
+    18: 'BR_PRED',
+    19: 'MEM_ACCESS',
+    21: 'L1D_CACHE_WB',
+    22: 'L2D_CACHE',
+    23: 'L2D_CACHE_REFILL',
+    24: 'L2D_CACHE_WB',
+    25: 'BUS_ACCESS',
+}
 
 
 def remove_quotes(quoted):
@@ -101,6 +115,15 @@ def main(input_file, output_directory, output_mode):
     # These resulting CSV files are read from within LaTeX.
     #    (Note: 'cores' == nr of cores,  'core' == core number)
     if output_mode == 'data':
+        # Let's see if there's also an event count logfile
+        # Our filename must end with -cycles.csv
+        regex = re.compile('^(.*)-cycles.csv$')
+        m = regex.match(basename(input_file))
+        if (m):
+            event_file = join(dirname(input_file),
+                              m.group(1) + '-events.csv')
+            if isfile(event_file):
+                df_events = pd.read_csv(input_file)
         df = df.set_index(keys=['label', 'cores', 'configuration', 'pattern'])
     elif output_mode == 'summary':
         df = pd.pivot_table(df,

@@ -28,8 +28,10 @@ divert`'dnl
 define(nr_of_benchmarks, 6)dnl
 /* Default configuration of benchmarks is '123' (but can be altered on the m4-cmdline) */
 define(config, `123')dnl
-/* Default data assignment is '0123' (but can be altered on the m4-cmdline) */
-define(dassign, `0123')dnl
+/* Default number of PMUs is 4 (but can be altered on the m4-cmdline) */
+define(nr_of_pmus, 4)dnl
+/* Default event count configuration is '01' */
+define(eventscore0, `01')dnl
 define(bench_string_core_undef, `
 #ifdef BENCH_STRING_CORE`$1'
 #undef BENCH_STRING_CORE`$1'
@@ -46,12 +48,13 @@ define(do_bench_core_undef, `
 #ifdef DO_BENCH_CORE`$1'
 #undef DO_BENCH_CORE`$1'
 #endif')dnl
-define(data_assign_core_undef, `
-#ifdef DATA_ASSIGN_CORE`$1'
-#undef DATA_ASSIGN_CORE`$1'
+define(pmu_event_core_undef, `
+#ifdef PMU_EVENT_CORE`$1'
+#undef PMU_EVENT_CORE`$1'
 #endif')dnl
 define(meta1, `forloop(`i', `0', `3', `$1(i)')')dnl
 define(meta2, `forloop(`i', `0', `3', `forloop(`j', `1', nr_of_benchmarks, `$1(i`_'j)')')')dnl
+define(meta2b, `forloop(`i', `0', `3', `forloop(`j', `1', nr_of_pmus, `$1(i`_'j)')')')dnl
 dnl
 /**
  * Benchmark name macros for lookup function
@@ -103,6 +106,18 @@ define(do_bench_core_def, `
 define(do_bench_core_empty_def, `
 #define DO_BENCH_CORE`$1' $2')dnl
 dnl
+define(pmu_event0, `(PMU_L1D_CACHE_REFILL)')
+define(pmu_event1, `(PMU_L1D_CACHE)')
+define(pmu_event2, `(PMU_BR_MIS_PRED)')
+define(pmu_event3, `(PMU_BR_PRED)')
+define(pmu_event4, `(PMU_MEM_ACCESS)')
+define(pmu_event5, `(PMU_L1D_CACHE_WB)')
+define(pmu_event6, `(PMU_L2D_CACHE)')
+define(pmu_event7, `(PMU_L2D_CACHE_REFILL)')
+define(pmu_event8, `(PMU_L1D_CACHE_WB)')
+define(pmu_event9, `(PMU_BUS_ACCESS)')
+define(lookup_pmu, pmu_event$1)
+dnl
 define(meta3, `forloop(`i', `0', eval(len($1) - 1), `$2(i)')')dnl
 define(meta4, `forloop(`i', len($1), 3, `$2(i)')')dnl
 divert(0)dnl
@@ -110,8 +125,8 @@ dnl
 meta1(`bench_string_core_undef')dnl
 meta1(`bench_arg_core_undef')dnl
 meta1(`do_bench_core_undef')dnl
-meta1(`data_assign_core_undef')dnl
 meta2(`bench_config_core_undef')dnl
+meta2b(`pmu_event_core_undef')dnl
 meta3(`config', `bench_config_core_def')dnl
 dnl
 meta3(`config', `bench_string_core_def')dnl
@@ -134,20 +149,20 @@ define(nr_of_cores, 4)
 #endif
 #define NR_OF_CORES len(config)
 
-/* The random data sets can be assigned to different cores,
-   to make sure that the data cannot be a factor in the measured
-   cycles. */dnl
-dnl
-define(data_assignment_core_def, `
-#define DATA_ASSIGN_CORE`$1' `'substr(dassign, $1, 1)')dnl
-dnl
-meta3(`dassign', `data_assignment_core_def')
 
-#ifdef DATA_ASSIGN_STRING
-#undef DATA_ASSIGN_STRING
-#endif
-#define DATA_ASSIGN_STRING "`dassign': 'dassign'"dnl
-
+/* The PMU event count configuration */dnl
+define(pmu_core_def, `
+#define PMU_EVENT_CORE`$1'_`'eval($2+1)`' `'lookup_pmu(substr(pmu_core$1, $2, 1))')dnl
+dnl
+define(pmu_core_def0, `pmu_core_def(0, $1)')dnl
+define(pmu_core_def1, `pmu_core_def(1, $1)')dnl
+define(pmu_core_def2, `pmu_core_def(2, $1)')dnl
+define(pmu_core_def3, `pmu_core_def(3, $1)')dnl
+ifdef(`pmu_core0', meta3(`pmu_core0', `pmu_core_def0'))
+ifdef(`pmu_core1', meta3(`pmu_core1', `pmu_core_def1'))
+ifdef(`pmu_core2', meta3(`pmu_core2', `pmu_core_def2'))
+ifdef(`pmu_core3', meta3(`pmu_core3', `pmu_core_def3'))
+dnl
 dnl maybe redefine the size of the array that is used in the
 dnl synthetic benchmarks.
 ifdef(`synbench_datasize', `', `define(synbench_datasize, `10240')')
