@@ -429,7 +429,7 @@ void core0(void* pParam) {
 		 * The first log_info statement here doesn't actually serve
 		 * a purpose, other than preventing the printed event1 being
 		 * zero(!). Beats me. */
-		log_info(corenum, buf, "%#02x\n\r", PMU_EVENT_CORE0_1);
+		log_info(corenum, buf, "%#02x\n\r", 0x03);
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d event1_number: %#02x event1_count: %d iteration: %d\n\r",
 				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
