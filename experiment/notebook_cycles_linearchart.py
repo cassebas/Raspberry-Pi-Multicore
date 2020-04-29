@@ -49,18 +49,19 @@ def event_number2name(number):
 
 # -
 
-f = 'output/testlog-20200427-events.csv'
-df = pd.read_csv(f)
-df['eventname'] = df['eventtype'].apply(event_number2name)
-df_events = df.set_index(keys=['core', 'iteration'])
-#df_events = df.pivot(index=['core', 'iteration'],
-#                     columns=['eventname'],
-#                     values=['eventname', 'eventcount'])
+f = 'report/data/eventsdata-TEST1-4core-config4433-pattern0000.csv'
+df = pd.read_csv(f, sep=' ')
+df['eventname'] = df['eventtype'].apply(lambda x: int(x, 16)).apply(event_number2name)
+df = df.drop(['eventtype'], axis=1)
+df_events = df.set_index(keys=['label', 'cores', 'configuration', 'pattern'])
+df_events.sort_index(inplace=True)
+set(df_events.index.get_level_values(0))
 df_events
+#.set_index(keys=['core', 'eventname'])
 
 # +
-f = 'output/testlog.csv'
-df = pd.read_csv(f)
+f = 'report/data/cyclesdata-TEST1-4core-config4433-pattern0000.csv'
+df = pd.read_csv(f, sep=' ')
 #df['cores'] = df['core'].astype('int32')
 df2 = df.set_index(keys=['label', 'cores', 'configuration', 'pattern'])
 df2.sort_index(inplace=True)

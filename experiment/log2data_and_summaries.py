@@ -32,7 +32,7 @@ def remove_quotes(quoted):
     return quoted
 
 
-def export_dataframe(df, output_mode, axis0, axis1, output_directory):
+def export_dataframe(df, output_mode, metric, axis0, axis1, output_directory):
     # axis0 is a tuple containing:
     #   output_mode==summary
     #     (label, cores, config, slice(None))
@@ -51,7 +51,7 @@ def export_dataframe(df, output_mode, axis0, axis1, output_directory):
             config = remove_quotes(config)
             pattern = remove_quotes(pattern)
 
-            output_filename = 'cycles{}-{}-'.format(output_mode, label)
+            output_filename = '{}{}-{}-'.format(metric, output_mode, label)
             output_filename += '{}core-config{}'.format(cores, config)
 
             if output_mode == 'data':
@@ -79,8 +79,12 @@ def export_dataframe(df, output_mode, axis0, axis1, output_directory):
 @click.option('--output-mode',
               default='data',
               help='Mode of the output, either data or summary.')
+@click.option('--metric',
+              default='cycles',
+              help='Metric contained in the logs, either cycles or events. ' +
+                   'The metric argument pertains to data output mode only.')
 @click_log.simple_verbosity_option(logger)
-def main(input_file, output_directory, output_mode):
+def main(input_file, output_directory, output_mode, metric):
     if not isfile(input_file):
         logger.error('Input file {}'.format(input_file) +
                      ' does not exist!')
@@ -96,17 +100,6 @@ def main(input_file, output_directory, output_mode):
     logger.info('Processing input file {}.'.format(input_file))
     df = pd.read_csv(input_file)
 
-    # Get the basename for the output files, a convention that is
-    # used to link input log CSV files to output summary CSV files.
-    # Pre condition for this to work: *all* log files must begin with /^log-/
-    regex = re.compile('^log-(.*).csv$')
-    m = regex.match(basename(input_file))
-    if (m):
-        logname = m.group(1)
-    else:
-        logname = 'default'
-    logger.debug('Found logname {}.'.format(logname))
-
     # Construct a pivot table:
     #  - benchmarks/core will be indexed as columns,
     #  - cores, configuration, dassign, pattern will be the index
@@ -115,17 +108,20 @@ def main(input_file, output_directory, output_mode):
     # These resulting CSV files are read from within LaTeX.
     #    (Note: 'cores' == nr of cores,  'core' == core number)
     if output_mode == 'data':
-        # Let's see if there's also an event count logfile
-        # Our filename must end with -cycles.csv
-        regex = re.compile('^(.*)-cycles.csv$')
-        m = regex.match(basename(input_file))
-        if (m):
-            event_file = join(dirname(input_file),
-                              m.group(1) + '-events.csv')
-            if isfile(event_file):
-                df_events = pd.read_csv(input_file)
+        if metric != 'cycles' and metric != 'events':
+            logger.error('Illegal metric for ' +
+                         'output mode {}'.format(output_mode))
+            logger.info('Exiting program due to error.')
+            exit(1)
+
         df = df.set_index(keys=['label', 'cores', 'configuration', 'pattern'])
     elif output_mode == 'summary':
+        if metric == 'events':
+            logger.error('Illegal metric for ' +
+                         'output mode {}'.format(output_mode))
+            logger.info('Exiting program due to error.')
+            exit(1)
+
         df = pd.pivot_table(df,
                             index=['label', 'cores', 'configuration',
                                    'pattern'],
@@ -165,13 +161,13 @@ def main(input_file, output_directory, output_mode):
 
                 if output_mode != 'data':
                     axis0 = (label, cores, config, slice(None))
-                    export_dataframe(df, output_mode, axis0, axis1,
+                    export_dataframe(df, output_mode, metric, axis0, axis1,
                                      output_directory)
                 else:  # output_mode == 'data':
                     for pattern in set(df.index.get_level_values(3)):
                         logger.debug('pattern={}'.format(pattern))
                         axis0 = (label, cores, config, pattern)
-                        export_dataframe(df, output_mode, axis0, axis1,
+                        export_dataframe(df, output_mode, metric, axis0, axis1,
                                          output_directory)
 
 
