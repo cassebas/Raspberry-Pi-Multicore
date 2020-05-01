@@ -97,7 +97,7 @@ png_data: $(PNG_DATA)
 # is to be included into a larger LaTeX file.
 $(PNG_DATA): $(CSV_DATA_CYCLES)
 	$(eval CSV := $(patsubst %.png,%.csv,$@))
-	python data2linearchart.py --input-file=$(CSV) --output-directory=$(IMG_DIR) --maximum-observations=250 --movingaverage-window=0
+	python data2linearchart.py --input-file=$(CSV) --output-directory=$(IMG_DIR) --maximum-observations=250 --movingaverage-window=0 --process-events=True
 
 clean:
 	rm -f $(CSV_CYCLE_LOGS) $(CSV_EVENT_LOGS) $(CSV_DATA_CYCLES) $(CSV_DATA_EVENTS) $(CSV_SUMMARIES) $(TEX_SUMMARIES) $(TEX_SUMMARIES_COMBINED) $(PNG_DATA_CLEAN)

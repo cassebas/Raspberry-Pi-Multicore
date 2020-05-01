@@ -163,14 +163,6 @@ ifdef(`pmu_core1', meta3(`pmu_core1', `pmu_core_def1'))
 ifdef(`pmu_core2', meta3(`pmu_core2', `pmu_core_def2'))
 ifdef(`pmu_core3', meta3(`pmu_core3', `pmu_core_def3'))
 dnl
-dnl maybe redefine the size of the array that is used in the
-dnl synthetic benchmarks.
-ifdef(`synbench_datasize', `', `define(synbench_datasize, `10240')')
-#ifdef SYNBENCH_DATASIZE
-#undef SYNBENCH_DATASIZE
-#define SYNBENCH_DATASIZE synbench_datasize
-#endif
-dnl
 dnl maybe use a label that is used by the data visualization scripts
 ifdef(`exp_label', `', `define(exp_label, `default')')
 #ifdef EXP_LABEL

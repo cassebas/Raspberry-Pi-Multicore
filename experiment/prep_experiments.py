@@ -23,12 +23,15 @@ click_log.basic_config(logger)
 
 
 class Fields(Enum):
-    EXP_LABEL = 1
-    CONFIG = 2
-    DASSIGN = 3
-    DISABLE_CACHE = 4
-    NO_CACHE_MGMT = 5
-    SB_DATASIZE = 6
+    CONFIG = 1
+    DISABLE_CACHE = 2
+    NO_CACHE_MGMT = 3
+    SB_DATASIZE = 4
+    EXP_LABEL = 5
+    PMU_CORE0 = 6
+    PMU_CORE1 = 7
+    PMU_CORE2 = 8
+    PMU_CORE3 = 9
 
 
 class Compile:
@@ -80,12 +83,16 @@ class Compile:
         self.myenv = dict(os.environ,
                           BENCHMARK_CONFIG='-DBENCHMARK_CONFIG_M4')
 
-    def set_compilation(self, config=None, dassign=None, label=None,
-                        datasize=None):
+    def set_compilation(self, config=None, label=None, datasize=None,
+                        pmu_cores=None, no_cache_mgmt=False):
         config_param = ''
-        dassign_param = ''
         label_param = ''
+        no_cache_mgmt_param = ''
         datasize_param = ''
+        pmu_core0_param = ''
+        pmu_core1_param = ''
+        pmu_core2_param = ''
+        pmu_core3_param = ''
         if config is not None:
             # The python process that runs m4 cannot handle a string
             # with quotes well, remove leading and trailing quotes.
@@ -94,25 +101,47 @@ class Compile:
             config = re.sub(r'\'$', '', config)
             config_param = '-Dconfig=' + config
             logger.debug('config={}'.format(config))
-        if dassign is not None:
-            # Same here, remove leading and trailing quotes.
-            logger.debug('dassign={}'.format(dassign))
-            dassign = re.sub(r'^\'', '', dassign)
-            dassign = re.sub(r'\'$', '', dassign)
-            dassign_param = '-Ddassign=' + dassign
-            logger.debug('dassign={}'.format(dassign))
         if label is not None:
             logger.debug('label={}'.format(label))
             label_param = '-Dexp_label={}'.format(label)
+        if no_cache_mgmt is True:
+            no_cache_mgmt_param = 'NO_CACHE_MGMT=-DNO_CACHE_MGMT'
         if datasize is not None:
             logger.debug('datasize={}'.format(datasize))
             datasize_param = '-Dsynbench_datasize={}'.format(datasize)
+        if pmu_cores is not None:
+            # if pmu_cores is not None, it must be a tuple of four
+            pmu0, pmu1, pmu2, pmu3 = pmu_cores
+            if not pd.isnull(pmu0):
+                pmu0 = re.sub(r'^\'', '', pmu0)
+                pmu0 = re.sub(r'\'$', '', pmu0)
+                pmu_core0_param = '-Dpmu_core0={}'.format(pmu0)
+                logger.debug('pmu0={}'.format(pmu0))
+            if not pd.isnull(pmu1):
+                pmu1 = re.sub(r'^\'', '', pmu1)
+                pmu1 = re.sub(r'\'$', '', pmu1)
+                pmu_core1_param = '-Dpmu_core1={}'.format(pmu1)
+                logger.debug('pmu1={}'.format(pmu1))
+            if not pd.isnull(pmu2):
+                pmu2 = re.sub(r'^\'', '', pmu2)
+                pmu2 = re.sub(r'\'$', '', pmu2)
+                pmu_core2_param = '-Dpmu_core2={}'.format(pmu2)
+                logger.debug('pmu2={}'.format(pmu2))
+            if not pd.isnull(pmu3):
+                pmu3 = re.sub(r'^\'', '', pmu3)
+                pmu3 = re.sub(r'\'$', '', pmu3)
+                pmu_core3_param = '-Dpmu_core3={}'.format(pmu3)
+                logger.debug('pmu3={}'.format(pmu3))
 
         self.makeprepcmd = ['m4',
                             config_param,
-                            dassign_param,
                             label_param,
+                            no_cache_mgmt_param,
                             datasize_param,
+                            pmu_core0_param,
+                            pmu_core1_param,
+                            pmu_core2_param,
+                            pmu_core3_param,
                             'benchmark_config.m4']
 
         logger.debug('makeprepcmd={}'.format(self.makeprepcmd))
@@ -154,12 +183,12 @@ class SerialThread(Thread):
 
 
 class Resetter(SerialThread):
-    def __init__(self, tty, log_processor):
+    def __init__(self, tty, log_processor, min_observations=100):
         super(Resetter, self).__init__(tty)
         self.log_processor = log_processor
         # Flag for main thread to detect move to next experiment
         self.next_experiment = False
-        self.min_observations = 250
+        self.min_observations = min_observations
         # timeout for not receiving data anymore (seconds)
         self.timeout = 60.0
         self.curtime = 0.0
@@ -187,6 +216,7 @@ class Resetter(SerialThread):
                         logger.info('Enough observations read.')
                         logger.debug('Setting next experiment flag to True.')
                         self.set_next_experiment(True)
+                        self.log_processor.set_init_state()
                         self.do_reset()
                 else:
                     # check for timeout
@@ -197,6 +227,7 @@ class Resetter(SerialThread):
                     if self.curtime > self.timeout:
                         logger.warning('Timeout reached.')
                         logger.debug('Setting reset flag to True.')
+                        self.log_processor.set_init_state()
                         self.do_reset()
             time.sleep(self.timeslice)
 
@@ -225,6 +256,8 @@ class LogProcessor(SerialThread):
         self.logfile = output_file
         self.filehandle = None
         self.connected = False
+        self.no_match = 0
+        self.max_no_match = 200
 
     # Overridden from Thread.run()
     def run(self):
@@ -246,6 +279,7 @@ class LogProcessor(SerialThread):
                         iteration = int(match.group(1))
                         if self.is_logical_iteration(iteration):
                             self.input_ok = True
+                            self.no_match = 0
                             logger.debug('Found iteration {}.'.format(iteration))
                             self.iteration = iteration
                             if self.filehandle is not None:
@@ -255,10 +289,16 @@ class LogProcessor(SerialThread):
                             logger.warning('Discarding non-logical iteration ' +
                                            '{}.'.format(iteration))
                     else:
-                        # oh oh, no match in received line
-                        self.set_init_state()
+                        # no match in received line
                         logger.debug('LogProcessor: no match in ' +
                                      ' line {}'.format(line))
+                        self.no_match += 1
+                        if self.no_match > self.max_no_match:
+                            logger.warning('LogProcessor: number ' +
+                                           'of not-matched lines ' +
+                                           'have exceeded threshold!')
+                            self.set_init_state()
+                            self.input_ok = False
                 except (TypeError, UnicodeDecodeError):
                     self.set_init_state()
                     logger.warning('Caught Error reading bytes via serial')
@@ -286,6 +326,7 @@ class LogProcessor(SerialThread):
 
     def set_init_state(self):
         self.input_ok = False
+        self.no_match = 0
         self.iteration = 0
 
     def get_iteration(self):
@@ -299,16 +340,20 @@ class LogProcessor(SerialThread):
 
 
 flds = {
-    Fields.EXP_LABEL: 'experiment label',
     Fields.CONFIG: 'configuration of cores',
-    Fields.DASSIGN: 'data assignment',
-    Fields.DISABLE_CACHE: 'disable cache',
+    Fields.DISABLE_CACHE: 'disable cache',  # not implemented for now
     Fields.NO_CACHE_MGMT: 'no cache management',
     Fields.SB_DATASIZE: 'synbench datasize',
+    Fields.EXP_LABEL: 'experiment label',
+    Fields.PMU_CORE0: 'pmu core 0',
+    Fields.PMU_CORE1: 'pmu core 1',
+    Fields.PMU_CORE2: 'pmu core 2',
+    Fields.PMU_CORE3: 'pmu core 3',
 }
 
 
-def do_experiments(infile, outfile, workdir, tty_reset, tty_logging):
+def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
+                   min_observations):
 
     logger.info('Instantiating Compile object.')
     comp = Compile()
@@ -330,11 +375,15 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging):
         logger.info('Starting a new compilation, ' +
                     'experiment nr is {}.'.format(i))
         config = row[flds[Fields.CONFIG]]
-        dassign = row[flds[Fields.DASSIGN]]
         label = row[flds[Fields.EXP_LABEL]]
+        no_cache_mgmt = row[flds[Fields.NO_CACHE_MGMT]]
         datasize = row[flds[Fields.SB_DATASIZE]]
-        comp.set_compilation(config=config, dassign=dassign,
-                             label=label, datasize=datasize)
+        pmu_cores = (row[flds[Fields.PMU_CORE0]],
+                     row[flds[Fields.PMU_CORE1]],
+                     row[flds[Fields.PMU_CORE2]],
+                     row[flds[Fields.PMU_CORE3]])
+        comp.set_compilation(config=config, label=label, datasize=datasize,
+                             pmu_cores=pmu_cores, no_cache_mgmt=no_cache_mgmt)
         comp.compile()
 
         logger.info('Compilation done.')
@@ -378,14 +427,18 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging):
 @click.option('--tty-logging',
               default='/dev/ttyUSB1',
               help='Path of the Raspberry Pi serial conn for the logs.')
+@click.option('--min-observations',
+              default=100,
+              help='Minimum number of observations to read.')
 @click_log.simple_verbosity_option(logger)
-def main(input_file, output_file, working_directory, tty_reset, tty_logging):
+def main(input_file, output_file, working_directory, tty_reset, tty_logging,
+         min_observations):
     if not isfile(input_file):
         print('Error: input file {}'.format(input_file), end=' ')
         print('does not exist!')
         exit(1)
     do_experiments(input_file, output_file, working_directory,
-                   tty_reset, tty_logging)
+                   tty_reset, tty_logging, min_observations)
 
 
 if __name__ == "__main__":

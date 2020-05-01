@@ -52,12 +52,23 @@ def event_number2name(number):
 f = 'report/data/eventsdata-TEST1-4core-config4433-pattern0000.csv'
 df = pd.read_csv(f, sep=' ')
 df['eventname'] = df['eventtype'].apply(lambda x: int(x, 16)).apply(event_number2name)
-df = df.drop(['eventtype'], axis=1)
-df_events = df.set_index(keys=['label', 'cores', 'configuration', 'pattern'])
+#df = df.drop(['eventtype'], axis=1)
+df_events = df.set_index(keys=['core', 'pmu'])
 df_events.sort_index(inplace=True)
-set(df_events.index.get_level_values(0))
-df_events
-#.set_index(keys=['core', 'eventname'])
+print(set(df_events.index.get_level_values(0)))
+print(set(df_events.index.get_level_values(1)))
+#df_pmu = df_events.loc[0, :]
+#print(len(set(df_pmu.index.get_level_values(0))))
+#df_pmu
+dfe = df_events.loc[(0,4), :]
+dfe = dfe.set_index(keys=['iteration'])
+dfe
+#dfe = df_events.loc[(1,3),:]
+#dfe = dfe.set_index(keys=['iteration'])
+#dfe
+#dfe = df_events.loc[(1,3),:]
+#dfe['eventname'].unique()[0]
+#dfe['eventcount']
 
 # +
 f = 'report/data/cyclesdata-TEST1-4core-config4433-pattern0000.csv'
@@ -68,10 +79,10 @@ df2.sort_index(inplace=True)
 df2.dropna(axis=0, how='all', inplace=True)
 df2.dropna(axis=1, how='all', inplace=True)
 
-df2.index.get_level_values(0) # label
-df2.index.get_level_values(1) # number of cores
-df2.index.get_level_values(2) # configuration string
-df2.index.get_level_values(3) # alignment pattern string
+print(set(df2.index.get_level_values(0))) # label
+print(set(df2.index.get_level_values(1))) # number of cores
+print(set(df2.index.get_level_values(2))) # configuration string
+print(set(df2.index.get_level_values(3))) # alignment pattern string
 df2
 
 # +
