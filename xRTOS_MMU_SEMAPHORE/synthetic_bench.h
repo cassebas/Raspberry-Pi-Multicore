@@ -1,10 +1,9 @@
-/*
+/**
  * synthetic_bench.h
  *
  *  Created on: Nov 11, 2019
  *      Author: Caspar Treijtel
  */
-
 #ifndef SYNTHETIC_BENCH_H
 #define SYNTHETIC_BENCH_H
 
@@ -14,12 +13,27 @@
  * large. The 64 bytes is chosen because we want to touch as
  * many cache lines as possible, with a jump of 64 bytes each
  * iteration, we try to fill the L2 as soon as possible.
+ * This is because the cache (both L1 and L2) have cache line
+ * sizes of 64 bytes.
+ *
+ * The default number of arrays can be altered (on the m4 cmdline),
+ * in order to see the effects of the stressing the memory hierarchy
+ * with increasing data structure sizes.
  */
+
+/* Maybe define the size of the array that is used in the
+   synthetic benchmarks.
+   If already defined in the CFLAGS (-DSYNBENCH_DATASIZE=...) then
+   do nothing. */
+#ifndef SYNBENCH_DATASIZE
 #define SYNBENCH_DATASIZE 10240
+#endif
 #define BIGSTRUCT_DATASIZE 63 // line size 64 bytes
+
 /**
-Synthetic benchmark inspired by the paper `Predictable and Efficient Virtual Addressing for
- Safety-Critical Real-Time Systems', written by Bennet and Audsley (2001).
+ * Synthetic benchmark inspired by the paper `Predictable and Efficient Virtual
+ * Addressing for Safety-Critical Real-Time Systems', written by Bennet and
+ * Audsley (2001).
  */
 
 /**

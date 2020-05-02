@@ -108,7 +108,8 @@ class Compile:
             no_cache_mgmt_param = 'NO_CACHE_MGMT=-DNO_CACHE_MGMT'
         if datasize is not None:
             logger.debug('datasize={}'.format(datasize))
-            datasize_param = '-Dsynbench_datasize={}'.format(datasize)
+            datasize_param = ('SYNBENCH_DATASIZE=' +
+                              '-DSYNBENCH_DATASIZE={}'.format(datasize))
         if pmu_cores is not None:
             # if pmu_cores is not None, it must be a tuple of four
             pmu0, pmu1, pmu2, pmu3 = pmu_cores
@@ -136,15 +137,18 @@ class Compile:
         self.makeprepcmd = ['m4',
                             config_param,
                             label_param,
-                            no_cache_mgmt_param,
-                            datasize_param,
                             pmu_core0_param,
                             pmu_core1_param,
                             pmu_core2_param,
                             pmu_core3_param,
                             'benchmark_config.m4']
-
         logger.debug('makeprepcmd={}'.format(self.makeprepcmd))
+
+        self.makeinstallcmd = ['make',
+                               no_cache_mgmt_param,
+                               datasize_param,
+                               'install']
+        logger.debug('makeinstallcmd={}'.format(self.makeinstallcmd))
 
 
 class SerialThread(Thread):

@@ -28,7 +28,7 @@ install: Pi3-64
 	cp -p DiskImg/kernel8.img $(INSTALL_DIR)
 .PHONY: install
 
-Pi3-64: CFLAGS = -Wall -O3 -mcpu=cortex-a53+fp+simd -ffreestanding -nostartfiles -std=gnu11 -mstrict-align -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare $(BENCHMARK_CONFIG) $(DISABLE_CACHE) $(NO_CACHE_MGMT)
+Pi3-64: CFLAGS = -Wall -O3 -mcpu=cortex-a53+fp+simd -ffreestanding -nostartfiles -std=gnu11 -mstrict-align -fno-tree-loop-vectorize -fno-tree-slp-vectorize -Wno-nonnull-compare $(SYNBENCH_DATASIZE) $(BENCHMARK_CONFIG) $(DISABLE_CACHE) $(NO_CACHE_MGMT)
 Pi3-64: ARMGNU = $(CROSS_COMPILER_AARCH64)/bin/aarch64-elf
 Pi3-64: LINKERFILE = rpi64.ld
 Pi3-64: SMARTSTART = SmartStart64.S
