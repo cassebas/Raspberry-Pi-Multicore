@@ -85,14 +85,8 @@ class Compile:
 
     def set_compilation(self, config=None, label=None, datasize=None,
                         pmu_cores=None, no_cache_mgmt=False):
-        config_param = ''
-        label_param = ''
-        no_cache_mgmt_param = ''
-        datasize_param = ''
-        pmu_core0_param = ''
-        pmu_core1_param = ''
-        pmu_core2_param = ''
-        pmu_core3_param = ''
+        arg_m4_list = []
+        arg_make_list = []
         if config is not None:
             # The python process that runs m4 cannot handle a string
             # with quotes well, remove leading and trailing quotes.
@@ -101,15 +95,19 @@ class Compile:
             config = re.sub(r'\'$', '', config)
             config_param = '-Dconfig=' + config
             logger.debug('config={}'.format(config))
+            arg_m4_list.append(config_param)
         if label is not None:
             logger.debug('label={}'.format(label))
             label_param = '-Dexp_label={}'.format(label)
+            arg_m4_list.append(label_param)
         if no_cache_mgmt is True:
             no_cache_mgmt_param = 'NO_CACHE_MGMT=-DNO_CACHE_MGMT'
+            arg_make_list.append(no_cache_mgmt_param)
         if datasize is not None:
             logger.debug('datasize={}'.format(datasize))
             datasize_param = ('SYNBENCH_DATASIZE=' +
                               '-DSYNBENCH_DATASIZE={}'.format(datasize))
+            arg_make_list.append(datasize_param)
         if pmu_cores is not None:
             # if pmu_cores is not None, it must be a tuple of four
             pmu0, pmu1, pmu2, pmu3 = pmu_cores
@@ -118,36 +116,30 @@ class Compile:
                 pmu0 = re.sub(r'\'$', '', pmu0)
                 pmu_core0_param = '-Dpmu_core0={}'.format(pmu0)
                 logger.debug('pmu0={}'.format(pmu0))
+                arg_m4_list.append(pmu_core0_param)
             if not pd.isnull(pmu1):
                 pmu1 = re.sub(r'^\'', '', pmu1)
                 pmu1 = re.sub(r'\'$', '', pmu1)
                 pmu_core1_param = '-Dpmu_core1={}'.format(pmu1)
                 logger.debug('pmu1={}'.format(pmu1))
+                arg_m4_list.append(pmu_core1_param)
             if not pd.isnull(pmu2):
                 pmu2 = re.sub(r'^\'', '', pmu2)
                 pmu2 = re.sub(r'\'$', '', pmu2)
                 pmu_core2_param = '-Dpmu_core2={}'.format(pmu2)
                 logger.debug('pmu2={}'.format(pmu2))
+                arg_m4_list.append(pmu_core2_param)
             if not pd.isnull(pmu3):
                 pmu3 = re.sub(r'^\'', '', pmu3)
                 pmu3 = re.sub(r'\'$', '', pmu3)
                 pmu_core3_param = '-Dpmu_core3={}'.format(pmu3)
                 logger.debug('pmu3={}'.format(pmu3))
+                arg_m4_list.append(pmu_core3_param)
 
-        self.makeprepcmd = ['m4',
-                            config_param,
-                            label_param,
-                            pmu_core0_param,
-                            pmu_core1_param,
-                            pmu_core2_param,
-                            pmu_core3_param,
-                            'benchmark_config.m4']
+        self.makeprepcmd = ['m4'] + arg_m4_list + ['benchmark_config.m4']
         logger.debug('makeprepcmd={}'.format(self.makeprepcmd))
 
-        self.makeinstallcmd = ['make',
-                               no_cache_mgmt_param,
-                               datasize_param,
-                               'install']
+        self.makeinstallcmd = ['make'] + arg_make_list + ['install']
         logger.debug('makeinstallcmd={}'.format(self.makeinstallcmd))
 
 
