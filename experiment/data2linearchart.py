@@ -227,7 +227,6 @@ def output_image(dfcycles, cores, dfevents, pmu, win, benchmarks,
         if dfevents is not None:
             try:
                 logger.debug('Adding PMU plot')
-                print(dfevents)
                 logger.debug(dfevents.index)
                 dfcore_ev = dfevents.loc[(corenum, pmu), slice(None)]
                 dfcore_ev = dfcore_ev.set_index(keys=['iteration'])
