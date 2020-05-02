@@ -1,7 +1,8 @@
+import sys
 import click
 import click_log
 import logging
-from os.path import basename, isfile, isdir, join, dirname
+from os.path import isfile, isdir, join
 import numpy as np
 import pandas as pd
 import re
@@ -150,21 +151,30 @@ def main(input_file, output_directory, output_mode, metric):
     axis1 = (slice(None))
     for label in df.index.get_level_values(0):
         logger.debug('label={}'.format(label))
-
-        cores_list = df.index.get_level_values(1)
+        dflabel = df.loc[label, :]
+        cores_list = dflabel.index.get_level_values(0)
         logger.debug('cores_list={}'.format(cores_list))
+
         for cores in set(cores_list):
             logger.debug('cores={}.'.format(cores))
+            dfcore = dflabel.loc[cores, :]
+            config_list = dfcore.index.get_level_values(0)
+            logger.debug('config_list={}'.format(config_list))
 
-            for config in set(df.index.get_level_values(2)):
+            for config in set(config_list):
                 logger.debug('config={}.'.format(config))
 
                 if output_mode != 'data':
                     axis0 = (label, cores, config, slice(None))
                     export_dataframe(df, output_mode, metric, axis0, axis1,
                                      output_directory)
+
                 else:  # output_mode == 'data':
-                    for pattern in set(df.index.get_level_values(3)):
+                    dfconfig = dfcore.loc[config, :]
+                    pattern_list = dfconfig.index.get_level_values(0)
+                    logger.debug('pattern_list={}'.format(pattern_list))
+
+                    for pattern in set(pattern_list):
                         logger.debug('pattern={}'.format(pattern))
                         axis0 = (label, cores, config, pattern)
                         export_dataframe(df, output_mode, metric, axis0, axis1,
