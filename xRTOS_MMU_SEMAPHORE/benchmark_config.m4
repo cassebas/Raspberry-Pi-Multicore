@@ -106,17 +106,17 @@ define(do_bench_core_def, `
 define(do_bench_core_empty_def, `
 #define DO_BENCH_CORE`$1' $2')dnl
 dnl
-define(pmu_event0, `(PMU_L1D_CACHE_REFILL)')
-define(pmu_event1, `(PMU_L1D_CACHE)')
-define(pmu_event2, `(PMU_BR_MIS_PRED)')
-define(pmu_event3, `(PMU_BR_PRED)')
-define(pmu_event4, `(PMU_MEM_ACCESS)')
-define(pmu_event5, `(PMU_L1D_CACHE_WB)')
-define(pmu_event6, `(PMU_L2D_CACHE)')
-define(pmu_event7, `(PMU_L2D_CACHE_REFILL)')
-define(pmu_event8, `(PMU_L1D_CACHE_WB)')
-define(pmu_event9, `(PMU_BUS_ACCESS)')
-define(lookup_pmu, pmu_event$1)
+define(pmu_event0, `(PMU_L1D_CACHE_REFILL)')dnl
+define(pmu_event1, `(PMU_L1D_CACHE)')dnl
+define(pmu_event2, `(PMU_BR_MIS_PRED)')dnl
+define(pmu_event3, `(PMU_BR_PRED)')dnl
+define(pmu_event4, `(PMU_MEM_ACCESS)')dnl
+define(pmu_event5, `(PMU_L1D_CACHE_WB)')dnl
+define(pmu_event6, `(PMU_L2D_CACHE)')dnl
+define(pmu_event7, `(PMU_L2D_CACHE_REFILL)')dnl
+define(pmu_event8, `(PMU_L1D_CACHE_WB)')dnl
+define(pmu_event9, `(PMU_BUS_ACCESS)')dnl
+define(lookup_pmu, pmu_event$1)dnl
 dnl
 define(meta3, `forloop(`i', `0', eval(len($1) - 1), `$2(i)')')dnl
 define(meta4, `forloop(`i', len($1), 3, `$2(i)')')dnl
@@ -127,14 +127,15 @@ meta1(`bench_arg_core_undef')dnl
 meta1(`do_bench_core_undef')dnl
 meta2(`bench_config_core_undef')dnl
 meta2b(`pmu_event_core_undef')dnl
+
 meta3(`config', `bench_config_core_def')dnl
 dnl
 meta3(`config', `bench_string_core_def')dnl
 ifelse(len(config), 4, `', `meta4(`config', `bench_string_core_empty_def')')dnl
-
+dnl
 meta3(`config', `bench_arg_core_def')dnl
 ifelse(len(config), 4, `', `meta4(`config', `bench_arg_core_empty_def')')dnl
-
+dnl
 meta3(`config', `do_bench_core_def')dnl
 ifelse(len(config), 4, `', `meta4(`config', `do_bench_core_empty_def')')
 
@@ -148,7 +149,7 @@ define(nr_of_cores, 4)
 #undef NR_OF_CORES
 #endif
 #define NR_OF_CORES len(config)
-
+dnl
 
 /* The PMU event count configuration */dnl
 define(pmu_core_def, `
@@ -158,11 +159,11 @@ define(pmu_core_def0, `pmu_core_def(0, $1)')dnl
 define(pmu_core_def1, `pmu_core_def(1, $1)')dnl
 define(pmu_core_def2, `pmu_core_def(2, $1)')dnl
 define(pmu_core_def3, `pmu_core_def(3, $1)')dnl
-ifdef(`pmu_core0', meta3(`pmu_core0', `pmu_core_def0'))
-ifdef(`pmu_core1', meta3(`pmu_core1', `pmu_core_def1'))
-ifdef(`pmu_core2', meta3(`pmu_core2', `pmu_core_def2'))
-ifdef(`pmu_core3', meta3(`pmu_core3', `pmu_core_def3'))
-dnl
+ifdef(`pmu_core0', meta3(`pmu_core0', `pmu_core_def0'))dnl
+ifdef(`pmu_core1', meta3(`pmu_core1', `pmu_core_def1'))dnl
+ifdef(`pmu_core2', meta3(`pmu_core2', `pmu_core_def2'))dnl
+ifdef(`pmu_core3', meta3(`pmu_core3', `pmu_core_def3'))dnl
+
 dnl maybe use a label that is used by the data visualization scripts
 ifdef(`exp_label', `', `define(exp_label, `default')')
 #ifdef EXP_LABEL
