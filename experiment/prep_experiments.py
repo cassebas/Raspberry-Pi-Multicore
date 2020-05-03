@@ -253,7 +253,7 @@ class LogProcessor(SerialThread):
         self.filehandle = None
         self.connected = False
         self.no_match = 0
-        self.max_no_match = 200
+        self.max_no_match = 50
 
     # Overridden from Thread.run()
     def run(self):
