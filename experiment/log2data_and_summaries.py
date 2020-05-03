@@ -149,7 +149,7 @@ def main(input_file, output_directory, output_mode, metric):
     #  - level 3: alignment pattern string
 
     axis1 = (slice(None))
-    for label in df.index.get_level_values(0):
+    for label in set(df.index.get_level_values(0)):
         logger.debug('label={}'.format(label))
         dflabel = df.loc[label, :]
         cores_list = dflabel.index.get_level_values(0)
