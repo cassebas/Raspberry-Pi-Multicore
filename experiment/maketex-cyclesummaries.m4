@@ -13,8 +13,7 @@ changecom(%)dnl
 % This m4 macro file expects the following 4 parameters:
 %  -Dfilename: filename of the CSV file containing the data
 %  -Dconfig: configuration of benchmarks to cores, like e.g. '3344'
-%  -Dfixedtype: type of data in the figure that is constant
-%  -Dfixedconf: assignment of data or alignment pattern that is fixed
+%  -Dlabel: label of the experiment that was run
 dnl
 divert(`-1')
 define(`forloop', `pushdef(`$1', `$2')_forloop($@)popdef(`$1')')
@@ -32,19 +31,13 @@ define(bench_name, undefined)
 dnl
 dnl % These are the default parameters:
 ifdef(`config', `', `define(config, `123')')
-dnl % The fixed type is the type of data that is constant in de data
-ifdef(`fixedtype', `', `define(fixedtype, `pattern')')
-dnl % The fixed configuration is the actual (constant) pattern or data assignment 
-ifdef(`fixedconf', `', `define(fixedconf, `0123')')
-dnl % The data type is the type of data that varies in de data, it is always
-dnl % the opposite of the fixed type.
-define(datatype, ifelse(fixedtype, pattern, dassign, pattern))
+dnl % The label that characterizes the experiment
+ifdef(`label', `', `define(label, `default')')
 dnl %   but they can be redefined on the cmd line with:
 dnl %  -Dconfig='foo' => redefine config as foo
-dnl %  -Ddatatype='bar'  => redefine datatype as bar
-dnl %  -Ddataconf='bar'  => redefine dataconf as bar
+dnl %  -Dlabel='bar'  => redefine label as bar
 dnl % e.g.
-dnl % m4 -Dconfig='1234' -Ddatatype='pattern' -Ddataconf='0000' maketex-cyclesummaries.m4
+dnl % m4 -Dconfig='1234' -Dlabel='TEST1' maketex-cyclesummaries.m4
 dnl
 dnl % meta1 : runs a for loop from 0 to 3 where each iteration a specified macro is executed
 define(meta1, `forloop(`i', `0', `3', `$1(i)')')dnl
@@ -60,12 +53,7 @@ dnl % define(bench_name_from_config, `lookup_name(substr(config, eval($1-1), `1'
 define(bench_name_from_config, `lookup_name(substr(config, $1, `1'))')
 dnl
 dnl % template_xlabel
-dnl %   parameters:
-define(template_xlabel, `dnl
-ifelse(fixedtype, pattern,dnl
-`data assignment --- cores data set assignment',dnl
-`alignment pattern --- cores starting time'dnl
-)')dnl
+define(template_xlabel, `alignment pattern --- cores starting time')dnl
 dnl
 dnl % template_addplot
 dnl %   parameters:
@@ -114,8 +102,8 @@ define(template_figure, `dnl
 meta3(`config', `template_addplot', `filename')dnl
     \end{axis}
   \end{tikzpicture}
-  \caption{Benchmarks running on $2 cores configuration config}
-  \label{fig_cycles_`config'config`_'fixedtype`'fixedconf`_'`$2'`cores'}
+  \caption{Benchmarks running on $2 cores configuration config `label' label}
+  \label{fig_cycles_`config'config`_'label`_'`$2'`cores'}
 \end{figure}')dnl
 divert(0)dnl
 dnl
