@@ -433,6 +433,10 @@ def main(input_file, output_file, working_directory, tty_reset, tty_logging,
         print('Error: input file {}'.format(input_file), end=' ')
         print('does not exist!')
         exit(1)
+    if isfile(output_file):
+        print('Error: output file {}'.format(output_file), end=' ')
+        print('already exists!')
+        exit(1)
     do_experiments(input_file, output_file, working_directory,
                    tty_reset, tty_logging, min_observations)
 
