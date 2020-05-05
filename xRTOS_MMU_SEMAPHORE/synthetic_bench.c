@@ -9,14 +9,15 @@
 #include <stdlib.h>
 #include "synthetic_bench.h"
 
-void array_access_linear(volatile bigstruct_t* data)
+int array_access_linear(volatile bigstruct_t* data)
 {
-	volatile int sum = 0;
+	int sum = 0;
 	if (data != NULL) {
 		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
 			sum += data[i].id;
 		}
 	}
+	return sum;
 }
 
 void array_write_linear(volatile bigstruct_t* data)
@@ -37,14 +38,15 @@ void array_access_randomize(volatile int* idx, int corenum)
 	}
 }
 
-void array_access_random(volatile bigstruct_t* data, volatile int* idx)
+int array_access_random(volatile bigstruct_t* data, volatile int* idx)
 {
-	volatile int sum = 0;
+	int sum = 0;
 	if (data != NULL && idx != NULL) {
 		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
 			sum += data[idx[i]].id;
 		}
 	}
+	return sum;
 }
 
 void array_write_random(volatile bigstruct_t* data, volatile int* idx)
