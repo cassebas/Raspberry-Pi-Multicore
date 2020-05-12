@@ -22,6 +22,10 @@
 	#define configIDLE_TASK_NAME "IDLE"
 #endif
 
+/* The name allocated to the HEARTBEAT task */
+#ifndef configHEARTBEAT_TASK_NAME
+	#define configHEARTBEAT_TASK_NAME "HEARTBEAT"
+#endif
 
 #define CoreEnterCritical DisableInterrupts
 #define CoreExitCritical EnableInterrupts
@@ -289,10 +293,13 @@ void xTaskCreate (uint8_t corenum,									// The core number to run task on
 		if (pxCreatedTask) (*pxCreatedTask) = task;
 
 		if (strcmp(pcName, configIDLE_TASK_NAME) != 0) {
-			// Set the core's state to active
-			log_debug(corenum, buf, "Setting state to active core=%d task name=%s\n\r",
-					  corenum, pcName);
-			cb->CoreState = ACTIVE;
+			if (strcmp(pcName, configHEARTBEAT_TASK_NAME) != 0) {
+				// Set the core's state to active
+				log_debug(corenum, buf,
+						  "Setting state to active core=%d task name=%s\n\r",
+						  corenum, pcName);
+				cb->CoreState = ACTIVE;
+			}
 		}
 
 		CoreExitCritical();											// Exiting core critical area

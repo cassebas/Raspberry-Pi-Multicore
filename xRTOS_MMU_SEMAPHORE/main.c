@@ -243,6 +243,18 @@ void Flash_LED(void)
 }
 
 
+void heartbeat(void* pParam)
+{
+	uint8_t* gpio = (uint8_t*) pParam;
+	bool ok = gpio_setup(*gpio, GPIO_OUTPUT);
+	while (ok) {
+		gpio_output(*gpio, 1);
+		xTaskDelay(configTICK_RATE_HZ);
+		gpio_output(*gpio, 0);
+		xTaskDelay(configTICK_RATE_HZ);
+	}
+}
+
 
 void DoProgress(HDC dc, int step, int total, int x, int y, int barWth, int barHt,  COLORREF col)
 {
@@ -981,16 +993,28 @@ void main (void)
 #if(NR_OF_CORES >= 2)
 	/* Core 1 task */
 	xTaskCreate(1, core1, "Core1", 512, NULL, 2, NULL);
+#else
+	uint8_t gpio2 = 6;
+	void* gpio2_ptr = (void*) &gpio2;
+	xTaskCreate(2, heartbeat, "HEARTBEAT", 512, gpio2_ptr, 2, NULL);
 #endif
 
 #if(NR_OF_CORES >= 3)
 	/* Core 2 task */
 	xTaskCreate(2, core2, "Core2", 512, NULL, 2, NULL);
+#else
+	uint8_t gpio3 = 5;
+	void* gpio3_ptr = (void*) &gpio3;
+	xTaskCreate(2, heartbeat, "HEARTBEAT", 512, gpio3_ptr, 2, NULL);
 #endif
 
 #if(NR_OF_CORES >= 4)
 	/* Core 3 task */
 	xTaskCreate(3, core3, "Core3", 512, NULL, 2, NULL);
+#else
+	uint8_t gpio4 = 12;
+	void* gpio4_ptr = (void*) &gpio4;
+	xTaskCreate(3, heartbeat, "HEARTBEAT", 512, gpio4_ptr, 2, NULL);
 #endif
 
 
