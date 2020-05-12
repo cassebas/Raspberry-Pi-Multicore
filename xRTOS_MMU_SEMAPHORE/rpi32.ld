@@ -151,12 +151,13 @@ SECTIONS {
 	. = . + 65536;
 	_estack = .;
 
-	/*
-	* Finally comes everything else. A fun trick here is to put all other 
-	* sections into this section, which will be discarded by default.
-	*/
-	/DISCARD/ : {
-		*(*)
-	}
+	/* Comment this part: don't throw away the debug symbols */
+	/* /\* */
+	/* * Finally comes everything else. A fun trick here is to put all other  */
+	/* * sections into this section, which will be discarded by default. */
+	/* *\/ */
+	/* /DISCARD/ : { */
+	/* 	*(*) */
+	/* } */
 }
 

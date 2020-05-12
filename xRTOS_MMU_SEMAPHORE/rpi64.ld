@@ -116,11 +116,12 @@ SECTIONS
     	_end = .; PROVIDE (end = .);/* Any memory from here is free to use so this is end of code and start of heap */
 	}
 
-	/*
-	* Finally comes everything else. A fun trick here is to put all other 
-	* sections into this section, which will be discarded by default.
-	*/
-	/DISCARD/ : {
-		*(*)
-	}
+	/* Comment this part: don't throw away the debug symbols */
+	/* /\* */
+	/* * Finally comes everything else. A fun trick here is to put all other  */
+	/* * sections into this section, which will be discarded by default. */
+	/* *\/ */
+	/* /DISCARD/ : { */
+	/* 	*(*) */
+	/* } */
 }

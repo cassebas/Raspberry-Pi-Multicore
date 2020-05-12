@@ -74,11 +74,12 @@ MAP = kernel.map
 # The names of all object files that must be generated. Deduced from the 
 # assembly code files in source.
 
-ASMOBJS = $(patsubst $(SOURCE)/%.S,$(BUILD)/%.o,$(SMARTSTART) $(IV_CACHE))
+ASMOBJS = $(patsubst $(SOURCE)/%.S,$(BUILD)/%.o,$(wildcard $(SOURCE)/*32.S))
+ASMOBJS64 = $(patsubst $(SOURCE)/%.S,$(BUILD)/%.o,$(wildcard $(SOURCE)/*64.S))
 COBJS = $(patsubst $(SOURCE)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE)/*.c))
 
 
-Pi3-64: $(RANDOM_SETS_H) kernel.elf
+Pi3-64: $(RANDOM_SETS_H) kernel8.elf
 BINARY = $(IMGFILE)
 .PHONY: Pi3-64
 
@@ -103,11 +104,17 @@ $(BUILD)/%.o: $(SOURCE)/%.S
 $(BUILD)/%.o: $(SOURCE)/%.c
 	$(ARMGNU)-gcc -MMD -MP -g $(CFLAGS) -c  $< -o $@ -lc -lm -lgcc
 
+kernel8.elf: $(ASMOBJS64) $(COBJS)
+	$(ARMGNU)-gcc $(CFLAGS) $(ASMOBJS64) $(COBJS) -T $(LINKERFILE) -Wl,--build-id=none -o $@ -lc -lm -lgcc
+	$(ARMGNU)-objdump -d $@ > $(LIST)
+	$(ARMGNU)-objcopy $@ -O binary DiskImg/$(BINARY)
+	$(ARMGNU)-nm -n $@ > $(MAP)
+
 kernel.elf: $(ASMOBJS) $(COBJS) 
-	$(ARMGNU)-gcc $(CFLAGS) $(ASMOBJS) $(COBJS) -T $(LINKERFILE) -Wl,--build-id=none -o kernel.elf -lc -lm -lgcc
-	$(ARMGNU)-objdump -d kernel.elf > $(LIST)
-	$(ARMGNU)-objcopy kernel.elf -O binary DiskImg/$(BINARY)
-	$(ARMGNU)-nm -n kernel.elf > $(MAP)
+	$(ARMGNU)-gcc $(CFLAGS) $(ASMOBJS) $(COBJS) -T $(LINKERFILE) -Wl,--build-id=none -o $@ -lc -lm -lgcc
+	$(ARMGNU)-objdump -d $@ > $(LIST)
+	$(ARMGNU)-objcopy $@ -O binary DiskImg/$(BINARY)
+	$(ARMGNU)-nm -n $@ > $(MAP)
 
 # Control silent mode  .... we want silent in clean
 .SILENT: clean
@@ -117,6 +124,7 @@ clean:
 	$(RM) $(RANDOM_SETS_H) 
 	$(RM) $(MAP) 
 	$(RM) kernel.elf 
+	$(RM) kernel8.elf
 	$(RM) $(LIST) 
 	$(RM) $(BUILD)$(SLASH)*.o 
 	$(RM) $(BUILD)$(SLASH)*.d 
