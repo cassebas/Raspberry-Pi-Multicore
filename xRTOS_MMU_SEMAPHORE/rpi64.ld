@@ -65,11 +65,11 @@ SECTIONS
 	.stack_core0 : {
         . = ALIGN(16);				/* Stack must always be aligned to 16 byte boundary AAPCS64 call standard */
         __stack_start_core0__ = .;
-        . = . + 512;				/* EL0 stack size */
+        . = . + 2048;				/* EL0 stack size */
         __EL0_stack_core0 = .;
-        . = . + 16384;				/* EL1 stack size */
+        . = . + 65536;				/* EL1 stack size */
         __EL1_stack_core0 = .;
-        . = . + 512;				/* EL2 stack size (start-up) */
+        . = . + 2048;				/* EL2 stack size (start-up) */
         __EL2_stack_core0 = .;
         __stack_end_core0__ = .;    
     }
@@ -77,11 +77,11 @@ SECTIONS
 	.stack_core1 : {
         . = ALIGN(16);				/* Stack must always be aligned to 16 byte boundary AAPCS64 call standard */
         __stack_start_core1__ = .;
-        . = . + 512;				/* EL0 stack size */
+        . = . + 2048;				/* EL0 stack size */
         __EL0_stack_core1 = .;
-		. = . + 1024;				/* EL1 stack size */
+		. = . + 65536;				/* EL1 stack size */
         __EL1_stack_core1 = .;
-        . = . + 512;				/* EL2 stack size (start-up) */
+        . = . + 2048;				/* EL2 stack size (start-up) */
         __EL2_stack_core1 = .;
         __stack_end_core1__ = .;    
     }
@@ -89,11 +89,11 @@ SECTIONS
 	.stack_core2 :	{
         . = ALIGN(16);				 /* Stack must always be aligned to 16 byte boundary AAPCS call standard */
         __stack_start_core2__ = .;
-        . = . + 512;				/* EL0 stack size */
+        . = . + 2048;				/* EL0 stack size */
         __EL0_stack_core2 = .;
-        . = . + 1024;				/* EL1 stack size */
+        . = . + 65536;				/* EL1 stack size */
         __EL1_stack_core2 = .;
-        . = . + 512;				/* EL2 stack size (start-up) */
+        . = . + 2048;				/* EL2 stack size (start-up) */
         __EL2_stack_core2 = .;
         __stack_end_core2__ = .;  
     }
@@ -101,11 +101,11 @@ SECTIONS
 	.stack_core3 :	{
         . = ALIGN(16);				/* Stack must always be aligned to 16 byte boundary AAPCS call standard */
         __stack_start_core3__ = .;
-        . = . + 512;				/* EL0 stack size */
+        . = . + 2048;				/* EL0 stack size */
         __EL0_stack_core3 = .;
-        . = . + 1024;				/* EL1 stack size */
+        . = . + 65536;				/* EL1 stack size */
         __EL1_stack_core3 = .;
-        . = . + 512;				/* EL2 stack size (start-up) */
+        . = . + 2048;				/* EL2 stack size (start-up) */
        	__EL2_stack_core3 = .;
        	__stack_end_core3__ = .;  
     }

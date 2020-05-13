@@ -134,8 +134,8 @@ static struct CoreControlBlock
 {					   PRIVATE INTERNAL DATA STORAGE					    }
 ****************************************************************************/
 
-static RegType_t TestStack[16384] __attribute__((aligned(16)));
-static RegType_t* TestStackTop = &TestStack[16384];
+static RegType_t TestStack[65536] __attribute__((aligned(16)));
+static RegType_t* TestStackTop = &TestStack[65536];
 
 static uint64_t m_nClockTicksPerHZTick = 0;							// Divisor to generat tick frequency
 
