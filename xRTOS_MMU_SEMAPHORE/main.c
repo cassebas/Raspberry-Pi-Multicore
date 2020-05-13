@@ -23,106 +23,37 @@
  * 2: linear array access
  * 3: random array access
  */
-#define NR_OF_CORES 3
+#define NR_OF_CORES 2
 #define BENCH_CONFIG_CORE0_1
-#define BENCH_CONFIG_CORE1_2
-#define BENCH_CONFIG_CORE2_3
-#define CONFIG_STRING "configuration: '123'"
+#define BENCH_CONFIG_CORE1_5
+#define CONFIG_STRING "configuration: '15'"
 
 #define BENCH_STRING_CORE0 "benchmark: malardalen_bsort100"
-#define BENCH_STRING_CORE1 "benchmark: malardalen_edn"
-#define BENCH_STRING_CORE2 "benchmark: linear_array_access"
+#define BENCH_STRING_CORE1 "benchmark: random_array_access"
+#define BENCH_STRING_CORE2 ""
 #define BENCH_STRING_CORE3 ""
 
 #define BENCH_ARG_CORE0 Array1
-#define BENCH_ARG_CORE2 mydata3
+#define BENCH_ARG_CORE1 mydata2, myrandidx2
+#define BENCH_ARG_CORE2 
+#define BENCH_ARG_CORE3 
 
 #define DO_BENCH_CORE0 bsort100_BubbleSort(BENCH_ARG_CORE0);
-#define DO_BENCH_CORE1 edn_Calculate();
-#define DO_BENCH_CORE2 array_access_linear(BENCH_ARG_CORE2);
-#define DO_BENCH_CORE3
+#define DO_BENCH_CORE1 array_access_random(BENCH_ARG_CORE1);
+#define DO_BENCH_CORE2 
+#define DO_BENCH_CORE3 
 
-/* The random data sets can be assigned to different cores,
-   to make sure that the data cannot be a factor in the measured
-   cycles. */
-#define DATA_ASSIGN_CORE0 0
-#define DATA_ASSIGN_CORE1 1
-#define DATA_ASSIGN_CORE2 2
-#define DATA_ASSIGN_CORE3 3
-#define DATA_ASSIGN_STRING "dassign: '0123'"
 
-#define EXP_LABEL "DEFAULT"
+#define EXP_LABEL "DEBUG_BENCH_15"
 
-#define PM_EVENT_TYPE1 "L2_DCACHE_ACCESS"
-#define PM_EVENT_TYPE2 "L2_DCACHE_REFILL"
-
-/**
- * If the following macro with name BENCHMARK_CONFIG_M4 was
- * specified on the command line, then we know the include
- * file can be included.
- * This is done to make sure that the include file is actually
- * generated (which is done using m4).
- *
- * Usage is thus:
- *   m4 config='123' benchmark_config.m4 > benchmark_config.h && \
- *     make BENCHMARK_CONFIG=-DBENCHMARK_CONFIG_M4 Pi-64
- *
- * Or, just 
- *   make Pi-64 in case the benchmark config is not to be set.
- */
-#ifdef BENCHMARK_CONFIG_M4
-#include "benchmark_config.h"
-#endif
 
 /**
  * Maybe define the needed datastructures (depending on
  * the specific configuration of benchmarks).
  */
-#ifdef BENCH_CONFIG_CORE0_1
 int Array1[MAXDIM];
-#endif
-#ifdef BENCH_CONFIG_CORE1_1
-int Array2[MAXDIM];
-#endif
-#ifdef BENCH_CONFIG_CORE2_1
-int Array3[MAXDIM];
-#endif
-#ifdef BENCH_CONFIG_CORE3_1
-int Array4[MAXDIM];
-#endif
-
-#if defined BENCH_CONFIG_CORE0_3 || defined BENCH_CONFIG_CORE0_4
-volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
-#else
-	#if defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
-	volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
-	volatile int myrandidx1[SYNBENCH_DATASIZE];
-	#endif
-#endif
-#if defined BENCH_CONFIG_CORE1_3 || defined BENCH_CONFIG_CORE1_4
 volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
-#else
-	#if defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
-	volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
-	volatile int myrandidx2[SYNBENCH_DATASIZE];
-	#endif
-#endif
-#if defined BENCH_CONFIG_CORE2_3 || defined BENCH_CONFIG_CORE2_4
-volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
-#else
-	#if defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
-	volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
-	volatile int myrandidx3[SYNBENCH_DATASIZE];
-	#endif
-#endif
-#if defined BENCH_CONFIG_CORE3_3 || defined BENCH_CONFIG_CORE3_4
-volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
-#else
-	#if defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
-	volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
-	volatile int myrandidx4[SYNBENCH_DATASIZE];
-	#endif
-#endif
+volatile int myrandidx2[SYNBENCH_DATASIZE];
 
 /**
  * Global enable of PMU
@@ -312,18 +243,6 @@ void core0(void* pParam) {
 	int step = 0;
 	int dir = 1;
     unsigned int cycles;
-#ifdef PMU_EVENT_CORE0_1
-    unsigned int event1;
-#endif
-#ifdef PMU_EVENT_CORE0_2
-    unsigned int event2;
-#endif
-#ifdef PMU_EVENT_CORE0_3
-    unsigned int event3;
-#endif
-#ifdef PMU_EVENT_CORE0_4
-    unsigned int event4;
-#endif
     unsigned int iter=1;
     unsigned int offset=0;
 	int corenum=0;
@@ -332,30 +251,11 @@ void core0(void* pParam) {
 	enable_pmu();
 
 	log_debug(0, buf, "%s\n\r", "config pmu_events");
-#ifdef PMU_EVENT_CORE0_1
-	config_event_counter(0, PMU_EVENT_CORE0_1);
-#endif
-#ifdef PMU_EVENT_CORE0_2
-	config_event_counter(1, PMU_EVENT_CORE0_2);
-#endif
-#ifdef PMU_EVENT_CORE0_3
-	config_event_counter(2, PMU_EVENT_CORE0_3);
-#endif
-#ifdef PMU_EVENT_CORE0_4
-	config_event_counter(3, PMU_EVENT_CORE0_4);
-#endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE0_1
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array1);
-#endif
-#if defined BENCH_CONFIG_CORE0_3 || defined BENCH_CONFIG_CORE0_4 || defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
-		array_access_initialize(mydata1);
-#endif
-#if defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
-		array_access_randomize(myrandidx1, DATA_ASSIGN_CORE0);
-#endif
+
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -363,69 +263,23 @@ void core0(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 100, GetScreenWidth()-20, 20, col);
 
-#ifndef DISABLE_CACHE
-	#ifndef NO_CACHE_MGMT
 		/* Master gets to invalidate the complete cache */
 		invalidate_cache();
-	#endif
-#endif
 
 		enable_cycle_counter();
-#ifdef PMU_EVENT_CORE0_1
-		enable_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE0_2
-		enable_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE0_3
-		enable_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE0_4
-		enable_event_counter(3);
-#endif
 
 		/* /\* This is core0, we are master for the synchronization between cores *\/ */
 		/* sync_master(); */
 
-		/* Maybe reset the event counters */
-#if defined PMU_EVENT_CORE0_1
-		/* If any of the event counters is active, then at least the first one
-		 * will be active. We can reset the event counters in this case. */
-		reset_event_counters();
-#endif
 		reset_cycle_counter();
-		DO_BENCH_CORE0
+		bsort100_BubbleSort(Array1);
 		disable_cycle_counter();
-#ifdef PMU_EVENT_CORE0_1
-		disable_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE0_2
-		disable_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE0_3
-		disable_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE0_4
-		disable_event_counter(3);
-#endif
 
 		/* sync_reset(); */
 
 		xTaskDelay(10);
 
 		cycles = read_cycle_counter();
-#ifdef PMU_EVENT_CORE0_1
-		event1 = read_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE0_2
-		event2 = read_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE0_3
-		event3 = read_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE0_4
-		event4 = read_event_counter(3);
-#endif
 
 		sprintf(&buf[0],
 				"Core 0 Load: %3i%% Task count: %2i Cycle count: %12u",
@@ -439,36 +293,6 @@ void core0(void* pParam) {
 				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE0, NR_OF_CORES,
 				 cycles, iter, offset);
 
-#ifdef PMU_EVENT_CORE0_1
-		/**
-		 * The first log_info statement here doesn't actually serve
-		 * a purpose, other than preventing the printed event1 being
-		 * zero(!). Beats me. */
-		log_info(corenum, buf, "%#02x\n\r", 0x03);
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE0_1, event1, iter);
-#endif
-#ifdef PMU_EVENT_CORE0_2
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE0_2, event2, iter);
-#endif
-#ifdef PMU_EVENT_CORE0_3
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE0_3, event3, iter);
-#endif
-#ifdef PMU_EVENT_CORE0_4
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE0_4, event4, iter);
-#endif
-
 		++iter;
 	}
 }
@@ -481,18 +305,6 @@ void core1(void* pParam) {
 	int step = 0;
 	int dir = 1;
     unsigned int cycles;
-#ifdef PMU_EVENT_CORE1_1
-    unsigned int event1;
-#endif
-#ifdef PMU_EVENT_CORE1_2
-    unsigned int event2;
-#endif
-#ifdef PMU_EVENT_CORE1_3
-    unsigned int event3;
-#endif
-#ifdef PMU_EVENT_CORE1_4
-    unsigned int event4;
-#endif
     unsigned int iter=1;
     unsigned int offset=0;
 	int corenum=1;
@@ -501,30 +313,10 @@ void core1(void* pParam) {
 	enable_pmu();
 
 	log_debug(0, buf, "%s\n\r", "config pmu_events");
-#ifdef PMU_EVENT_CORE1_1
-	config_event_counter(0, PMU_EVENT_CORE1_1);
-#endif
-#ifdef PMU_EVENT_CORE1_2
-	config_event_counter(1, PMU_EVENT_CORE1_2);
-#endif
-#ifdef PMU_EVENT_CORE1_3
-	config_event_counter(2, PMU_EVENT_CORE1_3);
-#endif
-#ifdef PMU_EVENT_CORE1_4
-	config_event_counter(3, PMU_EVENT_CORE1_4);
-#endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE1_1
-		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
-		bsort100_Initialize(Array2);
-#endif
-#if defined BENCH_CONFIG_CORE1_3 || defined BENCH_CONFIG_CORE1_4 || defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
 		array_access_initialize(mydata2);
-#endif
-#if defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
-		array_access_randomize(myrandidx2, DATA_ASSIGN_CORE1);
-#endif
+		array_access_randomize(myrandidx2, 1);
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -532,69 +324,24 @@ void core1(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 200, GetScreenWidth() - 20, 20, col);
 
-#ifndef DISABLE_CACHE
-	#ifndef NO_CACHE_MGMT
 		/* Slave only invalidates its own L1 cache */
 		invalidate_data_cache(1);
-	#endif
-#endif
 
 		enable_cycle_counter();
-#ifdef PMU_EVENT_CORE1_1
-		enable_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE1_2
-		enable_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE1_3
-		enable_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE1_4
-		enable_event_counter(3);
-#endif
 
 		/* /\* This is core1, we are slave for the synchronization between cores *\/ */
 		/* sync_slave(offset); */
 
 		/* Maybe reset the event counters */
-#if defined PMU_EVENT_CORE1_1
-		/* If any of the event counters is active, then at least the first one
-		 * will be active. We can reset the event counters in this case. */
-		reset_event_counters();
-#endif
 		reset_cycle_counter();
-		DO_BENCH_CORE1
+		array_access_random(mydata2, myrandidx2);
 		disable_cycle_counter();
-#ifdef PMU_EVENT_CORE1_1
-		disable_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE1_2
-		disable_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE1_3
-		disable_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE1_4
-		disable_event_counter(3);
-#endif
 
 		/* sync_reset(); */
 
 		xTaskDelay(10);
 
 		cycles = read_cycle_counter();
-#ifdef PMU_EVENT_CORE1_1
-		event1 = read_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE1_2
-		event2 = read_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE1_3
-		event3 = read_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE1_4
-		event4 = read_event_counter(3);
-#endif
 
 		sprintf(&buf[0],
 				"Core 1 Load: %3i%% Task count: %2i Cycle count: %12u",
@@ -607,31 +354,6 @@ void core1(void* pParam) {
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 1 cycle_count: %12u iteration: %u offset: %d\n\r",
 				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE1, NR_OF_CORES,
 				 cycles, iter, offset);
-
-#ifdef PMU_EVENT_CORE1_1
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE1_1, event1, iter);
-#endif
-#ifdef PMU_EVENT_CORE1_2
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE1_2, event2, iter);
-#endif
-#ifdef PMU_EVENT_CORE1_3
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE1_3, event3, iter);
-#endif
-#ifdef PMU_EVENT_CORE1_4
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE1_4, event4, iter);
-#endif
 
 		if (++iter % 100 == 0)
 			offset += corenum;
@@ -646,18 +368,6 @@ void core2(void* pParam) {
 	int step = 0;
 	int dir = 1;
     unsigned int cycles;
-#ifdef PMU_EVENT_CORE2_1
-    unsigned int event1;
-#endif
-#ifdef PMU_EVENT_CORE2_2
-    unsigned int event2;
-#endif
-#ifdef PMU_EVENT_CORE2_3
-    unsigned int event3;
-#endif
-#ifdef PMU_EVENT_CORE2_4
-    unsigned int event4;
-#endif
     unsigned int iter=1;
     unsigned int offset=0;
 	int corenum=2;
@@ -666,30 +376,8 @@ void core2(void* pParam) {
 	enable_pmu();
 
 	log_debug(0, buf, "%s\n\r", "config pmu_events");
-#ifdef PMU_EVENT_CORE2_1
-	config_event_counter(0, PMU_EVENT_CORE2_1);
-#endif
-#ifdef PMU_EVENT_CORE2_2
-	config_event_counter(1, PMU_EVENT_CORE2_2);
-#endif
-#ifdef PMU_EVENT_CORE2_3
-	config_event_counter(2, PMU_EVENT_CORE2_3);
-#endif
-#ifdef PMU_EVENT_CORE2_4
-	config_event_counter(3, PMU_EVENT_CORE2_4);
-#endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE2_1
-		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
-		bsort100_Initialize(Array3);
-#endif
-#if defined BENCH_CONFIG_CORE2_3 || defined BENCH_CONFIG_CORE2_4 || defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
-		array_access_initialize(mydata3);
-#endif
-#if defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
-		array_access_randomize(myrandidx3, DATA_ASSIGN_CORE2);
-#endif
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -697,26 +385,10 @@ void core2(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 300, GetScreenWidth() - 20, 20, col);
 
-#ifndef DISABLE_CACHE
-	#ifndef NO_CACHE_MGMT
 		/* Slave only invalidates its own L1 cache */
 		invalidate_data_cache(1);
-	#endif
-#endif
 
 		enable_cycle_counter();
-#ifdef PMU_EVENT_CORE2_1
-		enable_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE2_2
-		enable_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE2_3
-		enable_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE2_4
-		enable_event_counter(3);
-#endif
 
 		/* /\* This is core2, we are slave for the synchroniztion between cores *\/ */
 		/* sync_slave(offset); */
@@ -728,38 +400,13 @@ void core2(void* pParam) {
 		reset_event_counters();
 #endif
 		reset_cycle_counter();
-		DO_BENCH_CORE2
 		disable_cycle_counter();
-#ifdef PMU_EVENT_CORE2_1
-		disable_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE2_2
-		disable_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE2_3
-		disable_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE2_4
-		disable_event_counter(3);
-#endif
 
 		/* sync_reset(); */
 
 		xTaskDelay(10);
 
 		cycles = read_cycle_counter();
-#ifdef PMU_EVENT_CORE2_1
-		event1 = read_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE2_2
-		event2 = read_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE2_3
-		event3 = read_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE2_4
-		event4 = read_event_counter(3);
-#endif
 
 		sprintf(&buf[0],
 				"Core 2 Load: %3i%% Task count: %2i Cycle count: %12u",
@@ -772,31 +419,6 @@ void core2(void* pParam) {
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 2 cycle_count: %12u iteration: %u offset: %d\n\r",
 				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE2, NR_OF_CORES,
 				 cycles, iter, offset);
-
-#ifdef PMU_EVENT_CORE2_1
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE2_1, event1, iter);
-#endif
-#ifdef PMU_EVENT_CORE2_2
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE2_2, event2, iter);
-#endif
-#ifdef PMU_EVENT_CORE2_3
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE2_3, event3, iter);
-#endif
-#ifdef PMU_EVENT_CORE2_4
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE2_4, event4, iter);
-#endif
 
 		if (++iter % 100 == 0)
 			offset += corenum;
@@ -811,18 +433,6 @@ void core3(void* pParam) {
 	int step = 0;
 	int dir = 1;
     unsigned int cycles;
-#ifdef PMU_EVENT_CORE3_1
-    unsigned int event1;
-#endif
-#ifdef PMU_EVENT_CORE3_2
-    unsigned int event2;
-#endif
-#ifdef PMU_EVENT_CORE3_3
-    unsigned int event3;
-#endif
-#ifdef PMU_EVENT_CORE3_4
-    unsigned int event4;
-#endif
     unsigned int iter=1;
     unsigned int offset=0;
 	int corenum=3;
@@ -831,30 +441,8 @@ void core3(void* pParam) {
 	enable_pmu();
 
 	log_debug(0, buf, "%s\n\r", "config pmu_events");
-#ifdef PMU_EVENT_CORE3_1
-	config_event_counter(0, PMU_EVENT_CORE3_1);
-#endif
-#ifdef PMU_EVENT_CORE3_2
-	config_event_counter(1, PMU_EVENT_CORE3_2);
-#endif
-#ifdef PMU_EVENT_CORE3_3
-	config_event_counter(2, PMU_EVENT_CORE3_3);
-#endif
-#ifdef PMU_EVENT_CORE3_4
-	config_event_counter(3, PMU_EVENT_CORE3_4);
-#endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE3_1
-		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
-		bsort100_Initialize(Array4);
-#endif
-#if defined BENCH_CONFIG_CORE3_3 || defined BENCH_CONFIG_CORE3_4 || defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
-		array_access_initialize(mydata4);
-#endif
-#if defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
-		array_access_randomize(myrandidx4, DATA_ASSIGN_CORE3);
-#endif
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -863,69 +451,23 @@ void core3(void* pParam) {
 		}
 		DoProgress(Dc, step, total, 10, 400, GetScreenWidth() - 20, 20, col);
 
-#ifndef DISABLE_CACHE
-	#ifndef NO_CACHE_MGMT
 		/* Slave only invalidates its own L1 cache */
 		invalidate_data_cache(1);
-	#endif
-#endif
 
 		enable_cycle_counter();
-#ifdef PMU_EVENT_CORE3_1
-		enable_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE3_2
-		enable_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE3_3
-		enable_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE3_4
-		enable_event_counter(3);
-#endif
 
 		/* /\* This is core3, we are slave for the synchroniztion between cores *\/ */
 		/* sync_slave(offset); */
 
 		/* Maybe reset the event counters */
-#if defined PMU_EVENT_CORE3_1
-		/* If any of the event counters is active, then at least the first one
-		 * will be active. We can reset the event counters in this case. */
-		reset_event_counters();
-#endif
 		reset_cycle_counter();
-		DO_BENCH_CORE3
 		disable_cycle_counter();
-#ifdef PMU_EVENT_CORE3_1
-		disable_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE3_2
-		disable_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE3_3
-		disable_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE3_4
-		disable_event_counter(3);
-#endif
 
 		/* sync_reset(); */
 
 		xTaskDelay(10);
 
 		cycles = read_cycle_counter();
-#ifdef PMU_EVENT_CORE3_1
-		event1 = read_event_counter(0);
-#endif
-#ifdef PMU_EVENT_CORE3_2
-		event2 = read_event_counter(1);
-#endif
-#ifdef PMU_EVENT_CORE3_3
-		event3 = read_event_counter(2);
-#endif
-#ifdef PMU_EVENT_CORE3_4
-		event4 = read_event_counter(3);
-#endif
 
 		sprintf(&buf[0],
 				"Core 3 Load: %3i%% Task count: %2i Cycle count: %12u",
@@ -938,31 +480,6 @@ void core3(void* pParam) {
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 3 cycle_count: %12u iteration: %u offset: %d\n\r",
 				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE3, NR_OF_CORES,
 				 cycles, iter, offset);
-
-#ifdef PMU_EVENT_CORE3_1
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE3_1, event1, iter);
-#endif
-#ifdef PMU_EVENT_CORE3_2
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE3_2, event2, iter);
-#endif
-#ifdef PMU_EVENT_CORE3_3
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE3_3, event3, iter);
-#endif
-#ifdef PMU_EVENT_CORE3_4
-		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE3_4, event4, iter);
-#endif
 
 		if (++iter % 100 == 0)
 			offset += corenum;
@@ -992,64 +509,22 @@ void main (void)
 
 	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
 
-
-#ifdef DISABLE_CACHE
-	// Maybe disable cache completely:
-	disable_cache();
-	log_info(0, buf, "%s\n\r", "Cache is disabled.");
-#endif
-
 	/* Core 0 task */
 	xTaskCreate(0, core0, "Core0", 512, NULL, 2, NULL);
 
-#if(NR_OF_CORES >= 2)
 	/* Core 1 task */
 	xTaskCreate(1, core1, "Core1", 512, NULL, 2, NULL);
-#else
-	uint8_t gpio2 = 6;
-	void* gpio2_ptr = (void*) &gpio2;
-	xTaskCreate(2, heartbeat, "HEARTBEAT", 512, gpio2_ptr, 2, NULL);
-#endif
 
-#if(NR_OF_CORES >= 3)
-	/* Core 2 task */
-	xTaskCreate(2, core2, "Core2", 512, NULL, 2, NULL);
-#else
 	uint8_t gpio3 = 5;
 	void* gpio3_ptr = (void*) &gpio3;
 	xTaskCreate(2, heartbeat, "HEARTBEAT", 512, gpio3_ptr, 2, NULL);
-#endif
 
-#if(NR_OF_CORES >= 4)
-	/* Core 3 task */
-	xTaskCreate(3, core3, "Core3", 512, NULL, 2, NULL);
-#else
 	uint8_t gpio4 = 12;
 	void* gpio4_ptr = (void*) &gpio4;
 	xTaskCreate(3, heartbeat, "HEARTBEAT", 512, gpio4_ptr, 2, NULL);
-#endif
-
 
 	/* Start scheduler */
 	xTaskStartScheduler();
-
-
-	/* Get information on the implemented events */
-	/* uint64_t pmceid0 = read_cei_reg(); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L1DC) */
-	/* 	log_debug(0, buf, "%s\n\r", "L1 Data cache access event implemented"); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L2DC) */
-	/* 	log_debug(0, buf, "%s\n\r", "L2 Data cache access event implemented"); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L1DCRF) */
-	/* 	log_debug(0, buf, "%s\n\r", "L1 Data cache refill event implemented"); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L2DCRF) */
-	/* 	log_debug(0, buf, "%s\n\r", "L2 Data cache refill event implemented"); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L1DCWB) */
-	/* 	log_debug(0, buf, "%s\n\r", "L1 Data cache Write-back event implemented"); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L2DCWB) */
-	/* 	log_debug(0, buf, "%s\n\r", "L2 Data cache Write-back event implemented"); */
-
-	/* log_info(0, buf, "Number of event counters is %d\n\r", read_nr_eventcounters()); */
 
 	/*
 	 *	We should never get here, but just in case something goes wrong,
