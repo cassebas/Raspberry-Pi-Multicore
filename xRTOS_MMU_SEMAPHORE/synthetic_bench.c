@@ -9,6 +9,15 @@
 #include <stdlib.h>
 #include "synthetic_bench.h"
 
+void array_access_initialize(volatile bigstruct_t* data)
+{
+	if (data != NULL) {
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			data[i].id = i % 512;
+		}
+	}
+}
+
 int array_access_linear(volatile bigstruct_t* data)
 {
 	int sum = 0;

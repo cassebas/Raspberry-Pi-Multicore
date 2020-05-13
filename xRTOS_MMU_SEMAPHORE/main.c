@@ -350,6 +350,9 @@ void core0(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array1);
 #endif
+#if defined BENCH_CONFIG_CORE0_3 || defined BENCH_CONFIG_CORE0_4 || defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
+		array_access_initialize(mydata1);
+#endif
 #if defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
 		array_access_randomize(myrandidx1, DATA_ASSIGN_CORE0);
 #endif
@@ -516,6 +519,9 @@ void core1(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array2);
 #endif
+#if defined BENCH_CONFIG_CORE1_3 || defined BENCH_CONFIG_CORE1_4 || defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
+		array_access_initialize(mydata2);
+#endif
 #if defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
 		array_access_randomize(myrandidx2, DATA_ASSIGN_CORE1);
 #endif
@@ -678,6 +684,9 @@ void core2(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array3);
 #endif
+#if defined BENCH_CONFIG_CORE2_3 || defined BENCH_CONFIG_CORE2_4 || defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
+		array_access_initialize(mydata3);
+#endif
 #if defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
 		array_access_randomize(myrandidx3, DATA_ASSIGN_CORE2);
 #endif
@@ -839,6 +848,9 @@ void core3(void* pParam) {
 #ifdef BENCH_CONFIG_CORE3_1
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array4);
+#endif
+#if defined BENCH_CONFIG_CORE3_3 || defined BENCH_CONFIG_CORE3_4 || defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
+		array_access_initialize(mydata4);
 #endif
 #if defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
 		array_access_randomize(myrandidx4, DATA_ASSIGN_CORE3);

@@ -45,6 +45,7 @@ typedef struct bigstruct {
 } bigstruct_t;
 
 
+void array_access_initialize(volatile bigstruct_t* data);
 int array_access_linear(volatile bigstruct_t* data);
 void array_write_linear(volatile bigstruct_t* data);
 void array_access_randomize(volatile int* idx, int corenum);
