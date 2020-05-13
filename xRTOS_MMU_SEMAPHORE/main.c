@@ -381,8 +381,8 @@ void core0(void* pParam) {
 		enable_event_counter(3);
 #endif
 
-		/* This is core0, we are master for the synchronization between cores */
-		sync_master();
+		/* /\* This is core0, we are master for the synchronization between cores *\/ */
+		/* sync_master(); */
 
 		/* Maybe reset the event counters */
 #if defined PMU_EVENT_CORE0_1
@@ -406,7 +406,7 @@ void core0(void* pParam) {
 		disable_event_counter(3);
 #endif
 
-		sync_reset();
+		/* sync_reset(); */
 
 		xTaskDelay(10);
 
@@ -547,8 +547,8 @@ void core1(void* pParam) {
 		enable_event_counter(3);
 #endif
 
-		/* This is core1, we are slave for the synchronization between cores */
-		sync_slave(offset);
+		/* /\* This is core1, we are slave for the synchronization between cores *\/ */
+		/* sync_slave(offset); */
 
 		/* Maybe reset the event counters */
 #if defined PMU_EVENT_CORE1_1
@@ -572,7 +572,7 @@ void core1(void* pParam) {
 		disable_event_counter(3);
 #endif
 
-		sync_reset();
+		/* sync_reset(); */
 
 		xTaskDelay(10);
 
@@ -709,8 +709,8 @@ void core2(void* pParam) {
 		enable_event_counter(3);
 #endif
 
-		/* This is core2, we are slave for the synchroniztion between cores */
-		sync_slave(offset);
+		/* /\* This is core2, we are slave for the synchroniztion between cores *\/ */
+		/* sync_slave(offset); */
 
 		/* Maybe reset the event counters */
 #if defined PMU_EVENT_CORE2_1
@@ -734,7 +734,7 @@ void core2(void* pParam) {
 		disable_event_counter(3);
 #endif
 
-		sync_reset();
+		/* sync_reset(); */
 
 		xTaskDelay(10);
 
@@ -872,8 +872,8 @@ void core3(void* pParam) {
 		enable_event_counter(3);
 #endif
 
-		/* This is core3, we are slave for the synchroniztion between cores */
-		sync_slave(offset);
+		/* /\* This is core3, we are slave for the synchroniztion between cores *\/ */
+		/* sync_slave(offset); */
 
 		/* Maybe reset the event counters */
 #if defined PMU_EVENT_CORE3_1
@@ -897,7 +897,7 @@ void core3(void* pParam) {
 		disable_event_counter(3);
 #endif
 
-		sync_reset();
+		/* sync_reset(); */
 
 		xTaskDelay(10);
 
