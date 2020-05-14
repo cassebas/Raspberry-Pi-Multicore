@@ -1,6 +1,9 @@
 **/Build
 **/DiskImg/*.img
 kernel.*
+kernel8.*
 **/*.o
 **/benchmark_config.h
 **/random_sets.h
+**/.gdb_history
+.python-version
