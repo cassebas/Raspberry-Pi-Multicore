@@ -42,15 +42,6 @@
 #define DO_BENCH_CORE2 array_access_linear(BENCH_ARG_CORE2);
 #define DO_BENCH_CORE3
 
-/* The random data sets can be assigned to different cores,
-   to make sure that the data cannot be a factor in the measured
-   cycles. */
-#define DATA_ASSIGN_CORE0 0
-#define DATA_ASSIGN_CORE1 1
-#define DATA_ASSIGN_CORE2 2
-#define DATA_ASSIGN_CORE3 3
-#define DATA_ASSIGN_STRING "dassign: '0123'"
-
 #define EXP_LABEL "DEFAULT"
 
 #define PM_EVENT_TYPE1 "L2_DCACHE_ACCESS"
@@ -351,7 +342,7 @@ void core0(void* pParam) {
 		bsort100_Initialize(Array1);
 #endif
 #if defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
-		array_access_randomize(myrandidx1, DATA_ASSIGN_CORE0);
+		array_access_randomize(myrandidx1, corenum);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -517,7 +508,7 @@ void core1(void* pParam) {
 		bsort100_Initialize(Array2);
 #endif
 #if defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
-		array_access_randomize(myrandidx2, DATA_ASSIGN_CORE1);
+		array_access_randomize(myrandidx2, corenum);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -679,7 +670,7 @@ void core2(void* pParam) {
 		bsort100_Initialize(Array3);
 #endif
 #if defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
-		array_access_randomize(myrandidx3, DATA_ASSIGN_CORE2);
+		array_access_randomize(myrandidx3, corenum);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -841,7 +832,7 @@ void core3(void* pParam) {
 		bsort100_Initialize(Array4);
 #endif
 #if defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
-		array_access_randomize(myrandidx4, DATA_ASSIGN_CORE3);
+		array_access_randomize(myrandidx4, corenum);
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
