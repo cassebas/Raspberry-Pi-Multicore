@@ -86,6 +86,19 @@ print(set(df2.index.get_level_values(3))) # alignment pattern string
 df2
 
 # +
+df = pd.read_csv('output/test2-cycles.csv')
+#df = df.iloc[:100,:]
+
+df_core1 = df.loc[df['core']==0]
+df_core1 = df_core1.set_index(['iteration'])
+
+plt.figure(figsize=[10,5])
+plt.grid(True)
+plt.plot(df_core1['cycles'], label='Cycles core1')
+plt.legend(loc=1)
+df.configuration.unique()[0]
+
+# +
 df = pd.read_csv('example_linearcharts/cyclesdata-default-4core-config4455-dassign0123-pattern0000.csv',
                 sep=' ')
 df = df.iloc[:10000,:]

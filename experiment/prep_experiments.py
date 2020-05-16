@@ -359,7 +359,7 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
     log_processor.start_thread()
 
     logger.info('Instantiating Resetter object.')
-    resetter = Resetter(tty_reset, log_processor)
+    resetter = Resetter(tty_reset, log_processor, min_observations)
     resetter.start_thread()
 
     df = pd.read_excel(infile)
