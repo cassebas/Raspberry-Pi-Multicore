@@ -221,7 +221,7 @@ def output_image(dfcycles, cores, dfevents, pmu, win, benchmarks,
             axi = ax[corenum]
         axi.set_ylabel('Cycles')
         axi.plot(dfcore.index, dfcore[field2plot], label=label,
-                 color='blue')
+                 marker='o', linestyle=None, color='blue')
         axi.legend(loc=1)
         axi.grid(True)
         if dfevents is not None:
@@ -233,7 +233,8 @@ def output_image(dfcycles, cores, dfevents, pmu, win, benchmarks,
                 eventname = dfcore_ev['eventname'].unique()[0]
                 ax2 = axi.twinx()
                 ax2.plot(dfcore_ev.index, dfcore_ev['eventcount'],
-                         color='green', label=eventname)
+                         marker='o', linestyle=None, color='green',
+                         label=eventname)
                 ax2.set_ylabel(eventname)
                 ax2.legend(loc=4)
             except KeyError:

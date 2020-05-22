@@ -23,6 +23,11 @@ from itertools import permutations
 from itertools import product
 import re
 
+# + jupyter={"outputs_hidden": true}
+g = 'report/data/*.csv'
+filenames = glob.glob(g)
+filenames
+
 # +
 benchmarks = ['1', '2', '3', '4', '5', '6']
 flist = []
@@ -30,7 +35,7 @@ for cores in range(1, 5):
     prod = product(benchmarks, repeat=cores)
     for p in prod:
         bench = ''.join(p)
-        g = 'report/data/cyclesdata-*.csv'.format(cores, bench)
+        g = 'report/data/cyclesdata-TEST*.csv'.format(cores, bench)
         filenames = glob.glob(g)
         flist += filenames
 
