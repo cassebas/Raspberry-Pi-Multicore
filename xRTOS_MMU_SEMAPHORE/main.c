@@ -349,7 +349,10 @@ void core0(void* pParam) {
 		{
 			dir = -dir;
 		}
-		/* DoProgress(Dc, step, total, 10, 100, GetScreenWidth()-20, 20, col); */
+
+#ifdef SCREEN_ENABLE
+		DoProgress(Dc, step, total, 10, 100, GetScreenWidth()-20, 20, col);
+#endif
 
 #ifndef DISABLE_CACHE
 	#ifndef NO_CACHE_MGMT
@@ -415,12 +418,14 @@ void core0(void* pParam) {
 		event4 = read_event_counter(3);
 #endif
 
-		/* sprintf(&buf[0], */
-		/* 		"Core 0 Load: %3i%% Task count: %2i Cycle count: %12u", */
-		/* 		xLoadPercentCPU(), */
-		/* 		xTaskGetNumberOfTasks(), */
-		/* 		cycles); */
-		/* TextOut(Dc, 20, 80, &buf[0], strlen(&buf[0])); */
+#ifdef SCREEN_ENABLE
+		sprintf(&buf[0],
+				"Core 0 Load: %3i%% Task count: %2i Cycle count: %12u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				cycles);
+		TextOut(Dc, 20, 80, &buf[0], strlen(&buf[0]));
+#endif
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 0 cycle_count: %12u iteration: %u offset: %d\n\r",
@@ -515,7 +520,10 @@ void core1(void* pParam) {
 		{
 			dir = -dir;
 		}
-		/* DoProgress(Dc, step, total, 10, 200, GetScreenWidth() - 20, 20, col); */
+
+#ifdef SCREEN_ENABLE
+		DoProgress(Dc, step, total, 10, 200, GetScreenWidth() - 20, 20, col);
+#endif
 
 #ifndef DISABLE_CACHE
 	#ifndef NO_CACHE_MGMT
@@ -581,12 +589,14 @@ void core1(void* pParam) {
 		event4 = read_event_counter(3);
 #endif
 
-		/* sprintf(&buf[0], */
-		/* 		"Core 1 Load: %3i%% Task count: %2i Cycle count: %12u", */
-		/* 		xLoadPercentCPU(), */
-		/* 		xTaskGetNumberOfTasks(), */
-		/* 		cycles); */
-		/* TextOut(Dc, 20, 180, &buf[0], strlen(&buf[0])); */
+#ifdef SCREEN_ENABLE
+		sprintf(&buf[0],
+				"Core 1 Load: %3i%% Task count: %2i Cycle count: %12u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				cycles);
+		TextOut(Dc, 20, 180, &buf[0], strlen(&buf[0]));
+#endif
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 1 cycle_count: %12u iteration: %u offset: %d\n\r",
@@ -677,7 +687,10 @@ void core2(void* pParam) {
 		{
 			dir = -dir;
 		}
-		/* DoProgress(Dc, step, total, 10, 300, GetScreenWidth() - 20, 20, col); */
+
+#ifdef SCREEN_ENABLE
+		DoProgress(Dc, step, total, 10, 300, GetScreenWidth() - 20, 20, col);
+#endif
 
 #ifndef DISABLE_CACHE
 	#ifndef NO_CACHE_MGMT
@@ -743,12 +756,14 @@ void core2(void* pParam) {
 		event4 = read_event_counter(3);
 #endif
 
-		/* sprintf(&buf[0], */
-		/* 		"Core 2 Load: %3i%% Task count: %2i Cycle count: %12u", */
-		/* 		xLoadPercentCPU(), */
-		/* 		xTaskGetNumberOfTasks(), */
-		/* 		cycles); */
-		/* TextOut(Dc, 20, 280, &buf[0], strlen(&buf[0])); */
+#ifdef SCREEN_ENABLE
+		sprintf(&buf[0],
+				"Core 2 Load: %3i%% Task count: %2i Cycle count: %12u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				cycles);
+		TextOut(Dc, 20, 280, &buf[0], strlen(&buf[0]));
+#endif
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 2 cycle_count: %12u iteration: %u offset: %d\n\r",
@@ -840,7 +855,10 @@ void core3(void* pParam) {
 			dir = -dir;
 
 		}
-		/* DoProgress(Dc, step, total, 10, 400, GetScreenWidth() - 20, 20, col); */
+
+#ifdef SCREEN_ENABLE
+		DoProgress(Dc, step, total, 10, 400, GetScreenWidth() - 20, 20, col);
+#endif
 
 #ifndef DISABLE_CACHE
 	#ifndef NO_CACHE_MGMT
@@ -906,12 +924,14 @@ void core3(void* pParam) {
 		event4 = read_event_counter(3);
 #endif
 
-		/* sprintf(&buf[0], */
-		/* 		"Core 3 Load: %3i%% Task count: %2i Cycle count: %12u", */
-		/* 		xLoadPercentCPU(), */
-		/* 		xTaskGetNumberOfTasks(), */
-		/* 		cycles); */
-		/* TextOut(Dc, 20, 380, &buf[0], strlen(&buf[0])); */
+#ifdef SCREEN_ENABLE
+		sprintf(&buf[0],
+				"Core 3 Load: %3i%% Task count: %2i Cycle count: %12u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				cycles);
+		TextOut(Dc, 20, 380, &buf[0], strlen(&buf[0]));
+#endif
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 3 cycle_count: %12u iteration: %u offset: %d\n\r",
@@ -952,15 +972,21 @@ void main (void)
 {
 	char buf[256];
 
-	/* Init_EmbStdio(WriteText);										// Initialize embedded stdio */
-	/* PiConsole_Init(0, 0, 0, 
-	/* displaySmartStart(printf);										// Display smart start details */
-	/* ARM_setmaxspeed(printf);										// ARM CPU to max speed */
+#ifdef SCREEN_ENABLE
+	Init_EmbStdio(WriteText);										// Initialize embedded stdio
+	PiConsole_Init(0, 0, 0, printf);								// Auto resolution console, message to screen
+	displaySmartStart(printf);										// Display smart start details
+	ARM_setmaxspeed(printf);										// ARM CPU to max speed
+#else
+	ARM_setmaxspeed(NULL);										// ARM CPU to max speed
+#endif
 
+#ifdef SCREEN_ENABLE
 	// get timer frequency
-	/* RegType_t timerfreq = EL0_Timer_Frequency(); */
+	RegType_t timerfreq = EL0_Timer_Frequency();
 
-	/* printf("Task tick rate: %u   EL0 Timer frequency %u\n", configTICK_RATE_HZ, timerfreq); */
+	printf("Task tick rate: %u   EL0 Timer frequency %u\n", configTICK_RATE_HZ, timerfreq);
+#endif
 
     unsigned int baudrate = 115200;
     if (pl011_uart_init(baudrate)) {

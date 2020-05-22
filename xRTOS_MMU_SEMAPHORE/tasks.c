@@ -1,11 +1,39 @@
 #include <stdint.h>
 #include "xRTOS.h"
 #include "rpi-smartstart.h"
-#include "mmu.h"
 #include "semaphore.h"
 #include "task.h"
 #include <stdio.h>
 #include <stdarg.h>
+
+#define MMU_ENABLE
+
+/**
+ * If the following macro with name BENCHMARK_CONFIG_M4 was
+ * specified on the command line, then we know the include
+ * file can be included.
+ * This is done to make sure that the include file is actually
+ * generated (which is done using m4).
+ *
+ * Usage is thus:
+ *   m4 -Dmmu_enable > benchmark_config.h && \
+ *     make BENCHMARK_CONFIG=-DBENCHMARK_CONFIG_M4 Pi-64
+ *
+ * Or, just
+ *   make Pi-64 in case the benchmark config is not to be set.
+ *
+ * If the parameter -Dmmu_enable is used in the m4 macro definition,
+ * or if the benchmark_config.h is not generated, the MMU is enabled
+ * by default. Inclusion of the benchmark_config.h could potentially
+ * *disable* * the MMU by an #undef MMU_ENABLE.
+ */
+#ifdef BENCHMARK_CONFIG_M4
+#include "benchmark_config.h"
+#endif
+
+#ifdef MMU_ENABLE
+#include "mmu.h"
+#endif
 
 /*
  * Macros used by vListTask to indicate which state a task is in.
@@ -216,7 +244,9 @@ static void prvIdleTask(void* pvParameters)
 {--------------------------------------------------------------------------*/
 static void StartTasksOnCore(void)
 {
-	MMU_enable();													// Enable MMU											
+#ifdef MMU_ENABLE
+	MMU_enable();													// Enable MMU
+#endif
 	EL0_Timer_Set(m_nClockTicksPerHZTick);							// Set the EL0 timer
 	EL0_Timer_Irq_Setup();											// Setup the EL0 timer interrupt
 	xStartFirstTask();												// Restore context starting the first task
@@ -345,8 +375,10 @@ void xTaskStartScheduler( void )
 	/* Calculate divisor to create Timer Tick frequency on EL0 timer */
 	m_nClockTicksPerHZTick = (EL0_Timer_Frequency() / configTICK_RATE_HZ);
 
+#ifdef MMU_enable
 	/* MMU table setup done by core 0 */
 	MMU_setup_pagetable();
+#endif
 
 	/* Start each core in reverse order because core0 is running this code  */
 	CoreExecute(3, StartTasksOnCore);								// Start tasks on core3

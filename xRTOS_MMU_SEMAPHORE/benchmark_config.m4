@@ -171,4 +171,23 @@ ifdef(`exp_label', `', `define(exp_label, `default')')
 #define EXP_LABEL "exp_label"
 #endif
 
+define(mmu_enable_def, `
+#ifndef MMU_ENABLE
+#define MMU_ENABLE
+#endif
+')dnl
+define(mmu_disable_def, `
+#ifdef MMU_ENABLE
+#undef MMU_ENABLE
+#endif
+')dnl
+ifdef(`mmu_enable', mmu_enable_def, mmu_disable_def)dnl
+
+define(screen_enable_def, `
+#ifndef SCREEN_ENABLE
+#define SCREEN_ENABLE
+#endif
+')dnl
+ifdef(`screen_enable', screen_enable_def, `')dnl
+
 #endif /* ~BENCHMARK_CONFIG_H */
