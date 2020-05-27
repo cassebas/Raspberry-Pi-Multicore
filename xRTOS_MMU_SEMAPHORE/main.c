@@ -332,9 +332,11 @@ void core0(void* pParam) {
 		 * will be active. We can reset the event counters in this case. */
 		reset_event_counters();
 #endif
+		DisableInterrupts();
 		reset_cycle_counter();
 		DO_BENCH_CORE0
 		disable_cycle_counter();
+		EnableInterrupts();
 #ifdef PMU_EVENT_CORE0_1
 		disable_event_counter(0);
 #endif
@@ -498,9 +500,11 @@ void core1(void* pParam) {
 		 * will be active. We can reset the event counters in this case. */
 		reset_event_counters();
 #endif
+		DisableInterrupts();
 		reset_cycle_counter();
 		DO_BENCH_CORE1
 		disable_cycle_counter();
+		EnableInterrupts();
 #ifdef PMU_EVENT_CORE1_1
 		disable_event_counter(0);
 #endif
@@ -660,9 +664,11 @@ void core2(void* pParam) {
 		 * will be active. We can reset the event counters in this case. */
 		reset_event_counters();
 #endif
+		DisableInterrupts();
 		reset_cycle_counter();
 		DO_BENCH_CORE2
 		disable_cycle_counter();
+		EnableInterrupts();
 #ifdef PMU_EVENT_CORE2_1
 		disable_event_counter(0);
 #endif
@@ -823,9 +829,11 @@ void core3(void* pParam) {
 		 * will be active. We can reset the event counters in this case. */
 		reset_event_counters();
 #endif
+		DisableInterrupts();
 		reset_cycle_counter();
 		DO_BENCH_CORE3
 		disable_cycle_counter();
+		EnableInterrupts();
 #ifdef PMU_EVENT_CORE3_1
 		disable_event_counter(0);
 #endif
