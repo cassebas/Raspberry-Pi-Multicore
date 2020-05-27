@@ -171,4 +171,13 @@ ifdef(`exp_label', `', `define(exp_label, `default')')
 #define EXP_LABEL "exp_label"
 #endif
 
+dnl maybe define the tick rate in Hz
+define(tick_rate_hz_template, `
+#ifdef TICK_RATE_HZ
+#undef TICK_RATE_HZ
+#endif
+#define TICK_RATE_HZ $1
+')dnl
+ifdef(`tick_rate_hz', `tick_rate_hz_template(tick_rate_hz)', `')
+
 #endif /* ~BENCHMARK_CONFIG_H */

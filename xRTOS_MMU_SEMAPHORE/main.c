@@ -17,55 +17,6 @@
 #include "iv_cache.h"
 
 /**
- * These are the benchmarks:
- * 0: mälardalen bsort 100
- * 1: mälardalen edn
- * 2: linear array access
- * 3: random array access
- */
-#define NR_OF_CORES 3
-#define BENCH_CONFIG_CORE0_1
-#define BENCH_CONFIG_CORE1_2
-#define BENCH_CONFIG_CORE2_3
-#define CONFIG_STRING "configuration: '123'"
-
-#define BENCH_STRING_CORE0 "benchmark: malardalen_bsort100"
-#define BENCH_STRING_CORE1 "benchmark: malardalen_edn"
-#define BENCH_STRING_CORE2 "benchmark: linear_array_access"
-#define BENCH_STRING_CORE3 ""
-
-#define BENCH_ARG_CORE0 Array1
-#define BENCH_ARG_CORE2 mydata3
-
-#define DO_BENCH_CORE0 bsort100_BubbleSort(BENCH_ARG_CORE0);
-#define DO_BENCH_CORE1 edn_Calculate();
-#define DO_BENCH_CORE2 array_access_linear(BENCH_ARG_CORE2);
-#define DO_BENCH_CORE3
-
-#define EXP_LABEL "DEFAULT"
-
-#define PM_EVENT_TYPE1 "L2_DCACHE_ACCESS"
-#define PM_EVENT_TYPE2 "L2_DCACHE_REFILL"
-
-/**
- * If the following macro with name BENCHMARK_CONFIG_M4 was
- * specified on the command line, then we know the include
- * file can be included.
- * This is done to make sure that the include file is actually
- * generated (which is done using m4).
- *
- * Usage is thus:
- *   m4 config='123' benchmark_config.m4 > benchmark_config.h && \
- *     make BENCHMARK_CONFIG=-DBENCHMARK_CONFIG_M4 Pi-64
- *
- * Or, just 
- *   make Pi-64 in case the benchmark config is not to be set.
- */
-#ifdef BENCHMARK_CONFIG_M4
-#include "benchmark_config.h"
-#endif
-
-/**
  * Maybe define the needed datastructures (depending on
  * the specific configuration of benchmarks).
  */
