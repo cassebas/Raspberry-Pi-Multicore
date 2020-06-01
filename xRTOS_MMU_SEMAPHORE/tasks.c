@@ -4,6 +4,7 @@
 #include "task.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include "debug.h"
 
 #ifdef MMU_ENABLE
 #include "semaphore.h"

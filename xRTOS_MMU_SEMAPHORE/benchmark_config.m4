@@ -196,4 +196,12 @@ define(screen_enable_def, `
 ')dnl
 ifdef(`screen_enable', screen_enable_def, `')dnl
 
+dnl maybe enable debug info
+define(debug_enable_def, `
+#ifndef DEBUG_ENABLE
+#define DEBUG_ENABLE
+#endif
+')dnl
+ifdef(`debug_enable', debug_enable_def, `')dnl
+
 #endif /* ~BENCHMARK_CONFIG_H */

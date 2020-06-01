@@ -6,6 +6,7 @@
 #include "task.h"
 #include "windows.h"
 #include "semaphore.h"
+#include "debug.h"
 
 /* definition of performance monitor control registers and such */
 #include "armv8_pm.h"
