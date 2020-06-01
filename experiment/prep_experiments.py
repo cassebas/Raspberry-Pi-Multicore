@@ -25,13 +25,15 @@ click_log.basic_config(logger)
 class Fields(Enum):
     CONFIG = 1
     DISABLE_CACHE = 2
-    NO_CACHE_MGMT = 3
-    SB_DATASIZE = 4
-    EXP_LABEL = 5
-    PMU_CORE0 = 6
-    PMU_CORE1 = 7
-    PMU_CORE2 = 8
-    PMU_CORE3 = 9
+    ENABLE_MMU = 3
+    ENABLE_SCREEN = 4
+    NO_CACHE_MGMT = 5
+    SB_DATASIZE = 6
+    EXP_LABEL = 7
+    PMU_CORE0 = 8
+    PMU_CORE1 = 9
+    PMU_CORE2 = 10
+    PMU_CORE3 = 11
 
 
 class Compile:
@@ -84,7 +86,8 @@ class Compile:
                           BENCHMARK_CONFIG='-DBENCHMARK_CONFIG_M4')
 
     def set_compilation(self, config=None, label=None, datasize=None,
-                        pmu_cores=None, no_cache_mgmt=False):
+                        pmu_cores=None, no_cache_mgmt=False,
+                        enable_mmu=False, enable_screen=False):
         arg_m4_list = []
         arg_make_list = []
         if config is not None:
@@ -100,6 +103,14 @@ class Compile:
             logger.debug('label={}'.format(label))
             label_param = '-Dexp_label={}'.format(label)
             arg_m4_list.append(label_param)
+        if enable_mmu is True:
+            logger.debug('enable_mmu={}'.format(enable_mmu))
+            enable_mmu_param = '-Denable_mmu'
+            arg_m4_list.append(enable_mmu_param)
+        if enable_screen is True:
+            logger.debug('enable_screen={}'.format(enable_screen))
+            enable_screen_param = '-Denable_screen'
+            arg_m4_list.append(enable_screen_param)
         if no_cache_mgmt is True:
             no_cache_mgmt_param = 'NO_CACHE_MGMT=-DNO_CACHE_MGMT'
             arg_make_list.append(no_cache_mgmt_param)
@@ -338,6 +349,8 @@ class LogProcessor(SerialThread):
 flds = {
     Fields.CONFIG: 'configuration of cores',
     Fields.DISABLE_CACHE: 'disable cache',  # not implemented for now
+    Fields.ENABLE_MMU: 'enable mmu',
+    Fields.ENABLE_SCREEN: 'enable screen',
     Fields.NO_CACHE_MGMT: 'no cache management',
     Fields.SB_DATASIZE: 'synbench datasize',
     Fields.EXP_LABEL: 'experiment label',
@@ -373,13 +386,16 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
         config = row[flds[Fields.CONFIG]]
         label = row[flds[Fields.EXP_LABEL]]
         no_cache_mgmt = row[flds[Fields.NO_CACHE_MGMT]]
+        enable_mmu = row[flds[Fields.ENABLE_MMU]]
+        enable_screen = row[flds[Fields.ENABLE_SCREEN]]
         datasize = row[flds[Fields.SB_DATASIZE]]
         pmu_cores = (row[flds[Fields.PMU_CORE0]],
                      row[flds[Fields.PMU_CORE1]],
                      row[flds[Fields.PMU_CORE2]],
                      row[flds[Fields.PMU_CORE3]])
         comp.set_compilation(config=config, label=label, datasize=datasize,
-                             pmu_cores=pmu_cores, no_cache_mgmt=no_cache_mgmt)
+                             pmu_cores=pmu_cores, no_cache_mgmt=no_cache_mgmt,
+                             enable_mmu=enable_mmu, enable_screen=enable_screen)
         comp.compile()
 
         logger.info('Compilation done.')

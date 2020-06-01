@@ -180,4 +180,20 @@ define(tick_rate_hz_template, `
 ')dnl
 ifdef(`tick_rate_hz', `tick_rate_hz_template(tick_rate_hz)', `')
 
+dnl maybe enable the MMU
+define(mmu_enable_def, `
+#ifndef MMU_ENABLE
+#define MMU_ENABLE
+#endif
+')dnl
+ifdef(`mmu_enable', mmu_enable_def, `')dnl
+
+dnl maybe enable screen
+define(screen_enable_def, `
+#ifndef SCREEN_ENABLE
+#define SCREEN_ENABLE
+#endif
+')dnl
+ifdef(`screen_enable', screen_enable_def, `')dnl
+
 #endif /* ~BENCHMARK_CONFIG_H */

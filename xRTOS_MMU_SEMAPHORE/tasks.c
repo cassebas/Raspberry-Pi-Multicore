@@ -1,11 +1,14 @@
 #include <stdint.h>
 #include "xRTOS.h"
 #include "rpi-smartstart.h"
-#include "mmu.h"
-#include "semaphore.h"
 #include "task.h"
 #include <stdio.h>
 #include <stdarg.h>
+
+#ifdef MMU_ENABLE
+#include "semaphore.h"
+#include "mmu.h"
+#endif
 
 /*
  * Macros used by vListTask to indicate which state a task is in.
@@ -31,7 +34,15 @@
 #define CoreExitCritical EnableInterrupts
 #define ImmediateYield __asm volatile ("svc 0")
 
+#ifdef MMU_ENABLE
 static SemaphoreHandle_t screenSem;
+#endif
+
+// single writer/multiple reader (SWMR) atomic register level
+// for Peterson's algorithm
+static volatile int level[MAX_CPU_CORES] = {0};
+static volatile int last_to_enter[MAX_CPU_CORES] = {0};
+
 
 typedef struct TaskControlBlock* task_ptr;
 
@@ -80,7 +91,9 @@ typedef struct TaskControlBlock
 	/* If task is in the delayed list this is release time */
 	RegType_t ReleaseTime;										/*< Core OSTickCounter at which task will be released from delay */
 
-	SemaphoreHandle_t taskSem;									/*< Task semaphore */	
+#ifdef MMU_ENABLE
+	SemaphoreHandle_t taskSem;									/*< Task semaphore */
+#endif
 
 	struct {
 		RegType_t		uxPriority : 8;							/*< The priority of the task.  0 is the lowest priority. */
@@ -124,9 +137,6 @@ static struct CoreControlBlock
 		volatile unsigned CoreState : 3;
 		volatile unsigned SyncScheduler : 1;
 		volatile unsigned SyncOffset;
-		/* UART printing lock, level l==-1 means not waiting, l>=0 means waiting at level=l */
-		volatile int UARTlock_level : 4;
-		volatile int UARTlock_last_to_enter : 4;
 	};
 } coreCB[MAX_CPU_CORES] = { 0 };
 
@@ -216,9 +226,15 @@ static void prvIdleTask(void* pvParameters)
 {--------------------------------------------------------------------------*/
 static void StartTasksOnCore(void)
 {
-	MMU_enable();													// Enable MMU											
+#ifdef MMU_ENABLE
+	MMU_enable();													// Enable MMU
+#endif
 	EL0_Timer_Set(m_nClockTicksPerHZTick);							// Set the EL0 timer
 	EL0_Timer_Irq_Setup();											// Setup the EL0 timer interrupt
+
+#ifndef MMU_ENABLE
+	EnableInterrupts();												// Enable interrupts on core
+#endif
 	xStartFirstTask();												// Restore context starting the first task
 }
 
@@ -236,10 +252,6 @@ void xRTOS_Init (void)
 		RPi_coreCB_PTR[i] = &coreCB[i];								// Set the core block pointers in the smartstart system needed by irq and swi vectors
 		coreCB[i].xCoreBlockInitialized = 1;						// Set the core block initialzied flag to state this has been done
 
-		/* Initialize the synchronization variables */
-		coreCB[i].UARTlock_last_to_enter = -1;
-		coreCB[i].UARTlock_level = -1;
-
 		// Initialize the states of the cores to inactive. If a core is started
 		// by task creation, its state will be set to active.
 		coreCB[i].CoreState = INACTIVE;
@@ -247,8 +259,10 @@ void xRTOS_Init (void)
 		coreCB[i].SyncOffset = 0;
 	}
 
+#ifdef MMU_ENABLE
 	// Initialize the semaphore for protection of a critical section
 	screenSem = xSemaphoreCreateBinary();
+#endif
 }
 
 /*-[ xTaskCreate ]----------------------------------------------------------}
@@ -278,8 +292,11 @@ void xTaskCreate (uint8_t corenum,									// The core number to run task on
 		TestStackTop -= usStackDepth;
 		task->uxPriority = uxPriority;								// Hold the task priority
 		task->inUse = 1;											// Set the task is in use flag
-		task->assignedCore = corenum;								// Hold the core number task assigned to 
+		task->assignedCore = corenum;								// Hold the core number task assigned to
+#ifdef MMU_ENABLE
 		task->taskSem = xSemaphoreCreateBinary();					// Create a semaphore
+#endif
+
 		if (pcName) {
 			int j;
 			for (j = 0; (j < configMAX_TASK_NAME_LEN - 1) && (pcName[j] != 0); j++)
@@ -318,13 +335,22 @@ void xTaskDelay (const unsigned int time_wait)
 		struct TaskControlBlock* task;
 		unsigned int corenum = getCoreID();							// Get the core ID
 		struct CoreControlBlock* cb = &coreCB[corenum];				// Set pointer to core block
-		task = (struct TaskControlBlock*) cb->pxCurrentTCB;			// Set temp task pointer .. typecast is to stop volatile dropped warning						
+#ifndef MMU_ENABLE
+		CoreEnterCritical();										// Entering core critical area
+#endif
+		task = (struct TaskControlBlock*) cb->pxCurrentTCB;			// Set temp task pointer .. typecast is to stop volatile dropped warning
+#ifdef MMU_ENABLE
 		xSemaphoreTake(task->taskSem);								// We are going to play with list lock the task semaphore
+#endif
 		task->ReleaseTime = cb->OSTickCounter + time_wait;			// Calculate release tick value
 		RemoveTaskFromList(&cb->readyTasks, task);					// Remove task from ready list
 		task->taskState = tskBLOCKED_CHAR;							// Change task state to blocked
 		AddTaskToList(&cb->delayedTasks, task);						// Add the task to delay list
+#ifdef MMU_ENABLE
 		xSemaphoreGive(task->taskSem);								// Okay clear to release task semaphore
+#else
+		CoreExitCritical();
+#endif
 		ImmediateYield;												// Immediate yield ... store task context, reschedule new current task and switch to it
 	}
 }
@@ -345,8 +371,10 @@ void xTaskStartScheduler( void )
 	/* Calculate divisor to create Timer Tick frequency on EL0 timer */
 	m_nClockTicksPerHZTick = (EL0_Timer_Frequency() / configTICK_RATE_HZ);
 
+#ifdef MMU_ENABLE
 	/* MMU table setup done by core 0 */
 	MMU_setup_pagetable();
+#endif
 
 	/* Start each core in reverse order because core0 is running this code  */
 	CoreExecute(3, StartTasksOnCore);								// Start tasks on core3
@@ -598,13 +626,47 @@ RegType_t getOSTickCounter()
 void print_uart(unsigned int corenum, char *buf, const char *fmt, ...)
 {
 	va_list args;
-
-	xSemaphoreTake(screenSem);
-	/* Critical section */
 	va_start(args, fmt);
 	vsprintf(buf, fmt, args);
+
+#ifdef MMU_ENABLE
+	/* Code to make the printing to the UART reentrant: use the semaphore */
+	xSemaphoreTake(screenSem);
+#else
+	/*
+	 * Code to make the printing to the UART reentrant: we'll make a lock
+	 * according to a variation of Peterson's algorithm: the Filter algorithm.
+	 * This makes sure that the actual printing is done within a critical section.
+	 */
+	int k;
+	bool higher_level;
+	for (int l=1; l<NR_OF_CORES; l++) {
+		level[corenum] = l;
+		last_to_enter[l] = corenum;
+		higher_level = true;
+		while ((last_to_enter[l] == corenum) && higher_level) {
+			k = 0;
+			higher_level = false;
+			while (!higher_level && k < NR_OF_CORES) {
+				if (k != corenum)
+					higher_level = (level[k] >= l);
+				k++;
+			}
+		}
+	}
+#endif
+
+	/* Critical section */
 	pl011_uart_puts(buf);
-	va_end(args);
 	/* End of Critical section */
+
+#ifdef MMU_ENABLE
+	// release lock
 	xSemaphoreGive(screenSem);
+#else
+	// release lock
+	level[corenum] = 0;
+#endif
+
+	va_end(args);
 }

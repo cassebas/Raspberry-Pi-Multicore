@@ -300,7 +300,10 @@ void core0(void* pParam) {
 		{
 			dir = -dir;
 		}
-		/* DoProgress(Dc, step, total, 10, 100, GetScreenWidth()-20, 20, col); */
+
+#ifdef SCREEN_ENABLE
+		DoProgress(Dc, step, total, 10, 100, GetScreenWidth()-20, 20, col);
+#endif
 
 #ifndef DISABLE_CACHE
 	#ifndef NO_CACHE_MGMT
@@ -368,12 +371,14 @@ void core0(void* pParam) {
 		event4 = read_event_counter(3);
 #endif
 
-		/* sprintf(&buf[0], */
-		/* 		"Core 0 Load: %3i%% Task count: %2i Cycle count: %12u", */
-		/* 		xLoadPercentCPU(), */
-		/* 		xTaskGetNumberOfTasks(), */
-		/* 		cycles); */
-		/* TextOut(Dc, 20, 80, &buf[0], strlen(&buf[0])); */
+#ifdef SCREEN_ENABLE
+		sprintf(&buf[0],
+				"Core 0 Load: %3i%% Task count: %2i Cycle count: %12u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				cycles);
+		TextOut(Dc, 20, 80, &buf[0], strlen(&buf[0]));
+#endif
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 0 cycle_count: %12u iteration: %u offset: %d\n\r",
@@ -468,7 +473,10 @@ void core1(void* pParam) {
 		{
 			dir = -dir;
 		}
-		/* DoProgress(Dc, step, total, 10, 200, GetScreenWidth() - 20, 20, col); */
+
+#ifdef SCREEN_ENABLE
+		DoProgress(Dc, step, total, 10, 200, GetScreenWidth() - 20, 20, col);
+#endif
 
 #ifndef DISABLE_CACHE
 	#ifndef NO_CACHE_MGMT
@@ -536,12 +544,14 @@ void core1(void* pParam) {
 		event4 = read_event_counter(3);
 #endif
 
-		/* sprintf(&buf[0], */
-		/* 		"Core 1 Load: %3i%% Task count: %2i Cycle count: %12u", */
-		/* 		xLoadPercentCPU(), */
-		/* 		xTaskGetNumberOfTasks(), */
-		/* 		cycles); */
-		/* TextOut(Dc, 20, 180, &buf[0], strlen(&buf[0])); */
+#ifdef SCREEN_ENABLE
+		sprintf(&buf[0],
+				"Core 1 Load: %3i%% Task count: %2i Cycle count: %12u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				cycles);
+		TextOut(Dc, 20, 180, &buf[0], strlen(&buf[0]));
+#endif
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 1 cycle_count: %12u iteration: %u offset: %d\n\r",
@@ -632,7 +642,10 @@ void core2(void* pParam) {
 		{
 			dir = -dir;
 		}
-		/* DoProgress(Dc, step, total, 10, 300, GetScreenWidth() - 20, 20, col); */
+
+#ifdef SCREEN_ENABLE
+		DoProgress(Dc, step, total, 10, 300, GetScreenWidth() - 20, 20, col);
+#endif
 
 #ifndef DISABLE_CACHE
 	#ifndef NO_CACHE_MGMT
@@ -700,12 +713,14 @@ void core2(void* pParam) {
 		event4 = read_event_counter(3);
 #endif
 
-		/* sprintf(&buf[0], */
-		/* 		"Core 2 Load: %3i%% Task count: %2i Cycle count: %12u", */
-		/* 		xLoadPercentCPU(), */
-		/* 		xTaskGetNumberOfTasks(), */
-		/* 		cycles); */
-		/* TextOut(Dc, 20, 280, &buf[0], strlen(&buf[0])); */
+#ifdef SCREEN_ENABLE
+		sprintf(&buf[0],
+				"Core 2 Load: %3i%% Task count: %2i Cycle count: %12u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				cycles);
+		TextOut(Dc, 20, 280, &buf[0], strlen(&buf[0]));
+#endif
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 2 cycle_count: %12u iteration: %u offset: %d\n\r",
@@ -797,7 +812,10 @@ void core3(void* pParam) {
 			dir = -dir;
 
 		}
-		/* DoProgress(Dc, step, total, 10, 400, GetScreenWidth() - 20, 20, col); */
+
+#ifdef SCREEN_ENABLE
+		DoProgress(Dc, step, total, 10, 400, GetScreenWidth() - 20, 20, col);
+#endif
 
 #ifndef DISABLE_CACHE
 	#ifndef NO_CACHE_MGMT
@@ -865,12 +883,14 @@ void core3(void* pParam) {
 		event4 = read_event_counter(3);
 #endif
 
-		/* sprintf(&buf[0], */
-		/* 		"Core 3 Load: %3i%% Task count: %2i Cycle count: %12u", */
-		/* 		xLoadPercentCPU(), */
-		/* 		xTaskGetNumberOfTasks(), */
-		/* 		cycles); */
-		/* TextOut(Dc, 20, 380, &buf[0], strlen(&buf[0])); */
+#ifdef SCREEN_ENABLE
+		sprintf(&buf[0],
+				"Core 3 Load: %3i%% Task count: %2i Cycle count: %12u",
+				xLoadPercentCPU(),
+				xTaskGetNumberOfTasks(),
+				cycles);
+		TextOut(Dc, 20, 380, &buf[0], strlen(&buf[0]));
+#endif
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 3 cycle_count: %12u iteration: %u offset: %d\n\r",
@@ -911,15 +931,21 @@ void main (void)
 {
 	char buf[256];
 
-	/* Init_EmbStdio(WriteText);										// Initialize embedded stdio */
-	/* PiConsole_Init(0, 0, 0, 
-	/* displaySmartStart(printf);										// Display smart start details */
-	/* ARM_setmaxspeed(printf);										// ARM CPU to max speed */
+#ifdef SCREEN_ENABLE
+	Init_EmbStdio(WriteText);										// Initialize embedded stdio
+	PiConsole_Init(0, 0, 0, printf);								// Auto resolution console, message to screen
+	displaySmartStart(printf);										// Display smart start details
+	ARM_setmaxspeed(printf);										// ARM CPU to max speed
+#else
+	ARM_setmaxspeed(NULL);										// ARM CPU to max speed
+#endif
 
+#ifdef SCREEN_ENABLE
 	// get timer frequency
-	/* RegType_t timerfreq = EL0_Timer_Frequency(); */
+	RegType_t timerfreq = EL0_Timer_Frequency();
 
-	/* printf("Task tick rate: %u   EL0 Timer frequency %u\n", configTICK_RATE_HZ, timerfreq); */
+	printf("Task tick rate: %u   EL0 Timer frequency %u\n", configTICK_RATE_HZ, timerfreq);
+#endif
 
     unsigned int baudrate = 115200;
     if (pl011_uart_init(baudrate)) {
@@ -928,8 +954,24 @@ void main (void)
 		log_warning(0, buf, "%s\n\r", "UART could not be initialized!");
     }
 
-	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
+	/* /\* Get information on the implemented events *\/ */
+	uint64_t pmceid0 = read_cei_reg();
+	if (pmceid0 | ARMV8_PMCEID0_L1DC)
+		log_debug(0, buf, "%s\n\r", "L1 Data cache access event implemented");
+	if (pmceid0 | ARMV8_PMCEID0_L2DC)
+		log_debug(0, buf, "%s\n\r", "L2 Data cache access event implemented");
+	if (pmceid0 | ARMV8_PMCEID0_L1DCRF)
+		log_debug(0, buf, "%s\n\r", "L1 Data cache refill event implemented");
+	if (pmceid0 | ARMV8_PMCEID0_L2DCRF)
+		log_debug(0, buf, "%s\n\r", "L2 Data cache refill event implemented");
+	if (pmceid0 | ARMV8_PMCEID0_L1DCWB)
+		log_debug(0, buf, "%s\n\r", "L1 Data cache Write-back event implemented");
+	if (pmceid0 | ARMV8_PMCEID0_L2DCWB)
+		log_debug(0, buf, "%s\n\r", "L2 Data cache Write-back event implemented");
 
+	log_info(0, buf, "Number of event counters is %d\n\r", read_nr_eventcounters());
+
+	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
 
 #ifdef DISABLE_CACHE
 	// Maybe disable cache completely:
@@ -967,27 +1009,8 @@ void main (void)
 	xTaskCreate(3, heartbeat, "HEARTBEAT", 512, gpio4_ptr, 2, NULL);
 #endif
 
-
 	/* Start scheduler */
 	xTaskStartScheduler();
-
-
-	/* Get information on the implemented events */
-	/* uint64_t pmceid0 = read_cei_reg(); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L1DC) */
-	/* 	log_debug(0, buf, "%s\n\r", "L1 Data cache access event implemented"); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L2DC) */
-	/* 	log_debug(0, buf, "%s\n\r", "L2 Data cache access event implemented"); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L1DCRF) */
-	/* 	log_debug(0, buf, "%s\n\r", "L1 Data cache refill event implemented"); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L2DCRF) */
-	/* 	log_debug(0, buf, "%s\n\r", "L2 Data cache refill event implemented"); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L1DCWB) */
-	/* 	log_debug(0, buf, "%s\n\r", "L1 Data cache Write-back event implemented"); */
-	/* if (pmceid0 | ARMV8_PMCEID0_L2DCWB) */
-	/* 	log_debug(0, buf, "%s\n\r", "L2 Data cache Write-back event implemented"); */
-
-	/* log_info(0, buf, "Number of event counters is %d\n\r", read_nr_eventcounters()); */
 
 	/*
 	 *	We should never get here, but just in case something goes wrong,
