@@ -113,7 +113,10 @@ SECTIONS
 	.heap :	{
      	. = ALIGN(4);
      	__heap_start__ = .;			/* Label in case we want address of heap section start */
-    	_end = .; PROVIDE (end = .);/* Any memory from here is free to use so this is end of code and start of heap */
+    	_end = .; PROVIDE (__HEAP_START = _end);
+        /* Any memory from here is free to use so this is end of code
+           and start of heap. The label __HEAP_START is used in the
+           function _sbrk to be able to create pointers to the heap. */
 	}
 
 	/* Comment this part: don't throw away the debug symbols */
