@@ -62,6 +62,9 @@ Pi1:
 
 # The directory in which source files are stored.
 SOURCE = ${CURDIR}
+SOURCE_SDVBSCOMMON = ${CURDIR}/sdvbs/common
+SOURCE_DISPARITY = ${CURDIR}/sdvbs/disparity
+
 BUILD = Build
 
 
@@ -78,6 +81,8 @@ ASMOBJS = $(patsubst $(SOURCE)/%.S,$(BUILD)/%.o,$(wildcard $(SOURCE)/*32.S))
 ASMOBJS64 = $(patsubst $(SOURCE)/%.S,$(BUILD)/%.o,$(wildcard $(SOURCE)/*64.S))
 COBJS = $(patsubst $(SOURCE)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE)/*.c))
 
+COBJS_SDVBSCOMMON = $(patsubst $(SOURCE_SDVBSCOMMON)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE_SDVBSCOMMON)/*.c))
+COBJS_DISPARITY = $(patsubst $(SOURCE_DISPARITY)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE_DISPARITY)/*.c))
 
 Pi3-64: $(RANDOM_SETS_H) kernel8.elf
 BINARY = $(IMGFILE)
@@ -104,8 +109,14 @@ $(BUILD)/%.o: $(SOURCE)/%.S
 $(BUILD)/%.o: $(SOURCE)/%.c
 	$(ARMGNU)-gcc -MMD -MP -g $(CFLAGS) -c  $< -o $@ -lc -lm -lgcc
 
-kernel8.elf: $(ASMOBJS64) $(COBJS)
-	$(ARMGNU)-gcc -g $(CFLAGS) $(ASMOBJS64) $(COBJS) -T $(LINKERFILE) -Wl,--build-id=none -o $@ -lc -lm -lgcc
+$(BUILD)/%.o: $(SOURCE_SDVBSCOMMON)/%.c
+	$(ARMGNU)-gcc -MMD -MP -g $(CFLAGS) -c  $< -o $@ -lc -lm -lgcc
+
+$(BUILD)/%.o: $(SOURCE_DISPARITY)/%.c
+	$(ARMGNU)-gcc -MMD -MP -g $(CFLAGS) -c  $< -o $@ -lc -lm -lgcc
+
+kernel8.elf: $(ASMOBJS64) $(COBJS) $(COBJS_SDVBSCOMMON) $(COBJS_DISPARITY)
+	$(ARMGNU)-gcc -g $(CFLAGS) $(ASMOBJS64) $(COBJS) $(COBJS_SDVBSCOMMON) $(COBJS_DISPARITY) -T $(LINKERFILE) -Wl,--build-id=none -o $@ -lc -lm -lgcc
 	$(ARMGNU)-objdump -d $@ > $(LIST)
 	$(ARMGNU)-objcopy $@ -O binary DiskImg/$(BINARY)
 	$(ARMGNU)-nm -n $@ > $(MAP)

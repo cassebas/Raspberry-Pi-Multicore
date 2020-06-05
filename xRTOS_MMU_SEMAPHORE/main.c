@@ -8,6 +8,8 @@
 #include "windows.h"
 #include "semaphore.h"
 #include "debug.h"
+#include "mutex.h"
+#include "sdvbs/disparity/disparity.h"
 
 /* definition of performance monitor control registers and such */
 #include "armv8_pm.h"
@@ -272,6 +274,19 @@ void core0(void* pParam) {
     unsigned int offset=0;
 	int corenum=0;
 
+#ifdef BENCH_CONFIG_CORE0_7
+	// Disparity: initialization part 1, allocate memory for data
+	// and make seed
+	int seed = corenum + 1;
+	srand(seed);
+	lock(MEM_LOCK, corenum);
+	int width=192, height=144;
+    int WIN_SZ=4, SHIFT=8;
+    I2D* srcImage1 = iMallocHandle(width, height);
+    I2D* srcImage2 = iMallocHandle(width, height);
+	unlock(MEM_LOCK, corenum);
+#endif
+
 	/* Globally enable PMU */
 	enable_pmu();
 
@@ -296,6 +311,13 @@ void core0(void* pParam) {
 #endif
 #if defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
 		array_access_randomize(myrandidx1, corenum);
+#endif
+#ifdef BENCH_CONFIG_CORE0_7
+	// Disparity initialization part 2: fill the data with random numbers
+	for (int i=0; i<(width*height); i++) {
+		srcImage1->data[i] = rand() % 256;
+		srcImage2->data[i] = rand() % 256;
+	}
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -445,6 +467,19 @@ void core1(void* pParam) {
     unsigned int offset=0;
 	int corenum=1;
 
+#ifdef BENCH_CONFIG_CORE1_7
+	// Disparity: initialization part 1, allocate memory for data
+	// and make seed
+	int seed = corenum + 1;
+	srand(seed);
+	lock(MEM_LOCK, corenum);
+	int width=192, height=144;
+    int WIN_SZ=4, SHIFT=8;
+    I2D* srcImage1 = iMallocHandle(width, height);
+    I2D* srcImage2 = iMallocHandle(width, height);
+	unlock(MEM_LOCK, corenum);
+#endif
+
 	/* Globally enable PMU */
 	enable_pmu();
 
@@ -469,6 +504,13 @@ void core1(void* pParam) {
 #endif
 #if defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
 		array_access_randomize(myrandidx2, corenum);
+#endif
+#ifdef BENCH_CONFIG_CORE1_7
+	// Disparity initialization part 2: fill the data with random numbers
+	for (int i=0; i<(width*height); i++) {
+		srcImage1->data[i] = rand() % 256;
+		srcImage2->data[i] = rand() % 256;
+	}
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -614,6 +656,19 @@ void core2(void* pParam) {
     unsigned int offset=0;
 	int corenum=2;
 
+#ifdef BENCH_CONFIG_CORE2_7
+	// Disparity: initialization part 1, allocate memory for data
+	// and make seed
+	int seed = corenum + 1;
+	srand(seed);
+	lock(MEM_LOCK, corenum);
+	int width=192, height=144;
+    int WIN_SZ=4, SHIFT=8;
+    I2D* srcImage1 = iMallocHandle(width, height);
+    I2D* srcImage2 = iMallocHandle(width, height);
+	unlock(MEM_LOCK, corenum);
+#endif
+
 	/* Globally enable PMU */
 	enable_pmu();
 
@@ -638,6 +693,13 @@ void core2(void* pParam) {
 #endif
 #if defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
 		array_access_randomize(myrandidx3, corenum);
+#endif
+#ifdef BENCH_CONFIG_CORE2_7
+	// Disparity initialization part 2: fill the data with random numbers
+	for (int i=0; i<(width*height); i++) {
+		srcImage1->data[i] = rand() % 256;
+		srcImage2->data[i] = rand() % 256;
+	}
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -783,6 +845,19 @@ void core3(void* pParam) {
     unsigned int offset=0;
 	int corenum=3;
 
+#ifdef BENCH_CONFIG_CORE3_7
+	// Disparity: initialization part 1, allocate memory for data
+	// and make seed
+	int seed = corenum + 1;
+	srand(seed);
+	lock(MEM_LOCK, corenum);
+	int width=192, height=144;
+    int WIN_SZ=4, SHIFT=8;
+    I2D* srcImage1 = iMallocHandle(width, height);
+    I2D* srcImage2 = iMallocHandle(width, height);
+	unlock(MEM_LOCK, corenum);
+#endif
+
 	/* Globally enable PMU */
 	enable_pmu();
 
@@ -807,6 +882,13 @@ void core3(void* pParam) {
 #endif
 #if defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
 		array_access_randomize(myrandidx4, corenum);
+#endif
+#ifdef BENCH_CONFIG_CORE3_7
+	// Disparity initialization part 2: fill the data with random numbers
+	for (int i=0; i<(width*height); i++) {
+		srcImage1->data[i] = rand() % 256;
+		srcImage2->data[i] = rand() % 256;
+	}
 #endif
 		step += dir;
 		if ((step == total) || (step == 0))
@@ -974,6 +1056,10 @@ void main (void)
 	log_info(0, buf, "Number of event counters is %d\n\r", read_nr_eventcounters());
 
 	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
+
+#if defined BENCH_CONFIG_CORE0_7 || defined BENCH_CONFIG_CORE1_7 || defined BENCH_CONFIG_CORE2_7 || defined BENCH_CONFIG_CORE3_7
+	init_lock(MEM_LOCK);
+#endif
 
 #ifdef DISABLE_CACHE
 	// Maybe disable cache completely:
