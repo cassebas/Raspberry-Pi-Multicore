@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "debug.h"
+#include "mutex.h"
 
 #ifdef MMU_ENABLE
 #include "semaphore.h"
@@ -34,15 +35,6 @@
 #define CoreEnterCritical DisableInterrupts
 #define CoreExitCritical EnableInterrupts
 #define ImmediateYield __asm volatile ("svc 0")
-
-#ifdef MMU_ENABLE
-static SemaphoreHandle_t screenSem;
-#endif
-
-// single writer/multiple reader (SWMR) atomic register level
-// for Peterson's algorithm
-static volatile int level[MAX_CPU_CORES] = {0};
-static volatile int last_to_enter[MAX_CPU_CORES] = {0};
 
 
 typedef struct TaskControlBlock* task_ptr;
@@ -261,8 +253,7 @@ void xRTOS_Init (void)
 	}
 
 #ifdef MMU_ENABLE
-	// Initialize the semaphore for protection of a critical section
-	screenSem = xSemaphoreCreateBinary();
+	init_lock(UART_LOCK);
 #endif
 }
 
@@ -630,44 +621,15 @@ void print_uart(unsigned int corenum, char *buf, const char *fmt, ...)
 	va_start(args, fmt);
 	vsprintf(buf, fmt, args);
 
-#ifdef MMU_ENABLE
-	/* Code to make the printing to the UART reentrant: use the semaphore */
-	xSemaphoreTake(screenSem);
-#else
-	/*
-	 * Code to make the printing to the UART reentrant: we'll make a lock
-	 * according to a variation of Peterson's algorithm: the Filter algorithm.
-	 * This makes sure that the actual printing is done within a critical section.
-	 */
-	int k;
-	bool higher_level;
-	for (int l=1; l<NR_OF_CORES; l++) {
-		level[corenum] = l;
-		last_to_enter[l] = corenum;
-		higher_level = true;
-		while ((last_to_enter[l] == corenum) && higher_level) {
-			k = 0;
-			higher_level = false;
-			while (!higher_level && k < NR_OF_CORES) {
-				if (k != corenum)
-					higher_level = (level[k] >= l);
-				k++;
-			}
-		}
-	}
-#endif
+	// First try to get the lock for entering the critical section
+	lock(UART_LOCK, corenum);
 
 	/* Critical section */
 	pl011_uart_puts(buf);
 	/* End of Critical section */
 
-#ifdef MMU_ENABLE
-	// release lock
-	xSemaphoreGive(screenSem);
-#else
-	// release lock
-	level[corenum] = 0;
-#endif
+	// Done with critical section, release the lock
+	unlock(UART_LOCK, corenum);
 
 	va_end(args);
 }
