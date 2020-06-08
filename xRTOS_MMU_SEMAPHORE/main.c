@@ -1033,27 +1033,10 @@ void main (void)
 
     unsigned int baudrate = 115200;
     if (pl011_uart_init(baudrate)) {
-		log_info(0, buf, "%s\n\r", "UART succesfully initialized.");
+		printf("UART succesfully initialized.\n");
     } else {
-		log_warning(0, buf, "%s\n\r", "UART could not be initialized!");
+		printf("UART could not be initialized!\n");
     }
-
-	/* /\* Get information on the implemented events *\/ */
-	uint64_t pmceid0 = read_cei_reg();
-	if (pmceid0 | ARMV8_PMCEID0_L1DC)
-		log_debug(0, buf, "%s\n\r", "L1 Data cache access event implemented");
-	if (pmceid0 | ARMV8_PMCEID0_L2DC)
-		log_debug(0, buf, "%s\n\r", "L2 Data cache access event implemented");
-	if (pmceid0 | ARMV8_PMCEID0_L1DCRF)
-		log_debug(0, buf, "%s\n\r", "L1 Data cache refill event implemented");
-	if (pmceid0 | ARMV8_PMCEID0_L2DCRF)
-		log_debug(0, buf, "%s\n\r", "L2 Data cache refill event implemented");
-	if (pmceid0 | ARMV8_PMCEID0_L1DCWB)
-		log_debug(0, buf, "%s\n\r", "L1 Data cache Write-back event implemented");
-	if (pmceid0 | ARMV8_PMCEID0_L2DCWB)
-		log_debug(0, buf, "%s\n\r", "L2 Data cache Write-back event implemented");
-
-	log_info(0, buf, "Number of event counters is %d\n\r", read_nr_eventcounters());
 
 	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
 
@@ -1064,7 +1047,6 @@ void main (void)
 #ifdef DISABLE_CACHE
 	// Maybe disable cache completely:
 	disable_cache();
-	log_info(0, buf, "%s\n\r", "Cache is disabled.");
 #endif
 
 	/* Core 0 task */
