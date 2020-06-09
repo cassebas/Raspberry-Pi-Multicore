@@ -105,11 +105,11 @@ class Compile:
             arg_m4_list.append(label_param)
         if enable_mmu is True:
             logger.debug('enable_mmu={}'.format(enable_mmu))
-            enable_mmu_param = '-Denable_mmu'
+            enable_mmu_param = '-Dmmu_enable'
             arg_m4_list.append(enable_mmu_param)
         if enable_screen is True:
             logger.debug('enable_screen={}'.format(enable_screen))
-            enable_screen_param = '-Denable_screen'
+            enable_screen_param = '-Dscreen_enable'
             arg_m4_list.append(enable_screen_param)
         if no_cache_mgmt is True:
             no_cache_mgmt_param = 'NO_CACHE_MGMT=-DNO_CACHE_MGMT'
