@@ -377,6 +377,11 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
 
     df = pd.read_excel(infile)
 
+    # Convert boolean fields to actual bool type
+    df[flds[Fields.NO_CACHE_MGMT]] = df[flds[Fields.NO_CACHE_MGMT]].astype(bool)
+    df[flds[Fields.ENABLE_MMU]] = df[flds[Fields.ENABLE_MMU]].astype(bool)
+    df[flds[Fields.ENABLE_SCREEN]] = df[flds[Fields.ENABLE_SCREEN]].astype(bool)
+
     i = 0
     for idx, row in df.iterrows():
         i += 1
