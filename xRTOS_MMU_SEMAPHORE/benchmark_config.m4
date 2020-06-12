@@ -208,4 +208,15 @@ define(debug_enable_def, `
 ')dnl
 ifdef(`debug_enable', debug_enable_def, `')dnl
 
+dnl Benchmark specific configuration parameters
+dnl
+dnl SD-VBS Disparity: size of input image
+define(disparity_inputsize_template, `
+#ifdef DISPARITY_INPUTSIZE
+#undef DISPARITY_INPUTSIZE
+#endif
+#define DISPARITY_INPUTSIZE $1
+')dnl
+ifdef(`disparity_inputsize', disparity_inputsize_template(disparity_inputsize), `')dnl
+
 #endif /* ~BENCHMARK_CONFIG_H */

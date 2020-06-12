@@ -33,6 +33,11 @@
 #define EXP_LABEL "DEFAULT"
 
 /**
+ * Specific configuration for the SD-VBS Disparity benchmark
+ */
+#define DISPARITY_INPUTSIZE 96
+
+/**
  * If the following macro with name BENCHMARK_CONFIG_M4 was
  * specified on the command line, then we know the include
  * file can be included.
