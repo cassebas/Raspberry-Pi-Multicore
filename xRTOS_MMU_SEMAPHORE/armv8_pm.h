@@ -31,8 +31,8 @@
 /* Event types and their number to use in the configuration */
 #define PMU_L1D_CACHE_REFILL 0x03  /* 0: L1 Data cache refill */
 #define PMU_L1D_CACHE        0x04  /* 1: L1 Data cache access */
-#define PMU_BR_MIS_PRED      0x10  /* 2: Mis-/not predicted branch speculatively exec. */
-#define PMU_BR_PRED          0x12  /* 3: Predictable branch speculatively executed */
+#define PMU_L1I_TLB_REFILL   0x02  /* 2: L1 Instruction TLB refill. */
+#define PMU_L1D_TLB_REFILL   0x05  /* 3: L1 Data TLB refill. */
 #define PMU_MEM_ACCESS       0x13  /* 4: Data memory access */
 #define PMU_L1D_CACHE_WB     0x15  /* 5: L1 Data cache Write-back */
 #define PMU_L2D_CACHE        0x16  /* 6: L2 Data cache access */
