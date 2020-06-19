@@ -35,6 +35,7 @@ class Fields(Enum):
     PMU_CORE2 = 10
     PMU_CORE3 = 11
     DISP_INPUT = 12
+    BSORT_INPUT = 13
 
 
 class Compile:
@@ -89,7 +90,7 @@ class Compile:
     def set_compilation(self, config=None, label=None, datasize=None,
                         pmu_cores=None, no_cache_mgmt=False,
                         enable_mmu=False, enable_screen=False,
-                        disparity_inputsize=None):
+                        disparity_inputsize=None, bsort_inputsize=None):
         arg_m4_list = []
         arg_make_list = []
         if config is not None:
@@ -117,6 +118,10 @@ class Compile:
             logger.debug('disparity_inputsize={}'.format(disparity_inputsize))
             disparity_inputsize_param = '-Ddisparity_inputsize={}'.format(disparity_inputsize)
             arg_m4_list.append(disparity_inputsize_param)
+        if bsort_inputsize is not None:
+            logger.debug('bsort_inputsize={}'.format(bsort_inputsize))
+            bsort_inputsize_param = '-Dbsort_inputsize={}'.format(bsort_inputsize)
+            arg_m4_list.append(bsort_inputsize_param)
         if no_cache_mgmt is True:
             no_cache_mgmt_param = 'NO_CACHE_MGMT=-DNO_CACHE_MGMT'
             arg_make_list.append(no_cache_mgmt_param)
@@ -365,6 +370,7 @@ flds = {
     Fields.PMU_CORE2: 'pmu core 2',
     Fields.PMU_CORE3: 'pmu core 3',
     Fields.DISP_INPUT: 'disparity inputsize',
+    Fields.BSORT_INPUT: 'bsort inputsize',
 }
 
 
@@ -406,10 +412,12 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
                      row[flds[Fields.PMU_CORE2]],
                      row[flds[Fields.PMU_CORE3]])
         disparity_inputsize = row[flds[Fields.DISP_INPUT]]
+        bsort_inputsize = row[flds[Fields.BSORT_INPUT]]
         comp.set_compilation(config=config, label=label, datasize=datasize,
                              pmu_cores=pmu_cores, no_cache_mgmt=no_cache_mgmt,
                              enable_mmu=enable_mmu, enable_screen=enable_screen,
-                             disparity_inputsize=disparity_inputsize)
+                             disparity_inputsize=disparity_inputsize,
+                             bsort_inputsize=bsort_inputsize)
         comp.compile()
 
         logger.info('Compilation done.')

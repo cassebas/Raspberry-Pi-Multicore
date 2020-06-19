@@ -33,6 +33,11 @@
 #define EXP_LABEL "DEFAULT"
 
 /**
+ * Specific configuration for the Mälardalen bsort benchmark
+ */
+#define BSORT_INPUTSIZE 100
+
+/**
  * Specific configuration for the SD-VBS Disparity benchmark
  */
 #define DISPARITY_INPUTSIZE 96

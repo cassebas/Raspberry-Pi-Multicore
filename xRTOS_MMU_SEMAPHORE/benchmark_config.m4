@@ -219,4 +219,15 @@ define(disparity_inputsize_template, `
 ')dnl
 ifdef(`disparity_inputsize', disparity_inputsize_template(disparity_inputsize), `')dnl
 
+dnl Benchmark specific configuration parameters
+dnl
+dnl Mälardalen bsort: size of input array
+define(bsort_inputsize_template, `
+#ifdef BSORT_INPUTSIZE
+#undef BSORT_INPUTSIZE
+#endif
+#define BSORT_INPUTSIZE $1
+')dnl
+ifdef(`bsort_inputsize', bsort_inputsize_template(bsort_inputsize), `')dnl
+
 #endif /* ~BENCHMARK_CONFIG_H */
