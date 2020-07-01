@@ -16,6 +16,7 @@
 import pandas as pd
 import numpy as np
 from scipy.stats import ttest_ind
+from scipy.stats import mannwhitneyu
 import matplotlib.pyplot as plt
 import glob
 from itertools import combinations
@@ -24,6 +25,7 @@ from itertools import permutations
 from itertools import product
 import re
 
+# + jupyter={"outputs_hidden": true}
 g = 'report/data/*.csv'
 filenames = glob.glob(g)
 filenames
@@ -35,7 +37,7 @@ for cores in range(1, 5):
     prod = product(benchmarks, repeat=cores)
     for p in prod:
         bench = ''.join(p)
-        g = 'report/data/cyclesdata-BENCH1*_6000*.csv'.format(cores, bench)
+        g = 'report/data/cyclesdata-MIDTERM_*.csv'.format(cores, bench)
         filenames = glob.glob(g)
         flist += filenames
 
@@ -51,6 +53,33 @@ for f in flist:
         maximum = df['cycles'].max()
         median = df['cycles'].median()
         print('Filename:{} Experiment:{}  WCET is {}, which is {:1.3f} times more than the median {}.'.format(f, label, maximum, maximum/median, median))
+
+# +
+flist = []
+for cores in range(1, 5):
+    prod = product(benchmarks, repeat=cores)
+    for p in prod:
+        bench = ''.join(p)
+        g = 'report/data/eventsdata-MIDTERM_*.csv'.format(cores, bench)
+        filenames = glob.glob(g)
+        flist += filenames
+
+flist = list(set(flist))
+flist.sort()
+regex = re.compile(r'^.*eventsdata-([^-]*).*$')
+for f in flist:
+    m = regex.match(f)
+    eventtypes=['0x13', '0x16', '0x17', '0x19']
+    eventnames=['memory access', 'L2D cache access', 'L2D cache refill', 'Bus access']
+    if m:
+        label = m.group(1)
+        df = pd.read_csv(f, sep=' ')
+        df = df.loc[df['core'] == 0]
+        for i in range(3,4):
+            df_tmp = df.loc[df['eventtype'] == eventtypes[i]]
+            maximum = df_tmp['eventcount'].max()
+            median = df_tmp['eventcount'].median()
+            print('Experiment:{}  Event:{} Maximum is {}, which is {:1.3f} times more than the median {}.'.format(label, eventnames[i], maximum, maximum/median, median))
 # -
 
 boxprops = dict(linestyle='-', linewidth=3, color='k')
@@ -65,32 +94,40 @@ def set_boxplot_linewidth(bp, linewidth=3):
 
 
 # +
+from matplotlib import rcParams
+labelsize = 32
+rcParams['xtick.labelsize'] = labelsize
+rcParams['ytick.labelsize'] = labelsize
+
 bsort1_2000 = pd.read_csv('report/data/cyclesdata-BENCH1_2000-1core-config1-pattern0.csv', sep=' ')
 bsort1444_2000 = pd.read_csv('report/data/cyclesdata-BENCH1444_2000-4core-config1444-pattern0000.csv', sep=' ')
-fig, ax = plt.subplots(1, 2, sharey=True, figsize=(10,10))
+fig, ax = plt.subplots(1, 2, sharey=True, figsize=(12,12))
+xlab1 = ax[0].set_xlabel('run in isolation', fontsize=40, color='green')
+xlab2 = ax[1].set_xlabel('with co-runners', fontsize=40, color='red')
 maximum = [0, 0]
 for i, df in enumerate([bsort1_2000, bsort1444_2000]):
     df = df.loc[df['core'] == 0]
     maximum[i] = df['cycles'].max()
     boxplot = df.boxplot(column=['cycles'], ax=ax[i], return_type='dict')
     set_boxplot_linewidth(boxplot, linewidth=4)
-    
+
+plt.savefig('/home/caspar/git/RTS-thesis/talks/midterm-20200701/img/bsort2000-boxplot.png', bbox_inches='tight')
 print('The WCET of running 4 cores compared to 1 core is {} times slower'.format(maximum[1]/maximum[0]))
 # -
 
-# Calculate the student t-test
+# Calculate the Mann-Whitney U test
 a = bsort1_2000['cycles']
 b = bsort1444_2000.loc[bsort1444_2000['core'] == 0]['cycles']
 t, p = ttest_ind(b, a, equal_var=False)
-print('The calculated t-statistic is {}.'.format(t))
+stat, p = mannwhitneyu(a, b)
+alpha = 0.05
+print('The calculated statistic is {}.'.format(stat))
 print('The calculated p-value is {}.'.format(p))
-print('p/2 is smaller than 0.05 is {}'.format(p/2 < 0.05))
-print('t is greater than 0 is {}'.format(t > 0))
-if t > 0 and p/2 < 0.05:
+if p < alpha:
     # enough evidence to reject H0
-    print('Based on the t-test with t={} and p={}, we can reject the Null-hypothesis'.format(t, p))
+    print('Based on the Mann-Whitney U test with stat={} and p={}, we can reject the Null-hypothesis'.format(stat, p))
 else:
-    print('Based on the t-test with t={} and p={}, we cannot reject the Null-hypothesis'.format(t, p))
+    print('Based on the Mann-Whitney U test with stat={} and p={}, we cannot reject the Null-hypothesis'.format(stat, p))
 
 # +
 bsort1_6000 = pd.read_csv('report/data/cyclesdata-BENCH1_6000_STATIC-1core-config1-pattern0.csv', sep=' ')
@@ -109,21 +146,27 @@ print('The WCET of running 4 cores compared to 1 core is {} times slower'.format
 # Calculate the student t-test
 a = bsort1_6000['cycles']
 b = bsort1444_6000.loc[bsort1444_6000['core'] == 0]['cycles']
-t, p = ttest_ind(b, a, equal_var=False)
-print('The calculated t-statistic is {}.'.format(t))
+stat, p = mannwhitneyu(a, b)
+alpha = 0.05
+print('The calculated statistic is {}.'.format(stat))
 print('The calculated p-value is {}.'.format(p))
-print('p/2 is smaller than 0.05 is {}'.format(p/2 < 0.05))
-print('t is greater than 0 is {}'.format(t > 0))
-if t > 0 and p/2 < 0.05:
+if p < alpha:
     # enough evidence to reject H0
-    print('Based on the t-test with t={} and p={}, we can reject the Null-hypothesis'.format(t, p))
+    print('Based on the Mann-Whitney U test with stat={} and p={}, we can reject the Null-hypothesis'.format(stat, p))
 else:
-    print('Based on the t-test with t={} and p={}, we cannot reject the Null-hypothesis'.format(t, p))
+    print('Based on the Mann-Whitney U test with stat={} and p={}, we cannot reject the Null-hypothesis'.format(stat, p))
 
 # +
+from matplotlib import rcParams
+labelsize = 32
+rcParams['xtick.labelsize'] = labelsize
+rcParams['ytick.labelsize'] = labelsize
+
 bsort1_8000 = pd.read_csv('report/data/cyclesdata-BENCH1_8000-1core-config1-pattern0.csv', sep=' ')
 bsort1444_8000 = pd.read_csv('report/data/cyclesdata-BENCH1444_8000-4core-config1444-pattern0000.csv', sep=' ')
 fig, ax = plt.subplots(1, 2, sharey=True, figsize=(10,8))
+xlab1 = ax[0].set_xlabel('run in isolation  ', fontsize=40, color='green')
+xlab2 = ax[1].set_xlabel('   with co-runners', fontsize=40, color='red')
 max = [0, 0]
 for i, df in enumerate([bsort1_8000, bsort1444_8000]):
     df = df.loc[df['core'] == 0]
@@ -131,22 +174,22 @@ for i, df in enumerate([bsort1_8000, bsort1444_8000]):
     boxplot = df.boxplot(column=['cycles'], ax=ax[i], return_type='dict')
     set_boxplot_linewidth(boxplot, linewidth=4)
     
+plt.savefig('/home/caspar/git/RTS-thesis/talks/midterm-20200701/img/bsort8000-boxplot.png', bbox_inches='tight')
 print('The WCET of running 4 cores compared to 1 core is {} times slower'.format(max[1]/max[0]))
 # -
 
 # Calculate the student t-test
 a = bsort1_8000['cycles']
 b = bsort1444_8000.loc[bsort1444_8000['core'] == 0]['cycles']
-t, p = ttest_ind(b, a, equal_var=False)
-print('The calculated t-statistic is {}.'.format(t))
+stat, p = mannwhitneyu(a, b)
+alpha = 0.05
+print('The calculated statistic is {}.'.format(stat))
 print('The calculated p-value is {}.'.format(p))
-print('p/2 is smaller than 0.05 is {}'.format(p/2 < 0.05))
-print('t is greater than 0 is {}'.format(t > 0))
-if t > 0 and p/2 < 0.05:
+if p < alpha:
     # enough evidence to reject H0
-    print('Based on the t-test with t={} and p={}, we can reject the Null-hypothesis'.format(t, p))
+    print('Based on the Mann-Whitney U test with stat={} and p={}, we can reject the Null-hypothesis'.format(stat, p))
 else:
-    print('Based on the t-test with t={} and p={}, we cannot reject the Null-hypothesis'.format(t, p))
+    print('Based on the Mann-Whitney U test with stat={} and p={}, we cannot reject the Null-hypothesis'.format(stat, p))
 
 # +
 cores = range(1,5)
@@ -211,48 +254,68 @@ disparity192 = pd.DataFrame(disparity192lst)
 disparity192 = disparity192.transpose()
 disparity192.index = cores
 disparity192.columns = attacks
+# -
 
-# +
-fig, ax = plt.subplots(1, 2, sharey=True, figsize=(20, 6))
-ax[0].set_xticks(cores)
-ax[0].plot(disparity32[attacks[0]], label='Linear read attack, disparity 32x32', marker='o')
-ax[0].plot(disparity64[attacks[0]], label='Linear read attack, disparity 64x64', marker='o')
-ax[0].plot(disparity96[attacks[0]], label='Linear read attack, disparity 96x96', marker='o')
-ax[0].plot(disparity128[attacks[0]], label='Linear read attack, disparity 128x128', marker='o')
-ax[0].plot(disparity160[attacks[0]], label='Linear read attack, disparity 160x160', marker='o')
-ax[0].plot(disparity192[attacks[0]], label='Linear read attack, disparity 192x192', marker='o')
-ax[0].legend(loc=0)
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(15, 8))
+ax.set_title('Disparity + linear array access', fontsize=20)
+ax.set_xticks(cores)
+ax.plot(disparity32[attacks[0]], label='Linear array access, disparity 32x32', marker='o')
+ax.plot(disparity64[attacks[0]], label='Linear array access, disparity 64x64', marker='o')
+ax.plot(disparity96[attacks[0]], label='Linear array access, disparity 96x96', marker='o')
+ax.plot(disparity128[attacks[0]], label='Linear array access, disparity 128x128', marker='o')
+ax.plot(disparity160[attacks[0]], label='Linear array access, disparity 160x160', marker='o')
+ax.plot(disparity192[attacks[0]], label='Linear array access, disparity 192x192', marker='o')
+ax.set_xlabel('Number of cores', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.legend(loc=0, fontsize=14)
+fig.tight_layout()
+plt.savefig('/home/caspar/git/RTS-thesis/talks/midterm-20200701/img/disparity-lineararrayaccess.png')
 
-ax[1].set_xticks(cores)
-ax[1].plot(disparity32[attacks[1]], label='Linear read attack linear, disparity 32x32', marker='o')
-ax[1].plot(disparity64[attacks[1]], label='Linear read attack linear, disparity 64x64', marker='o')
-ax[1].plot(disparity96[attacks[1]], label='Linear read attack linear, disparity 96x96', marker='o')
-ax[1].plot(disparity128[attacks[1]], label='Linear read attack linear, disparity 128x128', marker='o')
-ax[1].plot(disparity160[attacks[1]], label='Linear read attack linear, disparity 160x160', marker='o')
-ax[1].plot(disparity192[attacks[1]], label='Linear read attack linear, disparity 192x192', marker='o')
-ax[1].legend(loc=0)
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(15, 8))
+ax.set_xticks(cores)
+ax.set_title('Disparity + random array access', fontsize=20)
+ax.plot(disparity32[attacks[1]], label='Random array access, disparity 32x32', marker='o')
+ax.plot(disparity64[attacks[1]], label='Random array access, disparity 64x64', marker='o')
+ax.plot(disparity96[attacks[1]], label='Random array access, disparity 96x96', marker='o')
+ax.plot(disparity128[attacks[1]], label='Random array access, disparity 128x128', marker='o')
+ax.plot(disparity160[attacks[1]], label='Random array access, disparity 160x160', marker='o')
+ax.plot(disparity192[attacks[1]], label='Random array access, disparity 192x192', marker='o')
+ax.set_xlabel('Number of cores', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.legend(loc=0, fontsize=14)
+fig.tight_layout()
+plt.savefig('/home/caspar/git/RTS-thesis/talks/midterm-20200701/img/disparity-randomarrayaccess.png')
 
-# +
-fig, ax = plt.subplots(1, 2, sharey=True, figsize=(20, 6))
-ax[0].set_xticks(cores)
-ax[0].plot(disparity32[attacks[2]], label='Linear write attack, disparity 32x32', marker='o')
-ax[0].plot(disparity64[attacks[2]], label='Linear write attack, disparity 64x64', marker='o')
-ax[0].plot(disparity96[attacks[2]], label='Linear write attack, disparity 96x96', marker='o')
-ax[0].plot(disparity128[attacks[2]], label='Linear write attack, disparity 128x128', marker='o')
-ax[0].plot(disparity160[attacks[2]], label='Linear write attack, disparity 160x160', marker='o')
-ax[0].plot(disparity192[attacks[2]], label='Linear write attack, disparity 192x192', marker='o')
-ax[0].legend(loc=0)
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(15, 8))
+ax.set_xticks(cores)
+ax.set_title('Disparity + linear array write', fontsize=20)
+ax.plot(disparity32[attacks[2]], label='Linear array write, disparity 32x32', marker='o')
+ax.plot(disparity64[attacks[2]], label='Linear array write, disparity 64x64', marker='o')
+ax.plot(disparity96[attacks[2]], label='Linear array write, disparity 96x96', marker='o')
+ax.plot(disparity128[attacks[2]], label='Linear array write, disparity 128x128', marker='o')
+ax.plot(disparity160[attacks[2]], label='Linear array write, disparity 160x160', marker='o')
+ax.plot(disparity192[attacks[2]], label='Linear array write, disparity 192x192', marker='o')
+ax.set_xlabel('Number of cores', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.legend(loc=0, fontsize=14)
+fig.tight_layout()
+plt.savefig('/home/caspar/git/RTS-thesis/talks/midterm-20200701/img/disparity-lineararraywrite.png')
 
-ax[1].set_xticks(cores)
-ax[1].plot(disparity32[attacks[3]], label='Random write attack, disparity 32x32', marker='o')
-ax[1].plot(disparity64[attacks[3]], label='Random write attack, disparity 64x64', marker='o')
-ax[1].plot(disparity96[attacks[3]], label='Random write attack, disparity 96x96', marker='o')
-ax[1].plot(disparity128[attacks[3]], label='Random write attack, disparity 128x128', marker='o')
-ax[1].plot(disparity160[attacks[3]], label='Random write attack, disparity 160x160', marker='o')
-ax[1].plot(disparity192[attacks[3]], label='Random write attack, disparity 192x192', marker='o')
-ax[1].legend(loc=0)
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(15, 8))
+ax.set_xticks(cores)
+ax.set_title('Disparity + random array write', fontsize=20)
+ax.plot(disparity32[attacks[3]], label='Random array write, disparity 32x32', marker='o')
+ax.plot(disparity64[attacks[3]], label='Random array write, disparity 64x64', marker='o')
+ax.plot(disparity96[attacks[3]], label='Random array write, disparity 96x96', marker='o')
+ax.plot(disparity128[attacks[3]], label='Random array write, disparity 128x128', marker='o')
+ax.plot(disparity160[attacks[3]], label='Random array write, disparity 160x160', marker='o')
+ax.plot(disparity192[attacks[3]], label='Random array write, disparity 192x192', marker='o')
+ax.set_xlabel('Number of cores', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.legend(loc=0, fontsize=14)
+plt.savefig('disparity-randomarraywrite')
+plt.savefig('/home/caspar/git/RTS-thesis/talks/midterm-20200701/img/disparity-randomarraywrite.png')
 
-# +
 mem_sizes = ['32x32', '64x64', '96x96', '128x128', '160x160', '192x192']
 slow_down = []
 for i in range(4):
@@ -263,47 +326,37 @@ for i in range(4):
                       disparity160.loc[4, attacks[i]],
                       disparity192.loc[4, attacks[i]]])
 
-index = np.arange(len(mem_sizes))
-fig, ax = plt.subplots(2, 2, sharey=True, figsize=(12, 10))
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(10, 5))
+ax.set_xlabel('Input size', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.bar(mem_sizes, slow_down[0], align='center', alpha=0.5, width=0.75)
+ax.set_title('Disparity: Linear read attack on 4 cores', fontsize=20)
+ax.set_xticks(mem_sizes)
+ax.tick_params(labelrotation=45)
 
-left = 0.145   # the left side of the subplots of the figure
-right = 0.92   # the right side of the subplots of the figure
-bottom = 0.2   # the bottom of the subplots of the figure
-top = 0.9      # the top of the subplots of the figure
-wspace = 0.3   # the amount of width reserved for space between subplots,
-               # expressed as a fraction of the average axis width
-hspace = 0.3   # the amount of height reserved for space between subplots,
-               # expressed as a fraction of the average axis height
-fig.subplots_adjust(left=left, right=right, bottom=bottom, top=top,
-                    wspace=wspace, hspace=hspace)
-fig.suptitle('Disparity attacks with MMU enabled')
-ax[0, 0].set_xlabel('Input size')
-ax[0, 0].set_ylabel('Slowdown factor')
-ax[0, 0].bar(mem_sizes, slow_down[0], align='center', alpha=0.5, width=0.75)
-ax[0, 0].set_title('Disparity: Linear read attack on 4 cores')
-ax[0, 0].set_xticks(mem_sizes)
-ax[0, 0].tick_params(labelrotation=45)
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(10, 5))
+ax.set_xlabel('Input size', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.bar(mem_sizes, slow_down[1], align='center', alpha=0.5, width=0.75)
+ax.set_title('Disparity: Random read attack on 4 cores', fontsize=20)
+ax.set_xticks(mem_sizes)
+ax.tick_params(labelrotation=45)
 
-ax[0, 1].set_xlabel('Input size')
-ax[0, 1].set_ylabel('Slowdown factor')
-ax[0, 1].bar(mem_sizes, slow_down[1], align='center', alpha=0.5, width=0.75)
-ax[0, 1].set_title('Disparity: Random read attack on 4 cores')
-ax[0, 1].set_xticks(mem_sizes)
-ax[0, 1].tick_params(labelrotation=45)
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(10, 5))
+ax.set_xlabel('Input size', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.bar(mem_sizes, slow_down[2], align='center', alpha=0.5, width=0.75)
+ax.set_title('Disparity: Linear write attack on 4 cores', fontsize=20)
+ax.set_xticks(mem_sizes)
+ax.tick_params(labelrotation=45)
 
-ax[1, 0].set_xlabel('Input size')
-ax[1, 0].set_ylabel('Slowdown factor')
-ax[1, 0].bar(mem_sizes, slow_down[2], align='center', alpha=0.5, width=0.75)
-ax[1, 0].set_title('Disparity: Linear write attack on 4 cores')
-ax[1, 0].set_xticks(mem_sizes)
-ax[1, 0].tick_params(labelrotation=45)
-
-ax[1, 1].set_xlabel('Input size')
-ax[1, 1].set_ylabel('Slowdown factor')
-ax[1, 1].bar(mem_sizes, slow_down[3], align='center', alpha=0.5, width=0.75)
-ax[1, 1].set_title('Disparity: Random write attack on 4 cores')
-ax[1, 1].set_xticks(mem_sizes)
-ax[1, 1].tick_params(labelrotation=45)
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(10, 5))
+ax.set_xlabel('Input size', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.bar(mem_sizes, slow_down[3], align='center', alpha=0.5, width=0.75)
+ax.set_title('Disparity: Random write attack on 4 cores', fontsize=20)
+ax.set_xticks(mem_sizes)
+ax.tick_params(labelrotation=45)
 
 
 # +
@@ -315,13 +368,16 @@ def autolabel(ax, bars):
                     xy=(bar.get_x() + bar.get_width() / 3, height),
                     xytext=(5, 5),  # 3 points vertical offset
                     textcoords="offset points",
-                    ha='center', va='bottom')
+                    ha='center', va='bottom',
+                    fontsize=20)
 
 mem_sizes = ['32x32', '64x64', '96x96', '128x128', '160x160', '192x192']
 index = np.arange(len(mem_sizes))
 y_ticks = [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
 width = 0.3
-fig, ax = plt.subplots(1, 2, sharey=True, figsize=(15,5))
+# -
+
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(15,6))
 slowdown = []
 for i in range(2, 5):
     slowdown.append([disparity32.loc[i, attacks[0]],
@@ -330,22 +386,24 @@ for i in range(2, 5):
                      disparity128.loc[i, attacks[0]],
                      disparity160.loc[i, attacks[0]],
                      disparity192.loc[i, attacks[0]]])
-bars1 = ax[0].bar(index - width, slowdown[0], width, label='2 cores')
-bars2 = ax[0].bar(index, slowdown[1], width, label='3 cores')
-bars3 = ax[0].bar(index + width, slowdown[2], width, label='4 cores')
-ax[0].legend()
-ax[0].set_title('Linear read attack')
-ax[0].set_xlabel('Input size')
-ax[0].set_ylabel('Slowdown factor')
-ax[0].set_xticks(index)
-#ax[0].set_yticks(y_ticks)
-ax[1].set_ylim([1.0, 2.0])
-ax[0].set_xticklabels(mem_sizes)
-ax[0].tick_params(labelrotation=45)
-autolabel(ax[0], bars1)
-autolabel(ax[0], bars2)
-autolabel(ax[0], bars3)
+bars1 = ax.bar(index - width, slowdown[0], width, label='2 cores')
+bars2 = ax.bar(index, slowdown[1], width, label='3 cores')
+bars3 = ax.bar(index + width, slowdown[2], width, label='4 cores')
+ax.legend(fontsize=14)
+ax.set_title('Disparity + Linear array access co-runners', fontsize=20)
+ax.set_xlabel('Input size', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.set_xticks(index)
+ax.set_ylim([1.0, 2.0])
+ax.set_xticklabels(mem_sizes, fontsize=14)
+ax.tick_params(labelrotation=45)
+autolabel(ax, bars1)
+autolabel(ax, bars2)
+autolabel(ax, bars3)
+fig.tight_layout()
+plt.savefig('/home/caspar/git/RTS-thesis/talks/midterm-20200701/img/disparity-lineararrayaccess-bars.png')
 
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(15,6))
 slowdown = []
 for i in range(2, 5):
     slowdown.append([disparity32.loc[i, attacks[1]],
@@ -354,30 +412,28 @@ for i in range(2, 5):
                      disparity128.loc[i, attacks[1]],
                      disparity160.loc[i, attacks[1]],
                      disparity192.loc[i, attacks[1]]])
-bars1 = ax[1].bar(index - width, slowdown[0], width, label='2 cores')
-bars2 = ax[1].bar(index, slowdown[1], width, label='3 cores')
-bars3 = ax[1].bar(index + width, slowdown[2], width, label='4 cores')
-ax[1].legend()
-ax[1].set_title('Random read attack')
-ax[1].set_xlabel('Input size')
-ax[1].set_xticks(index)
-ax[1].set_ylim([1.0, 2.0])
-ax[1].set_xticklabels(mem_sizes)
-ax[1].tick_params(labelrotation=45)
-autolabel(ax[1], bars1)
-autolabel(ax[1], bars2)
-autolabel(ax[1], bars3)
-
-
-
-fig.suptitle('Disparity benchmark Write attacks')
+bars1 = ax.bar(index - width, slowdown[0], width, label='2 cores')
+bars2 = ax.bar(index, slowdown[1], width, label='3 cores')
+bars3 = ax.bar(index + width, slowdown[2], width, label='4 cores')
+ax.legend(fontsize=14)
+ax.set_title('Disparity + Random array access co-runners', fontsize=20)
+ax.set_xlabel('Input size', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.set_xticks(index)
+ax.set_ylim([1.0, 2.0])
+ax.set_xticklabels(mem_sizes, fontsize=14)
+ax.tick_params(labelrotation=45)
+autolabel(ax, bars1)
+autolabel(ax, bars2)
+autolabel(ax, bars3)
 fig.tight_layout()
+plt.savefig('/home/caspar/git/RTS-thesis/talks/midterm-20200701/img/disparity-randomarrayaccess-bars.png')
 
-# +
 mem_sizes = ['32x32', '64x64', '96x96', '128x128', '160x160', '192x192']
 index = np.arange(len(mem_sizes))
 width = 0.3
-fig, ax = plt.subplots(1, 2, sharey=True, figsize=(15,6))
+
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(15,8))
 slowdown = []
 for i in range(2, 5):
     slowdown.append([disparity32.loc[i, attacks[2]],
@@ -386,20 +442,24 @@ for i in range(2, 5):
                      disparity128.loc[i, attacks[2]],
                      disparity160.loc[i, attacks[2]],
                      disparity192.loc[i, attacks[2]]])
-bars1 = ax[0].bar(index - width, slowdown[0], width, label='2 cores')
-bars2 = ax[0].bar(index, slowdown[1], width, label='3 cores')
-bars3 = ax[0].bar(index + width, slowdown[2], width, label='4 cores')
-ax[0].legend()
-ax[0].set_title('Linear write attack')
-ax[0].set_xlabel('Input size')
-ax[0].set_ylabel('Slowdown factor')
-ax[0].set_xticks(index)
-ax[0].set_xticklabels(mem_sizes)
-ax[0].tick_params(labelrotation=45)
-autolabel(ax[0], bars1)
-autolabel(ax[0], bars2)
-autolabel(ax[0], bars3)
+bars1 = ax.bar(index - width, slowdown[0], width, label='2 cores: 1 task, 1 co-runner')
+bars2 = ax.bar(index, slowdown[1], width, label='3 cores: 1 task, 2 co-runners')
+bars3 = ax.bar(index + width, slowdown[2], width, label='4 cores: 1 task, 3 co-runners')
+ax.legend(fontsize=20)
+ax.set_title('Disparity + Linear array write co-runners', fontsize=28)
+ax.set_xlabel('Input size', fontsize=28)
+ax.set_ylabel('Slowdown factor', fontsize=24)
+ax.set_ylim([1.0, 75.0])
+ax.set_xticks(index)
+ax.set_xticklabels(mem_sizes, fontsize=22)
+ax.tick_params(labelrotation=45)
+autolabel(ax, bars1)
+autolabel(ax, bars2)
+autolabel(ax, bars3)
+fig.tight_layout()
+plt.savefig('/home/caspar/git/RTS-thesis/talks/midterm-20200701/img/disparity-lineararraywrite-bars.png')
 
+fig, ax = plt.subplots(1, 1, sharey=True, figsize=(15,6))
 slowdown = []
 for i in range(2, 5):
     slowdown.append([disparity32.loc[i, attacks[3]],
@@ -408,22 +468,22 @@ for i in range(2, 5):
                      disparity128.loc[i, attacks[3]],
                      disparity160.loc[i, attacks[3]],
                      disparity192.loc[i, attacks[3]]])
-bars1 = ax[1].bar(index - width, slowdown[0], width, label='2 cores')
-bars2 = ax[1].bar(index, slowdown[1], width, label='3 cores')
-bars3 = ax[1].bar(index + width, slowdown[2], width, label='4 cores')
-ax[1].legend()
-ax[1].set_title('Random write attack')
-ax[1].set_xlabel('Input size')
-ax[1].set_xticks(index)
-ax[1].set_xticklabels(mem_sizes)
-ax[1].tick_params(labelrotation=45)
-autolabel(ax[1], bars1)
-autolabel(ax[1], bars2)
-autolabel(ax[1], bars3)
-
-fig.suptitle('Disparity benchmark Write attacks')
+bars1 = ax.bar(index - width, slowdown[0], width, label='2 cores')
+bars2 = ax.bar(index, slowdown[1], width, label='3 cores')
+bars3 = ax.bar(index + width, slowdown[2], width, label='4 cores')
+ax.legend(fontsize=14)
+ax.set_title('Disparity + Random array write co-runners', fontsize=20)
+ax.set_xlabel('Input size', fontsize=18)
+ax.set_ylabel('Slowdown factor', fontsize=18)
+ax.set_ylim([1.0, 75.0])
+ax.set_xticks(index)
+ax.set_xticklabels(mem_sizes, fontsize=14)
+ax.tick_params(labelrotation=45)
+autolabel(ax, bars1)
+autolabel(ax, bars2)
+autolabel(ax, bars3)
 fig.tight_layout()
-# -
+plt.savefig('/home/caspar/git/RTS-thesis/talks/midterm-20200701/img/disparity-randomarraywrite-bars.png')
 
 mem_sizes = ['32x32', '64x64', '96x96', '128x128', '160x160', '192x192']
 index = np.arange(len(mem_sizes))
