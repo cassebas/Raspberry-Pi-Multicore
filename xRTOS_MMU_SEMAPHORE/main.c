@@ -24,47 +24,47 @@
  * Maybe define the needed datastructures (depending on
  * the specific configuration of benchmarks).
  */
-#ifdef BENCH_CONFIG_CORE0_1
+#ifdef BENCH_CONFIG_CORE0_2_1
 int Array1[MAXDIM];
 #endif
-#ifdef BENCH_CONFIG_CORE1_1
+#ifdef BENCH_CONFIG_CORE1_2_1
 int Array2[MAXDIM];
 #endif
-#ifdef BENCH_CONFIG_CORE2_1
+#ifdef BENCH_CONFIG_CORE2_2_1
 int Array3[MAXDIM];
 #endif
-#ifdef BENCH_CONFIG_CORE3_1
+#ifdef BENCH_CONFIG_CORE3_2_1
 int Array4[MAXDIM];
 #endif
 
-#if defined BENCH_CONFIG_CORE0_3 || defined BENCH_CONFIG_CORE0_4
+#if defined BENCH_CONFIG_CORE0_1_1 || defined BENCH_CONFIG_CORE0_1_2
 volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
 #else
-	#if defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
+	#if defined BENCH_CONFIG_CORE0_1_3 || defined BENCH_CONFIG_CORE0_1_4
 	volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
 	volatile int myrandidx1[SYNBENCH_DATASIZE];
 	#endif
 #endif
-#if defined BENCH_CONFIG_CORE1_3 || defined BENCH_CONFIG_CORE1_4
+#if defined BENCH_CONFIG_CORE1_1_1 || defined BENCH_CONFIG_CORE1_1_2
 volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
 #else
-	#if defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
+	#if defined BENCH_CONFIG_CORE1_1_3 || defined BENCH_CONFIG_CORE1_1_4
 	volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
 	volatile int myrandidx2[SYNBENCH_DATASIZE];
 	#endif
 #endif
-#if defined BENCH_CONFIG_CORE2_3 || defined BENCH_CONFIG_CORE2_4
+#if defined BENCH_CONFIG_CORE2_1_1 || defined BENCH_CONFIG_CORE2_1_2
 volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
 #else
-	#if defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
+	#if defined BENCH_CONFIG_CORE2_1_3 || defined BENCH_CONFIG_CORE2_1_4
 	volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
 	volatile int myrandidx3[SYNBENCH_DATASIZE];
 	#endif
 #endif
-#if defined BENCH_CONFIG_CORE3_3 || defined BENCH_CONFIG_CORE3_4
+#if defined BENCH_CONFIG_CORE3_1_1 || defined BENCH_CONFIG_CORE3_1_2
 volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
 #else
-	#if defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
+	#if defined BENCH_CONFIG_CORE3_1_3 || defined BENCH_CONFIG_CORE3_1_4
 	volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
 	volatile int myrandidx4[SYNBENCH_DATASIZE];
 	#endif
@@ -274,7 +274,7 @@ void core0(void* pParam) {
     unsigned int offset=0;
 	int corenum=0;
 
-#ifdef BENCH_CONFIG_CORE0_7
+#ifdef BENCH_CONFIG_CORE0_3_1
 	// Disparity: initialization part 1, allocate memory for data
 	// and make seed
 	int seed = corenum + 1;
@@ -305,14 +305,14 @@ void core0(void* pParam) {
 #endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE0_1
+#ifdef BENCH_CONFIG_CORE0_2_1
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array1);
 #endif
-#if defined BENCH_CONFIG_CORE0_5 || defined BENCH_CONFIG_CORE0_6
+#if defined BENCH_CONFIG_CORE0_1_3 || defined BENCH_CONFIG_CORE0_1_4
 		array_access_randomize(myrandidx1, corenum);
 #endif
-#ifdef BENCH_CONFIG_CORE0_7
+#ifdef BENCH_CONFIG_CORE0_3_1
 	// Disparity initialization part 2: fill the data with random numbers
 	for (int i=0; i<(width*height); i++) {
 		srcImage1->data[i] = rand() % 256;
@@ -406,7 +406,7 @@ void core0(void* pParam) {
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 0 cycle_count: %12u iteration: %u offset: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE0, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, BENCH_STRING_CORE0, NR_OF_CORES,
 				 cycles, iter, offset);
 
 #ifdef PMU_EVENT_CORE0_1
@@ -417,25 +417,25 @@ void core0(void* pParam) {
 		log_info(corenum, buf, "%#02x\n\r", 0x03);
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE0_1, event1, iter);
 #endif
 #ifdef PMU_EVENT_CORE0_2
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE0_2, event2, iter);
 #endif
 #ifdef PMU_EVENT_CORE0_3
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE0_3, event3, iter);
 #endif
 #ifdef PMU_EVENT_CORE0_4
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE0_4, event4, iter);
 #endif
 
@@ -467,7 +467,7 @@ void core1(void* pParam) {
     unsigned int offset=0;
 	int corenum=1;
 
-#ifdef BENCH_CONFIG_CORE1_7
+#ifdef BENCH_CONFIG_CORE1_3_1
 	// Disparity: initialization part 1, allocate memory for data
 	// and make seed
 	int seed = corenum + 1;
@@ -498,14 +498,14 @@ void core1(void* pParam) {
 #endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE1_1
+#ifdef BENCH_CONFIG_CORE1_2_1
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array2);
 #endif
-#if defined BENCH_CONFIG_CORE1_5 || defined BENCH_CONFIG_CORE1_6
+#if defined BENCH_CONFIG_CORE1_1_3 || defined BENCH_CONFIG_CORE1_1_4
 		array_access_randomize(myrandidx2, corenum);
 #endif
-#ifdef BENCH_CONFIG_CORE1_7
+#ifdef BENCH_CONFIG_CORE1_3_1
 	// Disparity initialization part 2: fill the data with random numbers
 	for (int i=0; i<(width*height); i++) {
 		srcImage1->data[i] = rand() % 256;
@@ -599,31 +599,31 @@ void core1(void* pParam) {
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 1 cycle_count: %12u iteration: %u offset: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE1, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, BENCH_STRING_CORE1, NR_OF_CORES,
 				 cycles, iter, offset);
 
 #ifdef PMU_EVENT_CORE1_1
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE1_1, event1, iter);
 #endif
 #ifdef PMU_EVENT_CORE1_2
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE1_2, event2, iter);
 #endif
 #ifdef PMU_EVENT_CORE1_3
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE1_3, event3, iter);
 #endif
 #ifdef PMU_EVENT_CORE1_4
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE1_4, event4, iter);
 #endif
 
@@ -656,7 +656,7 @@ void core2(void* pParam) {
     unsigned int offset=0;
 	int corenum=2;
 
-#ifdef BENCH_CONFIG_CORE2_7
+#ifdef BENCH_CONFIG_CORE2_3_1
 	// Disparity: initialization part 1, allocate memory for data
 	// and make seed
 	int seed = corenum + 1;
@@ -687,14 +687,14 @@ void core2(void* pParam) {
 #endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE2_1
+#ifdef BENCH_CONFIG_CORE2_2_1
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array3);
 #endif
-#if defined BENCH_CONFIG_CORE2_5 || defined BENCH_CONFIG_CORE2_6
+#if defined BENCH_CONFIG_CORE2_1_3 || defined BENCH_CONFIG_CORE2_1_4
 		array_access_randomize(myrandidx3, corenum);
 #endif
-#ifdef BENCH_CONFIG_CORE2_7
+#ifdef BENCH_CONFIG_CORE2_3_1
 	// Disparity initialization part 2: fill the data with random numbers
 	for (int i=0; i<(width*height); i++) {
 		srcImage1->data[i] = rand() % 256;
@@ -788,31 +788,31 @@ void core2(void* pParam) {
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 2 cycle_count: %12u iteration: %u offset: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE2, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, BENCH_STRING_CORE2, NR_OF_CORES,
 				 cycles, iter, offset);
 
 #ifdef PMU_EVENT_CORE2_1
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE2_1, event1, iter);
 #endif
 #ifdef PMU_EVENT_CORE2_2
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE2_2, event2, iter);
 #endif
 #ifdef PMU_EVENT_CORE2_3
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE2_3, event3, iter);
 #endif
 #ifdef PMU_EVENT_CORE2_4
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE2_4, event4, iter);
 #endif
 
@@ -845,7 +845,7 @@ void core3(void* pParam) {
     unsigned int offset=0;
 	int corenum=3;
 
-#ifdef BENCH_CONFIG_CORE3_7
+#ifdef BENCH_CONFIG_CORE3_3_1
 	// Disparity: initialization part 1, allocate memory for data
 	// and make seed
 	int seed = corenum + 1;
@@ -876,14 +876,14 @@ void core3(void* pParam) {
 #endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE3_1
+#ifdef BENCH_CONFIG_CORE3_2_1
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array4);
 #endif
-#if defined BENCH_CONFIG_CORE3_5 || defined BENCH_CONFIG_CORE3_6
+#if defined BENCH_CONFIG_CORE3_1_3 || defined BENCH_CONFIG_CORE3_1_4
 		array_access_randomize(myrandidx4, corenum);
 #endif
-#ifdef BENCH_CONFIG_CORE3_7
+#ifdef BENCH_CONFIG_CORE3_3_1
 	// Disparity initialization part 2: fill the data with random numbers
 	for (int i=0; i<(width*height); i++) {
 		srcImage1->data[i] = rand() % 256;
@@ -978,31 +978,31 @@ void core3(void* pParam) {
 
 		log_info(corenum, buf,
 				 "CYCLECOUNT label: %s %s %s cores: %d core: 3 cycle_count: %12u iteration: %u offset: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, BENCH_STRING_CORE3, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, BENCH_STRING_CORE3, NR_OF_CORES,
 				 cycles, iter, offset);
 
 #ifdef PMU_EVENT_CORE3_1
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE3_1, event1, iter);
 #endif
 #ifdef PMU_EVENT_CORE3_2
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE3_2, event2, iter);
 #endif
 #ifdef PMU_EVENT_CORE3_3
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE3_3, event3, iter);
 #endif
 #ifdef PMU_EVENT_CORE3_4
 		log_info(corenum, buf,
 				 "EVENTCOUNT label: %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
-				 EXP_LABEL, CONFIG_STRING, NR_OF_CORES,
+				 EXP_LABEL, CONFIG_BENCH_STRING, NR_OF_CORES,
 				 corenum, PMU_EVENT_CORE3_4, event4, iter);
 #endif
 
@@ -1040,7 +1040,7 @@ void main (void)
 
 	xRTOS_Init();													// Initialize the xRTOS system .. done before any other xRTOS call
 
-#if defined BENCH_CONFIG_CORE0_7 || defined BENCH_CONFIG_CORE1_7 || defined BENCH_CONFIG_CORE2_7 || defined BENCH_CONFIG_CORE3_7
+#if defined BENCH_CONFIG_CORE0_3_1 || defined BENCH_CONFIG_CORE1_3_1 || defined BENCH_CONFIG_CORE2_3_1 || defined BENCH_CONFIG_CORE3_3_1
 	init_lock(MEM_LOCK);
 #endif
 

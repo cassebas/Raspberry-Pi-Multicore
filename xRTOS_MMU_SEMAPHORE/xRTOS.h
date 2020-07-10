@@ -12,22 +12,24 @@
  * 3: random array access
  */
 #define NR_OF_CORES 3
-#define BENCH_CONFIG_CORE0_1
-#define BENCH_CONFIG_CORE1_2
-#define BENCH_CONFIG_CORE2_3
-#define CONFIG_STRING "configuration: '123'"
+#define BENCH_CONFIG_CORE0_3_1
+#define BENCH_CONFIG_CORE1_2_2
+#define BENCH_CONFIG_CORE2_1_3
 
-#define BENCH_STRING_CORE0 "benchmark: malardalen_bsort100"
+#define CONFIG_SERIES_STRING "config_series: '321'"
+#define CONFIG_BENCH_STRING "config_benchmarks: '123'"
+
+#define BENCH_STRING_CORE0 "benchmark: sdvbs_disparity"
 #define BENCH_STRING_CORE1 "benchmark: malardalen_edn"
-#define BENCH_STRING_CORE2 "benchmark: linear_array_access"
+#define BENCH_STRING_CORE2 "benchmark: linear_array_write"
 #define BENCH_STRING_CORE3 ""
 
 #define BENCH_ARG_CORE0 Array1
 #define BENCH_ARG_CORE2 mydata3
 
-#define DO_BENCH_CORE0 bsort100_BubbleSort(BENCH_ARG_CORE0);
+#define DO_BENCH_CORE0 getDisparity(srcImage1, srcImage2, WIN_SZ, SHIFT);
 #define DO_BENCH_CORE1 edn_Calculate();
-#define DO_BENCH_CORE2 array_access_linear(BENCH_ARG_CORE2);
+#define DO_BENCH_CORE2 array_write_linear(BENCH_ARG_CORE2);
 #define DO_BENCH_CORE3
 
 #define EXP_LABEL "DEFAULT"
@@ -61,7 +63,7 @@
 #endif
 
 
-#define MAX_CPU_CORES							( 4	)				// The Raspberry Pi3 has 4 cores	
+#define MAX_CPU_CORES							( 4 )				// The Raspberry Pi3 has 4 cores	
 #define MAX_TASKS_PER_CORE						( 8 )				// For the moment task storage is static so we need some size
 
 /**
