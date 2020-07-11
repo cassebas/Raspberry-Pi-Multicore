@@ -36,10 +36,10 @@ def remove_quotes(quoted):
 def export_dataframe(df, output_mode, metric, axis0, axis1, output_directory):
     # axis0 is a tuple containing:
     #   output_mode==summary
-    #     (label, cores, config, slice(None))
+    #     (label, cores, config_series, config_bench, slice(None))
     #   output_mode==data
-    #     (label, cores, config, pattern)
-    (label, cores, config, pattern) = axis0
+    #     (label, cores, config_series, config_bench, pattern)
+    (label, cores, config_series, config_bench, pattern) = axis0
 
     try:
         df_exp = df.loc[axis0, axis1]
@@ -49,11 +49,14 @@ def export_dataframe(df, output_mode, metric, axis0, axis1, output_directory):
             if output_mode == 'summary':
                 df_exp.columns = df_exp.columns.to_series().str.join('-')
 
-            config = remove_quotes(config)
+            config_series = remove_quotes(config_series)
+            config_bench = remove_quotes(config_bench)
             pattern = remove_quotes(pattern)
 
             output_filename = '{}{}-{}-'.format(metric, output_mode, label)
-            output_filename += '{}core-config{}'.format(cores, config)
+            output_filename += 'core{}-'.format(cores)
+            output_filename += 'configseries{}-'.format(config_series)
+            output_filename += 'configbench{}'.format(config_bench)
 
             if output_mode == 'data':
                 output_filename += '-{}{}.csv'.format('pattern', pattern)
@@ -67,7 +70,9 @@ def export_dataframe(df, output_mode, metric, axis0, axis1, output_directory):
             logger.warning('Trying to export an empty dataframe.')
     except KeyError:
         logger.warning('KeyError => label={} '.format(label) +
-                       'cores={} config={}'.format(cores, config))
+                       'cores={} '.format(cores) +
+                       'configseries={} configbench={}'.format(config_series,
+                                                               config_bench))
 
 
 @click.command()
@@ -115,7 +120,9 @@ def main(input_file, output_directory, output_mode, metric):
             logger.info('Exiting program due to error.')
             exit(1)
 
-        df = df.set_index(keys=['label', 'cores', 'configuration', 'pattern'])
+        df = df.set_index(keys=['label', 'cores',
+                                'config_series', 'config_benchmarks',
+                                'pattern'])
     elif output_mode == 'summary':
         if metric == 'events':
             logger.error('Illegal metric for ' +
@@ -124,7 +131,8 @@ def main(input_file, output_directory, output_mode, metric):
             exit(1)
 
         df = pd.pivot_table(df,
-                            index=['label', 'cores', 'configuration',
+                            index=['label', 'cores',
+                                   'config_series', 'config_benchmarks',
                                    'pattern'],
                             columns=['benchmark', 'core'],
                             values='cycles',
@@ -140,13 +148,14 @@ def main(input_file, output_directory, output_mode, metric):
         exit(1)
 
     df.sort_index(inplace=True)
-
+    print(df.index)
     # Now output a series of CVS files that contain the summaries
     # The index levels of the df dataframe are:
     #  - level 0: label of experiment
     #  - level 1: number of cores
-    #  - level 2: configuration string
-    #  - level 3: alignment pattern string
+    #  - level 2: configuration series string
+    #  - level 3: configuration benchmarks string
+    #  - level 4: alignment pattern string
 
     axis1 = (slice(None))
     for label in set(df.index.get_level_values(0)):
@@ -158,27 +167,36 @@ def main(input_file, output_directory, output_mode, metric):
         for cores in set(cores_list):
             logger.debug('cores={}.'.format(cores))
             dfcore = dflabel.loc[cores, :]
-            config_list = dfcore.index.get_level_values(0)
-            logger.debug('config_list={}'.format(config_list))
+            config_series_list = dfcore.index.get_level_values(0)
+            logger.debug('config_series_list={}'.format(config_series_list))
 
-            for config in set(config_list):
-                logger.debug('config={}.'.format(config))
+            for config_series in set(config_series_list):
+                logger.debug('config_series={}.'.format(config_series))
+                dfconfig_series = dfcore.loc[config_series, :]
+                print(dfconfig_series)
+                config_bench_list = dfconfig_series.index.get_level_values(0)
+                logger.debug('config_bench_list={}'.format(config_bench_list))
 
-                if output_mode != 'data':
-                    axis0 = (label, cores, config, slice(None))
-                    export_dataframe(df, output_mode, metric, axis0, axis1,
-                                     output_directory)
+                for config_bench in set(config_bench_list):
+                    logger.debug('config_bench={}.'.format(config_bench))
 
-                else:  # output_mode == 'data':
-                    dfconfig = dfcore.loc[config, :]
-                    pattern_list = dfconfig.index.get_level_values(0)
-                    logger.debug('pattern_list={}'.format(pattern_list))
-
-                    for pattern in set(pattern_list):
-                        logger.debug('pattern={}'.format(pattern))
-                        axis0 = (label, cores, config, pattern)
+                    if output_mode != 'data':
+                        axis0 = (label, cores, config_series, config_bench,
+                                 slice(None))
                         export_dataframe(df, output_mode, metric, axis0, axis1,
                                          output_directory)
+
+                    else:  # output_mode == 'data':
+                        dfconfig_bench = dfconfig_series.loc[config_bench, :]
+                        pattern_list = dfconfig_bench.index.get_level_values(0)
+                        logger.debug('pattern_list={}'.format(pattern_list))
+
+                        for pattern in set(pattern_list):
+                            logger.debug('pattern={}'.format(pattern))
+                            axis0 = (label, cores, config_series, config_bench,
+                                     pattern)
+                            export_dataframe(df, output_mode, metric, axis0,
+                                             axis1, output_directory)
 
 
 if __name__ == "__main__":

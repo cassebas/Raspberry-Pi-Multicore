@@ -23,19 +23,21 @@ click_log.basic_config(logger)
 
 
 class Fields(Enum):
-    CONFIG = 1
-    DISABLE_CACHE = 2
-    ENABLE_MMU = 3
-    ENABLE_SCREEN = 4
-    NO_CACHE_MGMT = 5
-    SB_DATASIZE = 6
-    EXP_LABEL = 7
-    PMU_CORE0 = 8
-    PMU_CORE1 = 9
-    PMU_CORE2 = 10
-    PMU_CORE3 = 11
-    DISP_INPUT = 12
-    BSORT_INPUT = 13
+    NUMBER = 1
+    CONFIG_SERIES = 2
+    CONFIG_BENCH = 3
+    DISABLE_CACHE = 4
+    ENABLE_MMU = 5
+    ENABLE_SCREEN = 6
+    NO_CACHE_MGMT = 7
+    SB_DATASIZE = 8
+    EXP_LABEL = 9
+    PMU_CORE0 = 10
+    PMU_CORE1 = 11
+    PMU_CORE2 = 12
+    PMU_CORE3 = 13
+    DISP_INPUT = 14
+    BSORT_INPUT = 15
 
 
 class Compile:
@@ -87,21 +89,31 @@ class Compile:
         self.myenv = dict(os.environ,
                           BENCHMARK_CONFIG='-DBENCHMARK_CONFIG_M4')
 
-    def set_compilation(self, config=None, label=None, datasize=None,
+    def set_compilation(self, config_series=None, config_bench=None,
+                        label=None, datasize=None,
                         pmu_cores=None, no_cache_mgmt=False,
                         enable_mmu=False, enable_screen=False,
                         disparity_inputsize=None, bsort_inputsize=None):
         arg_m4_list = []
         arg_make_list = []
-        if config is not None:
+        if config_series is not None:
             # The python process that runs m4 cannot handle a string
             # with quotes well, remove leading and trailing quotes.
-            logger.debug('config={}'.format(config))
-            config = re.sub(r'^\'', '', config)
-            config = re.sub(r'\'$', '', config)
-            config_param = '-Dconfig=' + config
-            logger.debug('config={}'.format(config))
-            arg_m4_list.append(config_param)
+            logger.debug('config_series={}'.format(config_series))
+            config_series = re.sub(r'^\'', '', config_series)
+            config_series = re.sub(r'\'$', '', config_series)
+            config_series_param = '-Dconfig_series=' + config_series
+            logger.debug('config={}'.format(config_series_param))
+            arg_m4_list.append(config_series_param)
+        if config_bench is not None:
+            # The python process that runs m4 cannot handle a string
+            # with quotes well, remove leading and trailing quotes.
+            logger.debug('config_benchmarks={}'.format(config_bench))
+            config_bench = re.sub(r'^\'', '', config_bench)
+            config_bench = re.sub(r'\'$', '', config_bench)
+            config_bench_param = '-Dconfig_benchmarks=' + config_bench
+            logger.debug('config={}'.format(config_bench_param))
+            arg_m4_list.append(config_bench_param)
         if label is not None:
             logger.debug('label={}'.format(label))
             label_param = '-Dexp_label={}'.format(label)
@@ -358,7 +370,9 @@ class LogProcessor(SerialThread):
 
 
 flds = {
-    Fields.CONFIG: 'configuration of cores',
+    Fields.NUMBER: 'experiment number',
+    Fields.CONFIG_SERIES: 'benchmark series',
+    Fields.CONFIG_BENCH: 'benchmark configuration',
     Fields.DISABLE_CACHE: 'disable cache',  # not implemented for now
     Fields.ENABLE_MMU: 'enable mmu',
     Fields.ENABLE_SCREEN: 'enable screen',
@@ -375,7 +389,7 @@ flds = {
 
 
 def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
-                   min_observations):
+                   min_observations, begin, count):
 
     logger.info('Instantiating Compile object.')
     comp = Compile()
@@ -395,45 +409,50 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
     df[flds[Fields.ENABLE_MMU]] = df[flds[Fields.ENABLE_MMU]].astype(bool)
     df[flds[Fields.ENABLE_SCREEN]] = df[flds[Fields.ENABLE_SCREEN]].astype(bool)
 
-    i = 0
     for idx, row in df.iterrows():
-        i += 1
-        # First compile this experiment
-        logger.info('Starting a new compilation, ' +
-                    'experiment nr is {}.'.format(i))
-        config = row[flds[Fields.CONFIG]]
-        label = row[flds[Fields.EXP_LABEL]]
-        no_cache_mgmt = row[flds[Fields.NO_CACHE_MGMT]]
-        enable_mmu = row[flds[Fields.ENABLE_MMU]]
-        enable_screen = row[flds[Fields.ENABLE_SCREEN]]
-        datasize = row[flds[Fields.SB_DATASIZE]]
-        pmu_cores = (row[flds[Fields.PMU_CORE0]],
-                     row[flds[Fields.PMU_CORE1]],
-                     row[flds[Fields.PMU_CORE2]],
-                     row[flds[Fields.PMU_CORE3]])
-        disparity_inputsize = row[flds[Fields.DISP_INPUT]]
-        bsort_inputsize = row[flds[Fields.BSORT_INPUT]]
-        comp.set_compilation(config=config, label=label, datasize=datasize,
-                             pmu_cores=pmu_cores, no_cache_mgmt=no_cache_mgmt,
-                             enable_mmu=enable_mmu, enable_screen=enable_screen,
-                             disparity_inputsize=disparity_inputsize,
-                             bsort_inputsize=bsort_inputsize)
-        comp.compile()
+        number = row[flds[Fields.NUMBER]]
+        if number >= begin and number < (begin + count):
+            # First compile this experiment
+            logger.info('Starting a new compilation, ' +
+                        'experiment nr is {}.'.format(number))
+            config_series = row[flds[Fields.CONFIG_SERIES]]
+            config_bench = row[flds[Fields.CONFIG_BENCH]]
+            label = row[flds[Fields.EXP_LABEL]]
+            no_cache_mgmt = row[flds[Fields.NO_CACHE_MGMT]]
+            enable_mmu = row[flds[Fields.ENABLE_MMU]]
+            enable_screen = row[flds[Fields.ENABLE_SCREEN]]
+            datasize = row[flds[Fields.SB_DATASIZE]]
+            pmu_cores = (row[flds[Fields.PMU_CORE0]],
+                         row[flds[Fields.PMU_CORE1]],
+                         row[flds[Fields.PMU_CORE2]],
+                         row[flds[Fields.PMU_CORE3]])
+            disparity_inputsize = row[flds[Fields.DISP_INPUT]]
+            bsort_inputsize = row[flds[Fields.BSORT_INPUT]]
+            comp.set_compilation(config_series=config_series,
+                                 config_bench=config_bench,
+                                 label=label, datasize=datasize,
+                                 pmu_cores=pmu_cores,
+                                 no_cache_mgmt=no_cache_mgmt,
+                                 enable_mmu=enable_mmu,
+                                 enable_screen=enable_screen,
+                                 disparity_inputsize=disparity_inputsize,
+                                 bsort_inputsize=bsort_inputsize)
+            comp.compile()
 
-        logger.info('Compilation done.')
-        while True:
-            if resetter.get_next_experiment() is True:
-                # Oh! The resetter has reset the Pi. We should move on
-                # to the next experiment
-                logger.info('Detected reset, ' +
-                            ' move on to next experiment..')
-                # Finally reset the reset flag for the next iteration
-                resetter.set_next_experiment(False)
+            logger.info('Compilation done.')
+            while True:
+                if resetter.get_next_experiment() is True:
+                    # Oh! The resetter has reset the Pi. We should move on
+                    # to the next experiment
+                    logger.info('Detected reset, ' +
+                                ' move on to next experiment..')
+                    # Finally reset the reset flag for the next iteration
+                    resetter.set_next_experiment(False)
 
-                # break out of this loop
-                break
-            else:
-                time.sleep(0.5)
+                    # break out of this loop
+                    break
+                else:
+                    time.sleep(0.5)
 
     logger.info('Done processing excel file..')
     time.sleep(0.5)
@@ -464,9 +483,15 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
 @click.option('--min-observations',
               default=100,
               help='Minimum number of observations to read.')
+@click.option('--experiment-begin',
+              default=1,
+              help='Number of experiment to start processing.')
+@click.option('--experiment-count',
+              default=1,
+              help='Number of experiments process.')
 @click_log.simple_verbosity_option(logger)
 def main(input_file, output_file, working_directory, tty_reset, tty_logging,
-         min_observations):
+         min_observations, experiment_begin, experiment_count):
     if not isfile(input_file):
         print('Error: input file {}'.format(input_file), end=' ')
         print('does not exist!')
@@ -476,7 +501,8 @@ def main(input_file, output_file, working_directory, tty_reset, tty_logging,
         print('already exists!')
         exit(1)
     do_experiments(input_file, output_file, working_directory,
-                   tty_reset, tty_logging, min_observations)
+                   tty_reset, tty_logging, min_observations,
+                   experiment_begin, experiment_count)
 
 
 if __name__ == "__main__":

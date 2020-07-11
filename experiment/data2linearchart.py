@@ -12,12 +12,15 @@ logger = logging.getLogger(__name__)
 click_log.basic_config(logger)
 
 
-benchmark_list = ['malardalen bsort100',
-                  'malardalen edn',
-                  'linear array access',
-                  'linear array write',
-                  'random array access',
-                  'random array write']
+benchmark_list = [
+    ['linear array access',
+     'linear array write',
+     'random array access',
+     'random array write'],
+    ['malardalen bsort100',
+     'malardalen edn'],
+    ['sd-vbs disparity']]
+
 
 pmu_event_names = {
     3: 'L1D_CACHE_REFILL',
@@ -139,15 +142,25 @@ def main(input_file, output_directory, maximum_observations,
     rowcount = maximum_observations * cores
     df = df.iloc[:rowcount, ]
 
-    configuration_list = df.configuration.unique()
-    if len(configuration_list) != 1:
-        logger.warning('The uniqueness of the number of configurations ' +
+    config_series_list = df.config_series.unique()
+    if len(config_series_list) != 1:
+        logger.warning('The uniqueness of the number of config_series ' +
                        ' is not 1!')
-    config = remove_quotes(configuration_list[0])
+    config_series = remove_quotes(config_series_list[0])
     # assertion: number of cores must equal the length of the config string
-    if len(config) != cores:
-        logger.warning('Length of config string is not equal number of cores!')
-    logger.debug('config={}'.format(config))
+    if len(config_series) != cores:
+        logger.warning('Length of config_series string is not equal number of cores!')
+    logger.debug('config_series={}'.format(config_series))
+
+    config_bench_list = df.config_benchmarks.unique()
+    if len(config_bench_list) != 1:
+        logger.warning('The uniqueness of the number of config_bench ' +
+                       ' is not 1!')
+    config_bench = remove_quotes(config_bench_list[0])
+    # assertion: number of cores must equal the length of the config string
+    if len(config_bench) != cores:
+        logger.warning('Length of config_bench string is not equal number of cores!')
+    logger.debug('config_bench={}'.format(config_bench))
 
     pattern_list = df.pattern.unique()
     if len(pattern_list) != 1:
@@ -155,12 +168,15 @@ def main(input_file, output_directory, maximum_observations,
     pattern = remove_quotes(pattern_list[0])
     logger.debug('pattern={}'.format(pattern))
 
-    benchmarks = [benchmark_list[int(b)-1] for b in config]
+    benchmarks = [benchmark_list[int(tup[0])-1][int(tup[1])-1]
+                  for tup in zip(config_series, config_bench)]
     logger.debug('benchmarks={}'.format(benchmarks))
 
     # Start constructing output filename
     output_filename = 'cycles{}-{}-'.format('data', exp_name)
-    output_filename += '{}core-config{}-'.format(cores, config)
+    output_filename += '{}core-'.format(cores)
+    output_filename += 'configseries{}-'.format(config_series)
+    output_filename += 'configbench{}-'.format(config_bench)
     output_filename += '{}{}'.format('pattern', pattern)
 
     if dfevents is not None:

@@ -70,14 +70,18 @@ $(TEX_SUMMARIES): $(CSV_SUMMARIES)
 	$(eval CSV := $(patsubst %.tex,%.csv,$(TEX)))
 	$(eval INPUT := `echo $(CSV)|sed 's/^report\///'`)
 	$(eval LABEL := `echo $(TEX)|sed 's/^.*cyclessummary-\([^-]*\)-.*/\1/'`)
-	$(eval CFG := `echo $(TEX)|sed 's/^.*config\([0-9]*\).*/\1/'`)
+	$(eval CFG_S := `echo $(TEX)|sed 's/^.*configseries\([0-9]*\).*/\1/'`)
+	$(eval CFG_B := `echo $(TEX)|sed 's/^.*configbench\([0-9]*\).*/\1/'`)
 	@echo "csv is "$(CSV)
 	@echo "tex is "$(TEX)
 	@echo "label is "$(LABEL)
-	@echo "config is "$(CFG)
+	@echo "config_series is "$(CFG_S)
+	@echo "config_bench is "$(CFG_B)
 	@echo "inputfile is "$(INPUT)
 	m4 -Dfilename=$(INPUT) \
-		-Dconfig=$(CFG) -Dlabel=$(LABEL) maketex-cyclesummaries.m4 > $@
+		-Dconfig_series=$(CFG_S) \
+		-Dconfig_benchmarks=$(CFG_B) \
+		-Dlabel=$(LABEL) maketex-cyclesummaries.m4 > $@
 
 tex_summaries_combined: $(TEX_SUMMARIES_COMBINED)
 
