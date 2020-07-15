@@ -173,6 +173,9 @@ class Compile:
         self.makeprepcmd = ['m4'] + arg_m4_list + ['benchmark_config.m4']
         logger.debug('makeprepcmd={}'.format(self.makeprepcmd))
 
+        bench_config_m4 = 'BENCHMARK_CONFIG=-DBENCHMARK_CONFIG_M4'
+        arg_make_list.append(bench_config_m4)
+
         self.makeinstallcmd = ['make'] + arg_make_list + ['install']
         logger.debug('makeinstallcmd={}'.format(self.makeinstallcmd))
 
@@ -411,6 +414,7 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
 
     for idx, row in df.iterrows():
         number = row[flds[Fields.NUMBER]]
+        logger.debug('Experiment number read is {}.'.format(number))
         if number >= begin and number < (begin + count):
             # First compile this experiment
             logger.info('Starting a new compilation, ' +
@@ -453,6 +457,9 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
                     break
                 else:
                     time.sleep(0.5)
+
+        else:
+            logger.debug('Not processing experiment {}.'.format(number))
 
     logger.info('Done processing excel file..')
     time.sleep(0.5)
