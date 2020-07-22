@@ -319,7 +319,7 @@ class LogProcessor(SerialThread):
                 # readline is only temporarily blocking, timeout is set
                 line = self.serial.readline()
                 try:
-                    string = line.decode('ascii')
+                    string = line.decode('utf-8')
                     logger.debug('LogProcessor: line={}'.format(string.strip()))
                     match = re.search(r'iteration: ([0-9]+)', string)
                     if match:
