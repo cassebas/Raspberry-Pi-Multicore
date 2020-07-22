@@ -37,6 +37,27 @@ int Array3[MAXDIM];
 int Array4[MAXDIM];
 #endif
 
+#ifdef BENCH_CONFIG_CORE0_2_3
+matrix matA1;
+matrix matB1;
+matrix matC1;
+#endif
+#ifdef BENCH_CONFIG_CORE1_2_3
+matrix matA2;
+matrix matB2;
+matrix matC2;
+#endif
+#ifdef BENCH_CONFIG_CORE2_2_3
+matrix matA3;
+matrix matB3;
+matrix matC3;
+#endif
+#ifdef BENCH_CONFIG_CORE3_2_3
+matrix matA4;
+matrix matB4;
+matrix matC4;
+#endif
+
 #if defined BENCH_CONFIG_CORE0_1_1 || defined BENCH_CONFIG_CORE0_1_2
 volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
 #else
@@ -309,6 +330,11 @@ void core0(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array1);
 #endif
+#ifdef BENCH_CONFIG_CORE0_2_3
+		/* Maybe initialize the matmult matrix with random nrs (each iteration) */
+		matmult_Initialize(matA1);
+		matmult_Initialize(matB1);
+#endif
 #if defined BENCH_CONFIG_CORE0_1_3 || defined BENCH_CONFIG_CORE0_1_4
 		array_access_randomize(myrandidx1, corenum);
 #endif
@@ -502,6 +528,11 @@ void core1(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array2);
 #endif
+#ifdef BENCH_CONFIG_CORE1_2_3
+		/* Maybe initialize the matmult matrix with random nrs (each iteration) */
+		matmult_Initialize(matA2);
+		matmult_Initialize(matB2);
+#endif
 #if defined BENCH_CONFIG_CORE1_1_3 || defined BENCH_CONFIG_CORE1_1_4
 		array_access_randomize(myrandidx2, corenum);
 #endif
@@ -691,6 +722,11 @@ void core2(void* pParam) {
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array3);
 #endif
+#ifdef BENCH_CONFIG_CORE2_2_3
+		/* Maybe initialize the matmult matrix with random nrs (each iteration) */
+		matmult_Initialize(matA3);
+		matmult_Initialize(matB3);
+#endif
 #if defined BENCH_CONFIG_CORE2_1_3 || defined BENCH_CONFIG_CORE2_1_4
 		array_access_randomize(myrandidx3, corenum);
 #endif
@@ -879,6 +915,11 @@ void core3(void* pParam) {
 #ifdef BENCH_CONFIG_CORE3_2_1
 		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
 		bsort100_Initialize(Array4);
+#endif
+#ifdef BENCH_CONFIG_CORE3_2_3
+		/* Maybe initialize the matmult matrix with random nrs (each iteration) */
+		matmult_Initialize(matA4);
+		matmult_Initialize(matB4);
 #endif
 #if defined BENCH_CONFIG_CORE3_1_3 || defined BENCH_CONFIG_CORE3_1_4
 		array_access_randomize(myrandidx4, corenum);

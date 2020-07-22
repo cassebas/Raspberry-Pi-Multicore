@@ -12,6 +12,7 @@ changecom(/*,*/)dnl
  * 1-4: random array write
  * 2-1: mälardalen bsort 100
  * 2-2: mälardalen edn
+ * 2-3: mälardalen matmult
  * 3-1: sd-vbs disparity
  *
  * The BENCH_CONFIG definition prescribes the specific benchmarks running
@@ -102,6 +103,7 @@ define(bench_name1_4, random_array_write)dnl
 dnl series nr 2: Mälardalen
 define(bench_name2_1, malardalen_bsort100)dnl
 define(bench_name2_2, malardalen_edn)dnl
+define(bench_name2_3, malardalen_matmult)dnl
 dnl series nr 2: SD-VBS
 define(bench_name3_1, sdvbs_disparity)dnl
 dnl
@@ -115,6 +117,7 @@ define(bench_arg1_4, `mydata$1, myrandidx$1')dnl
 dnl series nr 2: Mälardalen
 define(bench_arg2_1, Array$1)dnl
 define(bench_arg2_2)dnl
+define(bench_arg2_3, `matA$1, matB$1, matC$1')dnl
 dnl series nr 3: SD-VBS
 define(bench_arg3_1)dnl
 dnl
@@ -128,6 +131,7 @@ define(do_bench1_4, array_write_random(BENCH_ARG_CORE`$1');)dnl
 dnl series nr 2: Mälardalen
 define(do_bench2_1, bsort100_BubbleSort(BENCH_ARG_CORE`$1');)dnl
 define(do_bench2_2, edn_Calculate();)dnl
+define(do_bench2_3, matmult_Multiply(BENCH_ARG_CORE`$1');)dnl
 dnl series nr 3: SD-VBS
 define(do_bench3_1, getDisparity(srcImage1, srcImage2, WIN_SZ, SHIFT);)dnl
 dnl
@@ -283,5 +287,17 @@ define(bsort_inputsize_template, `
 #define BSORT_INPUTSIZE $1
 ')dnl
 ifdef(`bsort_inputsize', bsort_inputsize_template(bsort_inputsize), `')dnl
+
+dnl Benchmark specific configuration parameters
+dnl
+dnl Mälardalen matmult: size of input matrices
+define(matmult_inputsize_template, `
+#ifdef MATMULT_INPUTSIZE
+#undef MATMULT_INPUTSIZE
+#endif
+#define MATMULT_INPUTSIZE $1
+')dnl
+ifdef(`matmult_inputsize', matmult_inputsize_template(matmult_inputsize), `')dnl
+
 
 #endif /* ~BENCHMARK_CONFIG_H */

@@ -38,7 +38,8 @@ class Fields(Enum):
     PMU_CORE3 = 13
     DISP_INPUT = 14
     BSORT_INPUT = 15
-    TICK_RATE_HZ = 16
+    MATMULT_INPUT = 16
+    TICK_RATE_HZ = 17
 
 
 class Compile:
@@ -95,7 +96,7 @@ class Compile:
                         pmu_cores=None, no_cache_mgmt=False,
                         enable_mmu=False, enable_screen=False,
                         disparity_inputsize=None, bsort_inputsize=None,
-                        tick_rate_hz=None):
+                        matmult_inputsize=None, tick_rate_hz=None):
         arg_m4_list = []
         arg_make_list = []
         if config_series is not None:
@@ -138,6 +139,11 @@ class Compile:
             bsort_inputsize_param = \
                 '-Dbsort_inputsize={}'.format(bsort_inputsize)
             arg_m4_list.append(bsort_inputsize_param)
+        if matmult_inputsize is not None:
+            logger.debug('matmult_inputsize={}'.format(matmult_inputsize))
+            matmult_inputsize_param = \
+                '-Dmatmult_inputsize={}'.format(matmult_inputsize)
+            arg_m4_list.append(matmult_inputsize_param)
         if tick_rate_hz is not None:
             logger.debug('tick_rate_hz={}'.format(tick_rate_hz))
             tick_rate_hz_param = '-Dtick_rate_hz={}'.format(tick_rate_hz)
@@ -396,6 +402,7 @@ flds = {
     Fields.PMU_CORE3: 'pmu core 3',
     Fields.DISP_INPUT: 'disparity inputsize',
     Fields.BSORT_INPUT: 'bsort inputsize',
+    Fields.MATMULT_INPUT: 'matmult inputsize',
     Fields.TICK_RATE_HZ: 'tick rate hz',
 }
 
@@ -441,6 +448,7 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
                          row[flds[Fields.PMU_CORE3]])
             disparity_inputsize = row[flds[Fields.DISP_INPUT]]
             bsort_inputsize = row[flds[Fields.BSORT_INPUT]]
+            matmult_inputsize = row[flds[Fields.MATMULT_INPUT]]
             tick_rate_hz = row[flds[Fields.TICK_RATE_HZ]]
             comp.set_compilation(config_series=config_series,
                                  config_bench=config_bench,
@@ -451,6 +459,7 @@ def do_experiments(infile, outfile, workdir, tty_reset, tty_logging,
                                  enable_screen=enable_screen,
                                  disparity_inputsize=disparity_inputsize,
                                  bsort_inputsize=bsort_inputsize,
+                                 matmult_inputsize=matmult_inputsize,
                                  tick_rate_hz=tick_rate_hz)
             comp.compile()
 

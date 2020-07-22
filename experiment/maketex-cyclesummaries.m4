@@ -9,6 +9,7 @@ changecom(%)dnl
 % 1-4: random array write
 % 2-1: mälardalen bsort 100
 % 2-2: mälardalen edn
+% 2-3: mälardalen matmult
 % 3-1: sd-vbs disparity
 %
 % This m4 macro file expects the following 4 parameters:
@@ -43,6 +44,7 @@ define(bench_name1_4, random_array_write)dnl
 dnl series nr 2: Mälardalen
 define(bench_name2_1, malardalen_bsort100)dnl
 define(bench_name2_2, malardalen_edn)dnl
+define(bench_name2_3, malardalen_matmult)dnl
 dnl series nr 2: SD-VBS
 define(bench_name3_1, sdvbs_disparity)dnl
 define(bench_name, undefined)

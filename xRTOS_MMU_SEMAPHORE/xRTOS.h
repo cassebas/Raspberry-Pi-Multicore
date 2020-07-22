@@ -40,6 +40,11 @@
 #define BSORT_INPUTSIZE 100
 
 /**
+ * Specific configuration for the Mälardalen bsort benchmark
+ */
+#define MATMULT_INPUTSIZE 100
+
+/**
  * Specific configuration for the SD-VBS Disparity benchmark
  */
 #define DISPARITY_INPUTSIZE 96

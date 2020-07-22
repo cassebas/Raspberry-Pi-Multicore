@@ -34,3 +34,14 @@ long int codebook(long int mask, long int bitchanged, long int numbasis, long in
 void jpegdct(short *d, short *r);
 
 void edn_Calculate(void);
+
+/*
+ * matmult: Malardalen's Matrix multiplication of two matrices.
+ */
+#define UPPERLIMIT MATMULT_INPUTSIZE
+typedef int matrix [UPPERLIMIT][UPPERLIMIT];
+
+void matmult_Multiply(matrix A, matrix B, matrix Res);
+void matmult_InitSeed(void);
+void matmult_Initialize(matrix Array);
+int matmult_RandomInteger(void);

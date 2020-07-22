@@ -25,7 +25,8 @@ benchmark_list = [
      'random array access',
      'random array write'],
     ['malardalen bsort100',
-     'malardalen edn'],
+     'malardalen edn',
+     'malardalen matmult'],
     ['sd-vbs disparity']]
 
 
@@ -55,6 +56,8 @@ class Fields(Enum):
     PMU_CORE3 = 13
     DISP_INPUT = 14
     BSORT_INPUT = 15
+    MATMULT_INPUT = 16
+    TICK_RATE_HZ = 17
 
 
 flds = {
@@ -73,6 +76,7 @@ flds = {
     Fields.PMU_CORE3: 'pmu core 3',
     Fields.DISP_INPUT: 'disparity inputsize',
     Fields.BSORT_INPUT: 'bsort inputsize',
+    Fields.MATMULT_INPUT: 'matmult inputsize',
 }
 
 
@@ -112,7 +116,8 @@ def get_experiment_labels(input_file):
             exp_key += str(row[flds[Fields.NO_CACHE_MGMT]]) + '_'
             exp_key += str(row[flds[Fields.SB_DATASIZE]]) + '_'
             exp_key += str(row[flds[Fields.DISP_INPUT]]) + '_'
-            exp_key += str(row[flds[Fields.BSORT_INPUT]])
+            exp_key += str(row[flds[Fields.BSORT_INPUT]]) + '_'
+            exp_key += str(row[flds[Fields.MATMULT_INPUT]])
             exp_keys[exp_key] = row[flds[Fields.EXP_LABEL]]
 
     # second pass, extract all n-core experiments that have co-runners
@@ -133,7 +138,8 @@ def get_experiment_labels(input_file):
         exp_key += str(row[flds[Fields.NO_CACHE_MGMT]]) + '_'
         exp_key += str(row[flds[Fields.SB_DATASIZE]]) + '_'
         exp_key += str(row[flds[Fields.DISP_INPUT]]) + '_'
-        exp_key += str(row[flds[Fields.BSORT_INPUT]])
+        exp_key += str(row[flds[Fields.BSORT_INPUT]]) + '_'
+        exp_key += str(row[flds[Fields.MATMULT_INPUT]])
 
         label = row[flds[Fields.EXP_LABEL]]
         if exp_key in exp_keys:
@@ -193,6 +199,10 @@ def get_experiment_results(exp_labels, exp_data):
                               for tup in zip(config_series, config_bench)]
                 benchmark = benchmarks[0]
 
+                # strip whitespace from benchmark name
+                benchmark = re.sub(r' ', '', benchmark)
+                # strip '-' from benchmark name
+                benchmark = re.sub(r'-', '', benchmark)
                 pattern_list = df_tmp.index.get_level_values(3)
                 logger.debug('pattern list is {}'.format(pattern_list))
 
@@ -200,7 +210,10 @@ def get_experiment_results(exp_labels, exp_data):
                     df_tmp_pattern = df_tmp.loc[(slice(None),
                                                  slice(None),
                                                  slice(None),
-                                                 pattern), :]
+                                                 pattern),
+                                                (slice(None),
+                                                 [benchmark],
+                                                 ['core0'])]
 
                     # dftmp now contains one row, three cols (max, median, std)
                     wcet = df_tmp_pattern.iloc[0, 0]
@@ -213,7 +226,9 @@ def get_experiment_results(exp_labels, exp_data):
 
                     label1core = row['label1core']
                     df1_tmp = exp_data.loc[label1core,
-                                           (slice(None), slice(None), ['core0'])]
+                                           (slice(None),
+                                            [benchmark],
+                                            ['core0'])]
                     if len(df1_tmp.index) > 0:
                         # dftmp now contains one row, three cols (max, median, std)
                         wcet1 = df1_tmp.iloc[0, 0]
@@ -235,11 +250,10 @@ def get_experiment_results(exp_labels, exp_data):
                         else:
                             std_factor = None
 
-                        logger.debug('Label:{}'.format(label) +
-                                     'pattern:{}'.format(pattern) +
-                                     ' Slowdown ' +
-                                     'factor:{}'.format(label,
-                                                        wcet/wcet1))
+                        logger.debug('Label:{} '.format(label) +
+                                     'pattern:{} '.format(pattern) +
+                                     'Slowdown ' +
+                                     'factor:{}'.format(wcet/wcet1))
                         ps = pd.Series({'label': label,
                                         'label1core': label1core,
                                         'cores': cores,

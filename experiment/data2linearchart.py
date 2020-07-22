@@ -18,7 +18,8 @@ benchmark_list = [
      'random array access',
      'random array write'],
     ['malardalen bsort100',
-     'malardalen edn'],
+     'malardalen edn',
+     'malardalen matmult'],
     ['sd-vbs disparity']]
 
 
