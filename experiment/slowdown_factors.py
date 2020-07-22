@@ -185,7 +185,6 @@ def get_experiment_results(exp_labels, exp_data):
                 cores = df_tmp.index.get_level_values(0)[0]
                 config_series = df_tmp.index.get_level_values(1)[0]
                 config_bench = df_tmp.index.get_level_values(2)[0]
-
                 # remove quotes from strings (if present)
                 config_series = remove_quotes(config_series)
                 config_bench = remove_quotes(config_bench)
@@ -194,53 +193,66 @@ def get_experiment_results(exp_labels, exp_data):
                               for tup in zip(config_series, config_bench)]
                 benchmark = benchmarks[0]
 
-                # dftmp now contains one row, three cols (max, median, std)
-                wcet = df_tmp.iloc[0, 0]
-                median = df_tmp.iloc[0, 1]
-                std = df_tmp.iloc[0, 2]
-                if median != 0:
-                    wcet_median_factor = wcet / median
-                else:
-                    wcet_median_factor = None
+                pattern_list = df_tmp.index.get_level_values(3)
+                logger.debug('pattern list is {}'.format(pattern_list))
 
-                label1core = row['label1core']
-                df1_tmp = exp_data.loc[label1core,
-                                       (slice(None), slice(None), ['core0'])]
-                if len(df1_tmp.index) > 0:
+                for pattern in pattern_list:
+                    df_tmp_pattern = df_tmp.loc[(slice(None),
+                                                 slice(None),
+                                                 slice(None),
+                                                 pattern), :]
+
                     # dftmp now contains one row, three cols (max, median, std)
-                    wcet1 = df1_tmp.iloc[0, 0]
-                    median1 = df1_tmp.iloc[0, 1]
-                    std1 = df1_tmp.iloc[0, 2]
-
-                    if wcet1 != 0:
-                        slowdown_factor = wcet / wcet1
+                    wcet = df_tmp_pattern.iloc[0, 0]
+                    median = df_tmp_pattern.iloc[0, 1]
+                    std = df_tmp_pattern.iloc[0, 2]
+                    if median != 0:
+                        wcet_median_factor = wcet / median
                     else:
-                        slowdown_factor = None
+                        wcet_median_factor = None
 
-                    if median1 != 0:
-                        median_factor = median / median1
-                    else:
-                        median_factor = None
+                    label1core = row['label1core']
+                    df1_tmp = exp_data.loc[label1core,
+                                           (slice(None), slice(None), ['core0'])]
+                    if len(df1_tmp.index) > 0:
+                        # dftmp now contains one row, three cols (max, median, std)
+                        wcet1 = df1_tmp.iloc[0, 0]
+                        median1 = df1_tmp.iloc[0, 1]
+                        std1 = df1_tmp.iloc[0, 2]
 
-                    if std1 != 0:
-                        std_factor = std / std1
-                    else:
-                        std_factor = None
+                        if wcet1 != 0:
+                            slowdown_factor = wcet / wcet1
+                        else:
+                            slowdown_factor = None
 
-                    logger.debug('Label:{} Slowdown factor:{}'.format(label,
-                                                                      wcet/wcet1))
-                    ps = pd.Series({'label': label,
-                                    'label1core': label1core,
-                                    'cores': cores,
-                                    'benchmark': benchmark,
-                                    'wcet': wcet,
-                                    'wcet_median_factor': wcet_median_factor,
-                                    'slowdown_factor': slowdown_factor,
-                                    'median': median,
-                                    'median_factor': median_factor,
-                                    'stdev': std,
-                                    'stdev_factor': std_factor})
-                    exp_results = exp_results.append(ps, ignore_index=True)
+                        if median1 != 0:
+                            median_factor = median / median1
+                        else:
+                            median_factor = None
+
+                        if std1 != 0:
+                            std_factor = std / std1
+                        else:
+                            std_factor = None
+
+                        logger.debug('Label:{}'.format(label) +
+                                     'pattern:{}'.format(pattern) +
+                                     ' Slowdown ' +
+                                     'factor:{}'.format(label,
+                                                        wcet/wcet1))
+                        ps = pd.Series({'label': label,
+                                        'label1core': label1core,
+                                        'cores': cores,
+                                        'benchmark': benchmark,
+                                        'pattern': pattern,
+                                        'wcet': wcet,
+                                        'wcet_median_factor': wcet_median_factor,
+                                        'slowdown_factor': slowdown_factor,
+                                        'median': median,
+                                        'median_factor': median_factor,
+                                        'stdev': std,
+                                        'stdev_factor': std_factor})
+                        exp_results = exp_results.append(ps, ignore_index=True)
         except KeyError:
             logger.debug('Caught KeyError for label {}'.format(label))
 

@@ -627,8 +627,8 @@ void core1(void* pParam) {
 				 corenum, PMU_EVENT_CORE1_4, event4, iter);
 #endif
 
-		if (++iter % 100 == 0)
-			offset += corenum;
+		if (++iter % 50 == 0)
+			offset += 1;
 	}
 }
 
@@ -816,8 +816,8 @@ void core2(void* pParam) {
 				 corenum, PMU_EVENT_CORE2_4, event4, iter);
 #endif
 
-		if (++iter % 100 == 0)
-			offset += corenum;
+		if (++iter % 50 == 0)
+			offset += 1;
 	}
 }
 
@@ -1006,8 +1006,8 @@ void core3(void* pParam) {
 				 corenum, PMU_EVENT_CORE3_4, event4, iter);
 #endif
 
-		if (++iter % 100 == 0)
-			offset += corenum;
+		if (++iter % 50 == 0)
+			offset += 1;
 	}
 }
 
