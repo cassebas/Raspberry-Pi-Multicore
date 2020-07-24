@@ -79,7 +79,7 @@ BEGIN {
                 pattern = "'0999'"
         }
 
-        printf("%s,%s,%s,%s,%s,%s,%s,%s,%s\n",$5,$7,$9,$11,$13,pattern,$15,$17,$19,$21)
+        printf("%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n",$5,$7,$9,$11,$13,pattern,$15,$17,$19,$21)
     } else {
         printf("WARNING: number of fields doesn't match. Line number is %s\n", NR) | "cat 1>&2"
     }
