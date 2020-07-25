@@ -84,8 +84,16 @@
 #define configTICK_RATE_HZ						( 10000 )				// Timer tick frequency
 #endif
 
-#define tskIDLE_PRIORITY						( 0	)				// Idle priority is 0 .. rarely would this ever change	
-#define configMAX_TASK_NAME_LEN					( 16 )				// Maxium length of a task name
+#ifndef OFFSET_INTERVAL
+#define OFFSET_INTERVAL						( 100 )				// Number of iterations to run with each offset setting
+#endif
+
+#ifndef TICKS_INCR_OFFSET
+#define TICKS_INCR_OFFSET						( 2 )					// Number of ticks with which the offset is increased
+#endif
+
+#define tskIDLE_PRIORITY						( 0	)				// Idle priority is 0 .. rarely would this ever change
+#define configMAX_TASK_NAME_LEN				( 16 )					// Maxium length of a task name
 #define configMINIMAL_STACK_SIZE				( 128 )				// Minimum stack size used by idle task
 
 
