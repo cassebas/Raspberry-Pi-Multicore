@@ -500,7 +500,7 @@ void core1(void* pParam) {
 	int seed = corenum + 1;
 	srand(seed);
 	lock(MEM_LOCK, corenum);
-	int width=192, height=144;
+	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;
     int WIN_SZ=4, SHIFT=8;
     I2D* srcImage1 = iMallocHandle(width, height);
     I2D* srcImage2 = iMallocHandle(width, height);
@@ -694,7 +694,7 @@ void core2(void* pParam) {
 	int seed = corenum + 1;
 	srand(seed);
 	lock(MEM_LOCK, corenum);
-	int width=192, height=144;
+	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;
     int WIN_SZ=4, SHIFT=8;
     I2D* srcImage1 = iMallocHandle(width, height);
     I2D* srcImage2 = iMallocHandle(width, height);
@@ -888,7 +888,7 @@ void core3(void* pParam) {
 	int seed = corenum + 1;
 	srand(seed);
 	lock(MEM_LOCK, corenum);
-	int width=192, height=144;
+	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;
     int WIN_SZ=4, SHIFT=8;
     I2D* srcImage1 = iMallocHandle(width, height);
     I2D* srcImage2 = iMallocHandle(width, height);
