@@ -10,6 +10,7 @@
 #include "debug.h"
 #include "mutex.h"
 #include "sdvbs/disparity/disparity.h"
+#include "sdvbs/mser/mser.h"
 
 /* definition of performance monitor control registers and such */
 #include "armv8_pm.h"
@@ -24,72 +25,10 @@
  * Maybe define the needed datastructures (depending on
  * the specific configuration of benchmarks).
  */
-#ifdef BENCH_CONFIG_CORE0_2_1
-int Array1[MAXDIM];
-#endif
-#ifdef BENCH_CONFIG_CORE1_2_1
-int Array2[MAXDIM];
-#endif
-#ifdef BENCH_CONFIG_CORE2_2_1
-int Array3[MAXDIM];
-#endif
-#ifdef BENCH_CONFIG_CORE3_2_1
-int Array4[MAXDIM];
-#endif
-
-#ifdef BENCH_CONFIG_CORE0_2_3
-matrix matA1;
-matrix matB1;
-matrix matC1;
-#endif
-#ifdef BENCH_CONFIG_CORE1_2_3
-matrix matA2;
-matrix matB2;
-matrix matC2;
-#endif
-#ifdef BENCH_CONFIG_CORE2_2_3
-matrix matA3;
-matrix matB3;
-matrix matC3;
-#endif
-#ifdef BENCH_CONFIG_CORE3_2_3
-matrix matA4;
-matrix matB4;
-matrix matC4;
-#endif
-
-#if defined BENCH_CONFIG_CORE0_1_1 || defined BENCH_CONFIG_CORE0_1_2
-volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
-#else
-	#if defined BENCH_CONFIG_CORE0_1_3 || defined BENCH_CONFIG_CORE0_1_4
-	volatile bigstruct_t mydata1[SYNBENCH_DATASIZE];
-	volatile int myrandidx1[SYNBENCH_DATASIZE];
-	#endif
-#endif
-#if defined BENCH_CONFIG_CORE1_1_1 || defined BENCH_CONFIG_CORE1_1_2
-volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
-#else
-	#if defined BENCH_CONFIG_CORE1_1_3 || defined BENCH_CONFIG_CORE1_1_4
-	volatile bigstruct_t mydata2[SYNBENCH_DATASIZE];
-	volatile int myrandidx2[SYNBENCH_DATASIZE];
-	#endif
-#endif
-#if defined BENCH_CONFIG_CORE2_1_1 || defined BENCH_CONFIG_CORE2_1_2
-volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
-#else
-	#if defined BENCH_CONFIG_CORE2_1_3 || defined BENCH_CONFIG_CORE2_1_4
-	volatile bigstruct_t mydata3[SYNBENCH_DATASIZE];
-	volatile int myrandidx3[SYNBENCH_DATASIZE];
-	#endif
-#endif
-#if defined BENCH_CONFIG_CORE3_1_1 || defined BENCH_CONFIG_CORE3_1_2
-volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
-#else
-	#if defined BENCH_CONFIG_CORE3_1_3 || defined BENCH_CONFIG_CORE3_1_4
-	volatile bigstruct_t mydata4[SYNBENCH_DATASIZE];
-	volatile int myrandidx4[SYNBENCH_DATASIZE];
-	#endif
-#endif
+BENCH_DECL_CORE0
+BENCH_DECL_CORE1
+BENCH_DECL_CORE2
+BENCH_DECL_CORE3
 
 /**
  * Global enable of PMU
@@ -295,18 +234,11 @@ void core0(void* pParam) {
     unsigned int offset=0;
 	int corenum=0;
 
-#ifdef BENCH_CONFIG_CORE0_3_1
-	// Disparity: initialization part 1, allocate memory for data
-	// and make seed
-	int seed = corenum + 1;
-	srand(seed);
-	lock(MEM_LOCK, corenum);
-	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;
-    int WIN_SZ=4, SHIFT=8;
-    I2D* srcImage1 = iMallocHandle(width, height);
-    I2D* srcImage2 = iMallocHandle(width, height);
-	unlock(MEM_LOCK, corenum);
-#endif
+	/////////////////////
+	// Benchmark INIT1 //
+	/////////////////////
+	BENCH_INIT1_CORE0
+	/////////////////////
 
 	/* Globally enable PMU */
 	enable_pmu();
@@ -326,25 +258,12 @@ void core0(void* pParam) {
 #endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE0_2_1
-		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
-		bsort100_Initialize(Array1);
-#endif
-#ifdef BENCH_CONFIG_CORE0_2_3
-		/* Maybe initialize the matmult matrix with random nrs (each iteration) */
-		matmult_Initialize(matA1);
-		matmult_Initialize(matB1);
-#endif
-#if defined BENCH_CONFIG_CORE0_1_3 || defined BENCH_CONFIG_CORE0_1_4
-		array_access_randomize(myrandidx1, corenum);
-#endif
-#ifdef BENCH_CONFIG_CORE0_3_1
-	// Disparity initialization part 2: fill the data with random numbers
-	for (int i=0; i<(width*height); i++) {
-		srcImage1->data[i] = rand() % 256;
-		srcImage2->data[i] = rand() % 256;
-	}
-#endif
+		/////////////////////
+		// Benchmark INIT2 //
+		/////////////////////
+		BENCH_INIT2_CORE0
+		/////////////////////
+
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -387,7 +306,11 @@ void core0(void* pParam) {
 #endif
 		DisableInterrupts();
 		reset_cycle_counter();
+		///////////////////
+		// DO BENCHMARK! //
+		///////////////////
 		DO_BENCH_CORE0
+		///////////////////
 		disable_cycle_counter();
 		EnableInterrupts();
 #ifdef PMU_EVENT_CORE0_1
@@ -494,18 +417,11 @@ void core1(void* pParam) {
     unsigned int offset=0;
 	int corenum=1;
 
-#ifdef BENCH_CONFIG_CORE1_3_1
-	// Disparity: initialization part 1, allocate memory for data
-	// and make seed
-	int seed = corenum + 1;
-	srand(seed);
-	lock(MEM_LOCK, corenum);
-	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;
-    int WIN_SZ=4, SHIFT=8;
-    I2D* srcImage1 = iMallocHandle(width, height);
-    I2D* srcImage2 = iMallocHandle(width, height);
-	unlock(MEM_LOCK, corenum);
-#endif
+	/////////////////////
+	// Benchmark INIT1 //
+	/////////////////////
+	BENCH_INIT1_CORE1
+	/////////////////////
 
 	/* Globally enable PMU */
 	enable_pmu();
@@ -525,25 +441,12 @@ void core1(void* pParam) {
 #endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE1_2_1
-		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
-		bsort100_Initialize(Array2);
-#endif
-#ifdef BENCH_CONFIG_CORE1_2_3
-		/* Maybe initialize the matmult matrix with random nrs (each iteration) */
-		matmult_Initialize(matA2);
-		matmult_Initialize(matB2);
-#endif
-#if defined BENCH_CONFIG_CORE1_1_3 || defined BENCH_CONFIG_CORE1_1_4
-		array_access_randomize(myrandidx2, corenum);
-#endif
-#ifdef BENCH_CONFIG_CORE1_3_1
-	// Disparity initialization part 2: fill the data with random numbers
-	for (int i=0; i<(width*height); i++) {
-		srcImage1->data[i] = rand() % 256;
-		srcImage2->data[i] = rand() % 256;
-	}
-#endif
+		/////////////////////
+		// Benchmark INIT2 //
+		/////////////////////
+		BENCH_INIT2_CORE1
+		/////////////////////
+
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -688,18 +591,11 @@ void core2(void* pParam) {
     unsigned int offset=0;
 	int corenum=2;
 
-#ifdef BENCH_CONFIG_CORE2_3_1
-	// Disparity: initialization part 1, allocate memory for data
-	// and make seed
-	int seed = corenum + 1;
-	srand(seed);
-	lock(MEM_LOCK, corenum);
-	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;
-    int WIN_SZ=4, SHIFT=8;
-    I2D* srcImage1 = iMallocHandle(width, height);
-    I2D* srcImage2 = iMallocHandle(width, height);
-	unlock(MEM_LOCK, corenum);
-#endif
+	/////////////////////
+	// Benchmark INIT1 //
+	/////////////////////
+	BENCH_INIT1_CORE2
+	/////////////////////
 
 	/* Globally enable PMU */
 	enable_pmu();
@@ -719,25 +615,12 @@ void core2(void* pParam) {
 #endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE2_2_1
-		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
-		bsort100_Initialize(Array3);
-#endif
-#ifdef BENCH_CONFIG_CORE2_2_3
-		/* Maybe initialize the matmult matrix with random nrs (each iteration) */
-		matmult_Initialize(matA3);
-		matmult_Initialize(matB3);
-#endif
-#if defined BENCH_CONFIG_CORE2_1_3 || defined BENCH_CONFIG_CORE2_1_4
-		array_access_randomize(myrandidx3, corenum);
-#endif
-#ifdef BENCH_CONFIG_CORE2_3_1
-	// Disparity initialization part 2: fill the data with random numbers
-	for (int i=0; i<(width*height); i++) {
-		srcImage1->data[i] = rand() % 256;
-		srcImage2->data[i] = rand() % 256;
-	}
-#endif
+		/////////////////////
+		// Benchmark INIT2 //
+		/////////////////////
+		BENCH_INIT2_CORE2
+		/////////////////////
+
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
@@ -882,18 +765,11 @@ void core3(void* pParam) {
     unsigned int offset=0;
 	int corenum=3;
 
-#ifdef BENCH_CONFIG_CORE3_3_1
-	// Disparity: initialization part 1, allocate memory for data
-	// and make seed
-	int seed = corenum + 1;
-	srand(seed);
-	lock(MEM_LOCK, corenum);
-	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;
-    int WIN_SZ=4, SHIFT=8;
-    I2D* srcImage1 = iMallocHandle(width, height);
-    I2D* srcImage2 = iMallocHandle(width, height);
-	unlock(MEM_LOCK, corenum);
-#endif
+	/////////////////////
+	// Benchmark INIT1 //
+	/////////////////////
+	BENCH_INIT1_CORE3
+	/////////////////////
 
 	/* Globally enable PMU */
 	enable_pmu();
@@ -913,30 +789,16 @@ void core3(void* pParam) {
 #endif
 
 	while (1) {
-#ifdef BENCH_CONFIG_CORE3_2_1
-		/* Maybe initialize the bsort100 array with random nrs (each iteration) */
-		bsort100_Initialize(Array4);
-#endif
-#ifdef BENCH_CONFIG_CORE3_2_3
-		/* Maybe initialize the matmult matrix with random nrs (each iteration) */
-		matmult_Initialize(matA4);
-		matmult_Initialize(matB4);
-#endif
-#if defined BENCH_CONFIG_CORE3_1_3 || defined BENCH_CONFIG_CORE3_1_4
-		array_access_randomize(myrandidx4, corenum);
-#endif
-#ifdef BENCH_CONFIG_CORE3_3_1
-	// Disparity initialization part 2: fill the data with random numbers
-	for (int i=0; i<(width*height); i++) {
-		srcImage1->data[i] = rand() % 256;
-		srcImage2->data[i] = rand() % 256;
-	}
-#endif
+		/////////////////////
+		// Benchmark INIT2 //
+		/////////////////////
+		BENCH_INIT2_CORE3
+		/////////////////////
+
 		step += dir;
 		if ((step == total) || (step == 0))
 		{
 			dir = -dir;
-
 		}
 
 #ifdef SCREEN_ENABLE

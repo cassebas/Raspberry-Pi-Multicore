@@ -17,7 +17,7 @@ TOOLCHAIN_BASE = $(HOME)/local/share
 CROSS_COMPILER_ARM = $(TOOLCHAIN_BASE)/gcc-arm-eabi-8.3
 CROSS_COMPILER_AARCH64 = $(TOOLCHAIN_BASE)/gcc-aarch64-elf-8.3
 RASPBERRY_PI_NETWORKBOOT = $(HOME)/git/Raspberry-Pi-Networkboot
-INSTALL_DIR = $(RASPBERRY_PI_NETWORKBOOT)/tftp
+INSTALL_DIR = $(RASPBERRY_PI_NETWORKBOOT)/tftp/bcab9c80
 
 RANDOM_SETS_H = random_sets.h
 
@@ -64,6 +64,7 @@ Pi1:
 SOURCE = ${CURDIR}
 SOURCE_SDVBSCOMMON = ${CURDIR}/sdvbs/common
 SOURCE_DISPARITY = ${CURDIR}/sdvbs/disparity
+SOURCE_MSER = ${CURDIR}/sdvbs/mser
 
 BUILD = Build
 
@@ -83,6 +84,7 @@ COBJS = $(patsubst $(SOURCE)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE)/*.c))
 
 COBJS_SDVBSCOMMON = $(patsubst $(SOURCE_SDVBSCOMMON)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE_SDVBSCOMMON)/*.c))
 COBJS_DISPARITY = $(patsubst $(SOURCE_DISPARITY)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE_DISPARITY)/*.c))
+COBJS_MSER = $(patsubst $(SOURCE_MSER)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE_MSER)/*.c))
 
 Pi3-64: $(RANDOM_SETS_H) kernel8.elf
 BINARY = $(IMGFILE)
@@ -115,8 +117,11 @@ $(BUILD)/%.o: $(SOURCE_SDVBSCOMMON)/%.c
 $(BUILD)/%.o: $(SOURCE_DISPARITY)/%.c
 	$(ARMGNU)-gcc -MMD -MP -g $(CFLAGS) -c  $< -o $@ -lc -lm -lgcc
 
-kernel8.elf: $(ASMOBJS64) $(COBJS) $(COBJS_SDVBSCOMMON) $(COBJS_DISPARITY)
-	$(ARMGNU)-gcc -g $(CFLAGS) $(ASMOBJS64) $(COBJS) $(COBJS_SDVBSCOMMON) $(COBJS_DISPARITY) -T $(LINKERFILE) -Wl,--build-id=none -o $@ -lc -lm -lgcc
+$(BUILD)/%.o: $(SOURCE_MSER)/%.c
+	$(ARMGNU)-gcc -MMD -MP -g $(CFLAGS) -c  $< -o $@ -lc -lm -lgcc
+
+kernel8.elf: $(ASMOBJS64) $(COBJS) $(COBJS_SDVBSCOMMON) $(COBJS_DISPARITY) $(COBJS_MSER)
+	$(ARMGNU)-gcc -g $(CFLAGS) $(ASMOBJS64) $(COBJS) $(COBJS_SDVBSCOMMON) $(COBJS_DISPARITY) $(COBJS_MSER) -T $(LINKERFILE) -Wl,--build-id=none -o $@ -lc -lm -lgcc
 	$(ARMGNU)-objdump -d $@ > $(LIST)
 	$(ARMGNU)-objcopy $@ -O binary DiskImg/$(BINARY)
 	$(ARMGNU)-nm -n $@ > $(MAP)
