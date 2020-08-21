@@ -25,16 +25,16 @@ void bsort100_BubbleSort(volatile int Array[]);
 /*
  * ns: Malardalen's test of deeply nested loops and non-local exits.
  */
-#define NS_NUMELEMS NS_INPUTSIZE
+#define NS_ELEMS NS_INPUTSIZE
 #define NS_DIM 4
 
-void ns_Initialize(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
-				   int (*answer)[NS_DIM][NS_DIM][NS_DIM]);
-int foo(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
-		int (*answer)[NS_DIM][NS_DIM][NS_DIM],
+void ns_Initialize(int (*keys)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
+				   int (*answer)[NS_ELEMS][NS_ELEMS][NS_ELEMS]);
+int foo(int (*keys)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
+		int (*answer)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
 		int x);
-void ns_foo(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
-			int (*answer)[NS_DIM][NS_DIM][NS_DIM]);
+void ns_foo(int (*keys)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
+			int (*answer)[NS_ELEMS][NS_ELEMS][NS_ELEMS]);
 
 
 /*

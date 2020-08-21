@@ -78,8 +78,8 @@ void bsort100_BubbleSort(volatile int Array[])
 /*
  * ns: Malardalen's test of deeply nested loops and non-local exits.
  */
-void ns_Initialize(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
-				   int (*answer)[NS_DIM][NS_DIM][NS_DIM])
+void ns_Initialize(int (*keys)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
+				   int (*answer)[NS_ELEMS][NS_ELEMS][NS_ELEMS])
 {
 	// CT: own code to fill the keys and answer arrays with the same
 	//     numbers as in the benchmark code, but more/less numbers
@@ -87,15 +87,15 @@ void ns_Initialize(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
 
 	// The nr of dimensions is always NS_DIM
 	int i,j,k,l;
-	for (i=0; i<NS_NUMELEMS; i++)
-		for (j=0; j<NS_NUMELEMS; j++)
-			for (k=0; k<NS_NUMELEMS; k++)
-				for (l=0; l<NS_NUMELEMS; l++) {
+	for (i=0; i<NS_ELEMS; i++)
+		for (j=0; j<NS_ELEMS; j++)
+			for (k=0; k<NS_ELEMS; k++)
+				for (l=0; l<NS_ELEMS; l++) {
 					keys[i][j][k][l] = i;
 					answer[i][j][k][l] = i*111 + 123;
 				}
 
-	i = NS_NUMELEMS - 1;
+	i = NS_ELEMS - 1;
 #ifdef FIND_TARGET
 	keys[i][i][i][i] = 400;
 #else
@@ -103,16 +103,16 @@ void ns_Initialize(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
 #endif
 }
 
-int foo(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
-		int (*answer)[NS_DIM][NS_DIM][NS_DIM],
+int foo(int (*keys)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
+		int (*answer)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
 		int x)
 {
   int i,j,k,l;
 
-  for(i=0; i<NS_NUMELEMS; i++)
-    for(j=0 ; j<NS_NUMELEMS ; j++)
-      for(k=0 ; k<NS_NUMELEMS ; k++)
-        for(l=0 ; l<NS_NUMELEMS ; l++)
+  for(i=0; i<NS_ELEMS; i++)
+    for(j=0 ; j<NS_ELEMS ; j++)
+      for(k=0 ; k<NS_ELEMS ; k++)
+        for(l=0 ; l<NS_ELEMS ; l++)
         {
           if( keys[i][j][k][l] == x )
             {
@@ -122,8 +122,8 @@ int foo(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
   return -1;
 }
 
-void ns_foo(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
-			int (*answer)[NS_DIM][NS_DIM][NS_DIM])
+void ns_foo(int (*keys)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
+			int (*answer)[NS_ELEMS][NS_ELEMS][NS_ELEMS])
 {
 	foo(keys, answer, 400);
 }
