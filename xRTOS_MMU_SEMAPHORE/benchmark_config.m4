@@ -148,8 +148,8 @@ define(bench_decl_1_4, `\
 dnl series nr 2: Mälardalen
 define(bench_decl_2_1, `volatile int* Array$1;')dnl
 define(bench_decl_2_2, `\
-	int keys$1[NS_NUMELEMS][NS_NUMELEMS][NS_NUMELEMS][NS_NUMELEMS];	\
-	int answer$1[NS_NUMELEMS][NS_NUMELEMS][NS_NUMELEMS][NS_NUMELEMS];
+	int* keys$1;	\
+	int* answer$1;
 ')dnl
 define(bench_decl_2_3, `\
 	matrix matA$1;						\
@@ -188,7 +188,12 @@ define(bench_init1_1_4, `\
 ')dnl
 dnl series nr 2: Mälardalen
 define(bench_init1_2_1, `Array$1 = (volatile int*) malloc(sizeof(int) * NUMELEMS);')dnl
-define(bench_init1_2_2, `ns_Initialize(&keys$1[0][0][0][0], &answer$1[0][0][0][0]);')dnl
+define(bench_init1_2_2, `\
+	/* nr of elements in 4-dim array */										\
+	int num_elems = NS_INPUTSIZE * NS_INPUTSIZE * NS_INPUTSIZE * NS_INPUTSIZE;	\
+	keys$1 = (int*) malloc(sizeof(int) * num_elems);								\
+	answer$1 = (int*) malloc(sizeof(int) * num_elems);							\
+	ns_Initialize(keys$1, answer$1);')dnl
 define(bench_init1_2_3, `')dnl
 define(bench_init1_2_4, `\
 	in_data$1 = (long*) malloc(sizeof(long) * FIR_NUMELEMS);				\
@@ -282,7 +287,7 @@ define(do_bench1_3, array_access_random(mydata$1, myrandidx$1);)dnl
 define(do_bench1_4, array_write_random(mydata$1, myrandidx$1);)dnl
 dnl series nr 2: Mälardalen
 define(do_bench2_1, bsort100_BubbleSort(Array$1);)dnl
-define(do_bench2_2, ns_foo(&keys$1[0][0][0][0], &answer$1[0][0][0][0]);)dnl
+define(do_bench2_2, ns_foo(keys$1, answer$1);)dnl
 define(do_bench2_3, matmult_Multiply(matA$1, matB$1, matC$1);)dnl
 define(do_bench2_4, fir_filter_int(in_data$1,output$1,FIR_NUMELEMS,fir_int$1,FIR_COEFFSIZE-1,FIR_SCALE);)dnl
 dnl series nr 3: SD-VBS

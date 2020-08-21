@@ -78,8 +78,8 @@ void bsort100_BubbleSort(volatile int Array[])
 /*
  * ns: Malardalen's test of deeply nested loops and non-local exits.
  */
-void ns_Initialize(int* keys[NS_DIM][NS_DIM][NS_DIM],
-				   int* answer[NS_DIM][NS_DIM][NS_DIM])
+void ns_Initialize(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
+				   int (*answer)[NS_DIM][NS_DIM][NS_DIM])
 {
 	// CT: own code to fill the keys and answer arrays with the same
 	//     numbers as in the benchmark code, but more/less numbers
@@ -103,13 +103,10 @@ void ns_Initialize(int* keys[NS_DIM][NS_DIM][NS_DIM],
 #endif
 }
 
-int foo(int* keys[NS_DIM][NS_DIM][NS_DIM],
-		int* answer[NS_DIM][NS_DIM][NS_DIM],
+int foo(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
+		int (*answer)[NS_DIM][NS_DIM][NS_DIM],
 		int x)
 {
-#ifdef TEST
-  int c = 0;                    /* counter for innerloop */
-#endif
   int i,j,k,l;
 
   for(i=0; i<NS_NUMELEMS; i++)
@@ -117,22 +114,16 @@ int foo(int* keys[NS_DIM][NS_DIM][NS_DIM],
       for(k=0 ; k<NS_NUMELEMS ; k++)
         for(l=0 ; l<NS_NUMELEMS ; l++)
         {
-#ifdef TEST
-          c++;
-#endif
           if( keys[i][j][k][l] == x )
             {
-#ifdef TEST
-              printf("   %d\n",c);
-#endif
               return answer[i][j][k][l] + keys[i][j][k][l];
             }
         }
   return -1;
 }
 
-void ns_foo(int* keys[NS_DIM][NS_DIM][NS_DIM],
-			int* answer[NS_DIM][NS_DIM][NS_DIM])
+void ns_foo(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
+			int (*answer)[NS_DIM][NS_DIM][NS_DIM])
 {
 	foo(keys, answer, 400);
 }

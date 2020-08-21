@@ -24,13 +24,13 @@ void bsort100_BubbleSort(volatile int Array[]);
 #define NS_NUMELEMS NS_INPUTSIZE
 #define NS_DIM 4
 
-void ns_Initialize(int* keys[NS_DIM][NS_DIM][NS_DIM],
-				   int* answer[NS_DIM][NS_DIM][NS_DIM]);
-int foo(int* keys[NS_DIM][NS_DIM][NS_DIM],
-		int* answer[NS_DIM][NS_DIM][NS_DIM],
+void ns_Initialize(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
+				   int (*answer)[NS_DIM][NS_DIM][NS_DIM]);
+int foo(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
+		int (*answer)[NS_DIM][NS_DIM][NS_DIM],
 		int x);
-void ns_foo(int* keys[NS_DIM][NS_DIM][NS_DIM],
-			int* answer[NS_DIM][NS_DIM][NS_DIM]);
+void ns_foo(int (*keys)[NS_DIM][NS_DIM][NS_DIM],
+			int (*answer)[NS_DIM][NS_DIM][NS_DIM]);
 
 
 /*
