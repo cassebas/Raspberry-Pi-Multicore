@@ -238,7 +238,7 @@ dnl series nr 2: Mälardalen
 define(bench_init2_2_1, `bsort100_Initialize(Array$1);')dnl
 define(bench_init2_2_2, `')dnl
 define(bench_init2_2_3, `\
-	matmult_Initialize(matA$1);			\
+	matmult_Initialize(matA$1);						\
 	matmult_Initialize(matB$1);
 ')dnl
 define(bench_init2_2_4, `\

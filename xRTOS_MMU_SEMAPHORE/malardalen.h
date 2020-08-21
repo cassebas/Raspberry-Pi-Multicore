@@ -3,6 +3,10 @@
 
 Slightly modified for our use case.
 */
+#ifndef MALARDALEN_H
+#define MALARDALEN_H
+
+
 #include "xRTOS.h"
 
 /*
@@ -56,3 +60,5 @@ void fir_Initialize(long* in_data);
 void fir_fir_filter_int(long* in, long* out, long in_len,
 						long* coef, long coef_len,
 						long scale);
+
+#endif /* MALARDALEN_H */
