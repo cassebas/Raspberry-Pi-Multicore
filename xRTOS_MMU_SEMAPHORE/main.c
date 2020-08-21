@@ -11,6 +11,8 @@
 #include "mutex.h"
 #include "sdvbs/disparity/disparity.h"
 #include "sdvbs/mser/mser.h"
+#include "sdvbs/svm/svm.h"
+#include "sdvbs/stitch/stitch.h"
 
 /* definition of performance monitor control registers and such */
 #include "armv8_pm.h"

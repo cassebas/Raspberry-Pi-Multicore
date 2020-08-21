@@ -65,6 +65,8 @@ SOURCE = ${CURDIR}
 SOURCE_SDVBSCOMMON = ${CURDIR}/sdvbs/common
 SOURCE_DISPARITY = ${CURDIR}/sdvbs/disparity
 SOURCE_MSER = ${CURDIR}/sdvbs/mser
+SOURCE_SVM = ${CURDIR}/sdvbs/svm
+SOURCE_STITCH = ${CURDIR}/sdvbs/stitch
 
 BUILD = Build
 
@@ -85,6 +87,8 @@ COBJS = $(patsubst $(SOURCE)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE)/*.c))
 COBJS_SDVBSCOMMON = $(patsubst $(SOURCE_SDVBSCOMMON)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE_SDVBSCOMMON)/*.c))
 COBJS_DISPARITY = $(patsubst $(SOURCE_DISPARITY)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE_DISPARITY)/*.c))
 COBJS_MSER = $(patsubst $(SOURCE_MSER)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE_MSER)/*.c))
+COBJS_SVM = $(patsubst $(SOURCE_SVM)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE_SVM)/*.c))
+COBJS_STITCH = $(patsubst $(SOURCE_STITCH)/%.c,$(BUILD)/%.o,$(wildcard $(SOURCE_STITCH)/*.c))
 
 Pi3-64: $(RANDOM_SETS_H) kernel8.elf
 BINARY = $(IMGFILE)
@@ -120,8 +124,14 @@ $(BUILD)/%.o: $(SOURCE_DISPARITY)/%.c
 $(BUILD)/%.o: $(SOURCE_MSER)/%.c
 	$(ARMGNU)-gcc -MMD -MP -g $(CFLAGS) -c  $< -o $@ -lc -lm -lgcc
 
-kernel8.elf: $(ASMOBJS64) $(COBJS) $(COBJS_SDVBSCOMMON) $(COBJS_DISPARITY) $(COBJS_MSER)
-	$(ARMGNU)-gcc -g $(CFLAGS) $(ASMOBJS64) $(COBJS) $(COBJS_SDVBSCOMMON) $(COBJS_DISPARITY) $(COBJS_MSER) -T $(LINKERFILE) -Wl,--build-id=none -o $@ -lc -lm -lgcc
+$(BUILD)/%.o: $(SOURCE_SVM)/%.c
+	$(ARMGNU)-gcc -MMD -MP -g $(CFLAGS) -c  $< -o $@ -lc -lm -lgcc
+
+$(BUILD)/%.o: $(SOURCE_STITCH)/%.c
+	$(ARMGNU)-gcc -MMD -MP -g $(CFLAGS) -c  $< -o $@ -lc -lm -lgcc
+
+kernel8.elf: $(ASMOBJS64) $(COBJS) $(COBJS_SDVBSCOMMON) $(COBJS_DISPARITY) $(COBJS_MSER) $(COBJS_SVM) $(COBJS_STITCH)
+	$(ARMGNU)-gcc -g $(CFLAGS) $(ASMOBJS64) $(COBJS) $(COBJS_SDVBSCOMMON) $(COBJS_DISPARITY) $(COBJS_MSER) $(COBJS_SVM) $(COBJS_STITCH) -T $(LINKERFILE) -Wl,--build-id=none -o $@ -lc -lm -lgcc
 	$(ARMGNU)-objdump -d $@ > $(LIST)
 	$(ARMGNU)-objcopy $@ -O binary DiskImg/$(BINARY)
 	$(ARMGNU)-nm -n $@ > $(MAP)

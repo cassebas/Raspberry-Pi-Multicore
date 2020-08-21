@@ -65,6 +65,16 @@
 #define MSER_INPUTSIZE 64
 
 /**
+ * Specific configuration for the SD-VBS svm benchmark
+ */
+#define SVM_INPUTSIZE 16
+
+/**
+ * Specific configuration for the SD-VBS stitch benchmark
+ */
+#define STITCH_INPUTSIZE 64
+
+/**
  * If the following macro with name BENCHMARK_CONFIG_M4 was
  * specified on the command line, then we know the include
  * file can be included.

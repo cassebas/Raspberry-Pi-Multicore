@@ -16,6 +16,8 @@ changecom(/*,*/)dnl
  * 2-4: mälardalen fir
  * 3-1: sd-vbs disparity
  * 3-2: sd-vbs mser
+ * 3-3: sd-vbs svm
+ * 3-4: sd-vbs stitch
  *
  * The BENCH_CONFIG definition prescribes the specific benchmarks running
  * on the specific cores. If only one benchmark runs on multiple cores, the
@@ -123,6 +125,8 @@ define(bench_name2_4, malardalen_fir)dnl
 dnl series nr 2: SD-VBS
 define(bench_name3_1, sdvbs_disparity)dnl
 define(bench_name3_2, sdvbs_mser)dnl
+define(bench_name3_3, sdvbs_svm)dnl
+define(bench_name3_3, sdvbs_stitch)dnl
 dnl
 define(call_bench_name, bench_name$1_$2)dnl
 
@@ -164,6 +168,8 @@ define(bench_decl_2_4, `\
 dnl series nr 3: SD-VBS
 define(bench_decl_3_1, `')dnl
 define(bench_decl_3_2, `')dnl
+define(bench_decl_3_3, `')dnl
+define(bench_decl_3_4, `')dnl
 
 dnl *************************************
 dnl BENCHMARK INITIALIZATION 1 STATEMENTS
@@ -185,20 +191,33 @@ define(bench_init1_2_1, `Array$1 = (volatile int*) malloc(sizeof(int) * NUMELEMS
 define(bench_init1_2_2, `ns_Initialize(&keys$1[0][0][0][0], &answer$1[0][0][0][0]);')dnl
 define(bench_init1_2_3, `')dnl
 define(bench_init1_2_4, `\
-    in_data$1 = (long*) malloc(sizeof(long) * FIR_NUMELEMS);				\
-    output$1 = (long*) malloc(sizeof(long) * FIR_NUMELEMS);				\
-    ')dnl
+	in_data$1 = (long*) malloc(sizeof(long) * FIR_NUMELEMS);				\
+	output$1 = (long*) malloc(sizeof(long) * FIR_NUMELEMS);				\
+	')dnl
 dnl series nr 3: SD-VBS
 define(bench_init1_3_1, `\
 	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;	\
-    int WIN_SZ=4, SHIFT=8;										\
-    I2D* srcImage1 = iMallocHandle(width, height);				\
-    I2D* srcImage2 = iMallocHandle(width, height);
+	int WIN_SZ=4, SHIFT=8;										\
+	I2D* srcImage1 = iMallocHandle(width, height);				\
+	I2D* srcImage2 = iMallocHandle(width, height);
 ')dnl
 define(bench_init1_3_2, `\
 	int width=MSER_INPUTSIZE, height=MSER_INPUTSIZE;		\
-    int in_delta=2;										\
-    I2D* srcImage = iMallocHandle(width, height);
+	int in_delta=2;										\
+	I2D* srcImage = iMallocHandle(width, height);
+')dnl
+define(bench_init1_3_3, `\
+	int svm_iter = 8;										\
+    int svm_N = SVM_INPUTSIZE;								\
+    int svm_Ntst = SVM_INPUTSIZE;							\
+    F2D* svm_trn1 = fMallocHandle(svm_N, svm_N);			\
+    F2D* svm_trn2 = fMallocHandle(svm_N, svm_N);			\
+    F2D* svm_tst1 = fMallocHandle(svm_N, svm_N);			\
+    F2D* svm_tst2 = fMallocHandle(svm_N, svm_N);
+')dnl
+define(bench_init1_3_4, `\
+    int stitch_N = STITCH_INPUTSIZE;						\
+	I2D* Icur = iMallocHandle(stitch_N, stitch_N);
 ')dnl
 
 dnl *************************************
@@ -222,14 +241,32 @@ define(bench_init2_2_4, `\
 ')dnl
 dnl series nr 3: SD-VBS
 define(bench_init2_3_1, `\
-	for (int `i'=0; `i'<(width*height); `i'++) { \
-		srcImage1->data[`i'] = rand() % 256; \
-		srcImage2->data[`i'] = rand() % 256; \
+	for (int `i'=0; `i'<(width*height); `i'++) {				\
+		srcImage1->data[`i'] = rand() % 256;					\
+		srcImage2->data[`i'] = rand() % 256;					\
 	}
 ')dnl
 define(bench_init2_3_2, `\
-	for (int `i'=0; `i'<(width*height); `i'++) { \
-		srcImage->data[`i'] = rand() % 256; \
+	for (int `i'=0; `i'<(width*height); `i'++) {				\
+		srcImage->data[`i'] = rand() % 256;					\
+	}
+')dnl
+define(bench_init2_3_3, `\
+	float r;													\
+	for (int `i'=0; `i'<(svm_N*svm_N); `i'++) {				\
+		r = (float) ((rand() - RAND_MAX/2) / RAND_MAX);		\
+		svm_trn1->data[`i'] = r;								\
+		r = (float) ((rand() - RAND_MAX/2) / RAND_MAX);		\
+		svm_trn2->data[`i'] = r;								\
+		r = (float) ((rand() - RAND_MAX/2) / RAND_MAX);		\
+		svm_tst1->data[`i'] = r;								\
+		r = (float) ((rand() - RAND_MAX/2) / RAND_MAX);		\
+		svm_tst2->data[`i'] = r;								\
+	}
+')dnl
+define(bench_init2_3_4, `\
+	for (int `i'=0; `i'<(stitch_N*stitch_N); `i'++) {			\
+		Icur->data[`i'] = rand() % 256;						\
 	}
 ')dnl
 
@@ -251,6 +288,8 @@ define(do_bench2_4, fir_filter_int(in_data$1,output$1,FIR_NUMELEMS,fir_int$1,FIR
 dnl series nr 3: SD-VBS
 define(do_bench3_1, getDisparity(srcImage1, srcImage2, WIN_SZ, SHIFT);)dnl
 define(do_bench3_2, mser(srcImage, in_delta);)dnl
+define(do_bench3_3, svm_wrapper(svm_trn1, svm_tst1, svm_trn2, svm_tst2, svm_iter, svm_N, svm_Ntst);)dnl
+define(do_bench3_4, stitch_wrapper(Icur);)dnl
 
 
 dnl ******************************
@@ -275,6 +314,7 @@ define(bench_cleanup_2_3, `')dnl
 dnl series nr 3: SD-VBS
 define(bench_cleanup_3_1, `')dnl
 define(bench_cleanup_3_2, `')dnl
+define(bench_cleanup_3_3, `')dnl
 
 
 define(call_bench_decl, bench_decl_$1_$2($3))dnl
@@ -462,6 +502,24 @@ define(mser_inputsize_template, `
 #define MSER_INPUTSIZE $1
 ')dnl
 ifdef(`mser_inputsize', mser_inputsize_template(mser_inputsize), `')dnl
+
+dnl SD-VBS svm: size of input image
+define(svm_inputsize_template, `
+#ifdef SVM_INPUTSIZE
+#undef SVM_INPUTSIZE
+#endif
+#define SVM_INPUTSIZE $1
+')dnl
+ifdef(`svm_inputsize', svm_inputsize_template(svm_inputsize), `')dnl
+
+dnl SD-VBS stich: size of input image
+define(stitch_inputsize_template, `
+#ifdef STITCH_INPUTSIZE
+#undef STITCH_INPUTSIZE
+#endif
+#define STITCH_INPUTSIZE $1
+')dnl
+ifdef(`stitch_inputsize', stitch_inputsize_template(stitch_inputsize), `')dnl
 
 dnl Benchmark specific configuration parameters
 dnl
