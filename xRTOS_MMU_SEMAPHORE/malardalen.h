@@ -26,7 +26,6 @@ void bsort100_BubbleSort(volatile int Array[]);
  * ns: Malardalen's test of deeply nested loops and non-local exits.
  */
 #define NS_ELEMS NS_INPUTSIZE
-#define NS_DIM 4
 
 void ns_Initialize(int (*keys)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
 				   int (*answer)[NS_ELEMS][NS_ELEMS][NS_ELEMS]);
@@ -57,8 +56,8 @@ int matmult_RandomInteger(void);
 #define FIR_SCALE 285
 
 void fir_Initialize(long* in_data);
-void fir_fir_filter_int(long* in, long* out, long in_len,
-						long* coef, long coef_len,
-						long scale);
+void fir_filter_int(long* in, long* out, long in_len,
+					long* coef, long coef_len,
+					long scale);
 
 #endif /* MALARDALEN_H */

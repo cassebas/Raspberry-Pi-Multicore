@@ -126,7 +126,7 @@ dnl series nr 2: SD-VBS
 define(bench_name3_1, sdvbs_disparity)dnl
 define(bench_name3_2, sdvbs_mser)dnl
 define(bench_name3_3, sdvbs_svm)dnl
-define(bench_name3_3, sdvbs_stitch)dnl
+define(bench_name3_4, sdvbs_stitch)dnl
 dnl
 define(call_bench_name, bench_name$1_$2)dnl
 
@@ -148,8 +148,8 @@ define(bench_decl_1_4, `\
 dnl series nr 2: Mälardalen
 define(bench_decl_2_1, `volatile int* Array$1;')dnl
 define(bench_decl_2_2, `\
-	int* keys$1;	\
-	int* answer$1;
+	int (*keys$1)[NS_ELEMS][NS_ELEMS][NS_ELEMS];	\
+	int (*answer$1)[NS_ELEMS][NS_ELEMS][NS_ELEMS];
 ')dnl
 define(bench_decl_2_3, `\
 	matrix matA$1;						\
@@ -162,7 +162,7 @@ define(bench_decl_2_4, `\
 0xfffffff7, 0xfffffffc, 0xc, 0xb, 0xfffffff2, 0xffffffe6, 0xf, 0x59, 0x7f,	\
 0x59, 0xf, 0xffffffe6, 0xfffffff2, 0xb, 0xc, 0xfffffffc, 0xfffffff7, 0x0,	\
 0x7, 0x2, 0xfffffffc, 0xfffffffe, 0x3, 0x4, 0x1, 0xfffffffe, 0};			\
-    long* in_data$1;
+    long* in_data$1;														\
     long* output$1;
 ')dnl
 dnl series nr 3: SD-VBS
@@ -191,13 +191,13 @@ define(bench_init1_2_1, `Array$1 = (volatile int*) malloc(sizeof(int) * NUMELEMS
 define(bench_init1_2_2, `\
 	/* nr of elements in 4-dim array */										\
 	int num_elems = NS_INPUTSIZE * NS_INPUTSIZE * NS_INPUTSIZE * NS_INPUTSIZE;	\
-	keys$1 = (int*) malloc(sizeof(int) * num_elems);								\
-	answer$1 = (int*) malloc(sizeof(int) * num_elems);							\
+	keys$1 = (int (*)[NS_ELEMS][NS_ELEMS][NS_ELEMS]) malloc(sizeof(int) * num_elems);\
+	answer$1 = (int (*)[NS_ELEMS][NS_ELEMS][NS_ELEMS]) malloc(sizeof(int) * num_elems);\
 	ns_Initialize(keys$1, answer$1);')dnl
 define(bench_init1_2_3, `')dnl
 define(bench_init1_2_4, `\
 	in_data$1 = (long*) malloc(sizeof(long) * FIR_NUMELEMS);				\
-	output$1 = (long*) malloc(sizeof(long) * FIR_NUMELEMS);				\
+	output$1 = (long*) malloc(sizeof(long) * FIR_NUMELEMS);
 	')dnl
 dnl series nr 3: SD-VBS
 define(bench_init1_3_1, `\
@@ -316,10 +316,12 @@ dnl series nr 2: Mälardalen
 define(bench_cleanup_2_1, `free((void*) Array$1);')dnl
 define(bench_cleanup_2_2, `')dnl
 define(bench_cleanup_2_3, `')dnl
+define(bench_cleanup_2_4, `')dnl
 dnl series nr 3: SD-VBS
 define(bench_cleanup_3_1, `')dnl
 define(bench_cleanup_3_2, `')dnl
 define(bench_cleanup_3_3, `')dnl
+define(bench_cleanup_3_4, `')dnl
 
 
 define(call_bench_decl, bench_decl_$1_$2($3))dnl

@@ -5,32 +5,56 @@
  * Extension of xRTOS with machinery to perform benchmark
  * evaluations.
  *
- * These are the benchmarks:
- * 0: mälardalen bsort 100
- * 1: mälardalen edn
- * 2: linear array access
- * 3: random array access
+ * Default configuration is 3 cores, running:
+ *   Core 0: SD-VBS disparity
+ *   Core 1: Mälardalen bsort
+ *   Core 2: Synthetic benchmark linear array write
  */
 #define NR_OF_CORES 3
 #define BENCH_CONFIG_CORE0_3_1
-#define BENCH_CONFIG_CORE1_2_2
-#define BENCH_CONFIG_CORE2_1_3
+#define BENCH_CONFIG_CORE1_2_1
+#define BENCH_CONFIG_CORE2_1_2
 
 #define CONFIG_SERIES_STRING "config_series: '321'"
-#define CONFIG_BENCH_STRING "config_benchmarks: '123'"
+#define CONFIG_BENCH_STRING "config_benchmarks: '112'"
 
 #define BENCH_STRING_CORE0 "benchmark: sdvbs_disparity"
-#define BENCH_STRING_CORE1 "benchmark: malardalen_edn"
+#define BENCH_STRING_CORE1 "benchmark: malardalen_bsort"
 #define BENCH_STRING_CORE2 "benchmark: linear_array_write"
 #define BENCH_STRING_CORE3 ""
 
-#define BENCH_ARG_CORE0 Array1
-#define BENCH_ARG_CORE2 mydata3
+#define BENCH_DECL_CORE0
+#define BENCH_DECL_CORE1 volatile int* Array1;
+#define BENCH_DECL_CORE2 volatile bigstruct_t* mydata2;
+#define BENCH_DECL_CORE3
+
+#define BENCH_INIT1_CORE0 \
+	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;	\
+    int WIN_SZ=4, SHIFT=8;										\
+    I2D* srcImage1 = iMallocHandle(width, height);				\
+    I2D* srcImage2 = iMallocHandle(width, height);
+#define BENCH_INIT1_CORE1 Array1 = (volatile int*) new int[NUMELEMS];
+#define BENCH_INIT1_CORE2 mydata2 = new bigstruct_t[SYNBENCH_DATASIZE];
+#define BENCH_INIT1_CORE3
+
+#define BENCH_INIT2_CORE0 \
+	for (int i=0; i<(width*height); i++) { \
+		srcImage1->data[i] = rand.GetNumber() % 256; \
+		srcImage2->data[i] = rand.GetNumber() % 256; \
+	}
+#define BENCH_INIT2_CORE1 bsort100_Initialize(Array1, &rand);
+#define BENCH_INIT2_CORE2
+#define BENCH_INIT2_CORE3
 
 #define DO_BENCH_CORE0 getDisparity(srcImage1, srcImage2, WIN_SZ, SHIFT);
-#define DO_BENCH_CORE1 edn_Calculate();
-#define DO_BENCH_CORE2 array_write_linear(BENCH_ARG_CORE2);
+#define DO_BENCH_CORE1 bsort100_BubbleSort(Array1);
+#define DO_BENCH_CORE2 array_write_linear(mydata2);
 #define DO_BENCH_CORE3
+
+#define BENCH_CLEANUP_CORE0
+#define BENCH_CLEANUP_CORE1 free((void*) Array1);
+#define BENCH_CLEANUP_CORE2 free((void*) mydata2);
+#define BENCH_CLEANUP_CORE3
 
 #define EXP_LABEL "DEFAULT"
 
