@@ -3,7 +3,9 @@
 */
 
 #include "malardalen.h"
+#ifndef CIRCLE
 #include <stdlib.h>
+#endif
 
 /*
  * bsort100: Malardalen's Bubblesort definitions.
@@ -18,10 +20,16 @@ int factor;
 /*
  * Initializes given array with randomly generated integers.
  */
+#ifndef CIRCLE
 void bsort100_Initialize(volatile int Array[])
+#else
+void bsort100_Initialize(volatile int Array[], RandomWrapper* rand)
+#endif
 {
 	int  Index, fact;
+#ifndef CIRCLE
 	static int seed;
+#endif
 
 #ifdef WORSTCASE
 	factor = -1;
@@ -29,11 +37,17 @@ void bsort100_Initialize(volatile int Array[])
 	factor = 1;
 #endif
 
+#ifndef CIRCLE
 	srand(++seed);
+#endif
 
 	fact = factor;
 	for (Index = 1; Index <= NUMELEMS; Index ++) {
+#ifndef CIRCLE
 		Array[Index] = rand() * fact/* * KNOWN_VALUE*/;
+#else
+		Array[Index] = get_number(rand) * fact/* * KNOWN_VALUE*/;
+#endif
 	}
 }
 
@@ -75,6 +89,7 @@ void bsort100_BubbleSort(volatile int Array[])
 #endif
 }
 
+
 /*
  * ns: Malardalen's test of deeply nested loops and non-local exits.
  */
@@ -85,7 +100,7 @@ void ns_Initialize(int (*keys)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
 	//     numbers as in the benchmark code, but more/less numbers
 	//     depending on the number of elements as defined.
 
-	// The nr of dimensions is always NS_DIM
+	// The nr of dimensions is always 4
 	int i,j,k,l;
 	for (i=0; i<NS_ELEMS; i++)
 		for (j=0; j<NS_ELEMS; j++)

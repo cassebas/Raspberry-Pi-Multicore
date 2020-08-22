@@ -1,6 +1,7 @@
 #include "xRTOS.h"
 #include "mutex.h"
 #include "semaphore.h"
+#include "corunners_definition.h"
 
 #ifdef MMU_ENABLE
 static SemaphoreHandle_t sem[NR_OF_LOCKS];

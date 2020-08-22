@@ -6,19 +6,27 @@ Slightly modified for our use case.
 #ifndef MALARDALEN_H
 #define MALARDALEN_H
 
+#include "corunners_definition.h"
+#ifdef CIRCLE
+#include "randomwrapper.h"
+#endif
 
-#include "xRTOS.h"
+#ifndef CIRCLE
+#include "types.h"
+#endif
 
 /*
  * bsort100: Malardalen's Bubblesort definitions.
  */
 #define WORSTCASE 1
-#define FALSE 0
-#define TRUE 1
 #define NUMELEMS BSORT_INPUTSIZE
 #define MAXDIM   (NUMELEMS+1)
 
+#ifdef CIRCLE
+void bsort100_Initialize(volatile int Array[], RandomWrapper*);
+#else
 void bsort100_Initialize(volatile int Array[]);
+#endif
 void bsort100_BubbleSort(volatile int Array[]);
 
 

@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "types.h"
 #include "rpi-smartstart.h"
 #include "emb-stdio.h"
 #include "xRTOS.h"
@@ -14,6 +15,7 @@
 #include "sdvbs/svm/svm.h"
 #include "sdvbs/stitch/stitch.h"
 
+#include "corunners_definition.h"
 /* definition of performance monitor control registers and such */
 #include "armv8_pm.h"
 /* our own synthetic benchmark for testing purposes */
@@ -32,115 +34,115 @@ BENCH_DECL_CORE1
 BENCH_DECL_CORE2
 BENCH_DECL_CORE3
 
-/**
- * Global enable of PMU
- */
-static inline void enable_pmu()
-{
-	uint64_t val=0;
-	asm volatile("mrs %[val], pmcr_el0" : [val]"=r" (val));
-	asm volatile("msr pmcr_el0, %[val]" : : [val]"r" (val|ARMV8_PMCR_E));
-}
+/* /\** */
+/*  * Global enable of PMU */
+/*  *\/ */
+/* static inline void enable_pmu() */
+/* { */
+/* 	uint64_t val=0; */
+/* 	asm volatile("mrs %[val], pmcr_el0" : [val]"=r" (val)); */
+/* 	asm volatile("msr pmcr_el0, %[val]" : : [val]"r" (val|ARMV8_PMCR_E)); */
+/* } */
 
-static inline void enable_cycle_counter()
-{
-	asm volatile("msr pmcntenset_el0, %0" : : "r" (ARMV8_PMCNTENSET_C));
-}
+/* static inline void enable_cycle_counter() */
+/* { */
+/* 	asm volatile("msr pmcntenset_el0, %0" : : "r" (ARMV8_PMCNTENSET_C)); */
+/* } */
 
-static void disable_cycle_counter()
-{
-	asm volatile("msr pmcntenclr_el0, %0" : : "r" (ARMV8_PMCNTENCLR_C));
-}
+/* static void disable_cycle_counter() */
+/* { */
+/* 	asm volatile("msr pmcntenclr_el0, %0" : : "r" (ARMV8_PMCNTENCLR_C)); */
+/* } */
 
-static inline uint64_t read_cycle_counter()
-{
-	uint64_t val = 0;
-	asm volatile("mrs %0, pmccntr_el0" : "=r" (val));
-	return val;
-}
+/* static inline uint64_t read_cycle_counter() */
+/* { */
+/* 	uint64_t val = 0; */
+/* 	asm volatile("mrs %0, pmccntr_el0" : "=r" (val)); */
+/* 	return val; */
+/* } */
 
-/**
- * Reset the cycle counter PMCCNTR_EL0 to zero.
- */
-static inline void reset_cycle_counter()
-{
-	uint64_t val=0;
-	asm volatile("mrs %[val], pmcr_el0" : [val]"=r" (val));
-	asm volatile("msr pmcr_el0, %[val]" : : [val]"r" (val|ARMV8_PMCR_C));
-}
+/* /\** */
+/*  * Reset the cycle counter PMCCNTR_EL0 to zero. */
+/*  *\/ */
+/* static inline void reset_cycle_counter() */
+/* { */
+/* 	uint64_t val=0; */
+/* 	asm volatile("mrs %[val], pmcr_el0" : [val]"=r" (val)); */
+/* 	asm volatile("msr pmcr_el0, %[val]" : : [val]"r" (val|ARMV8_PMCR_C)); */
+/* } */
 
 
-static inline uint64_t read_nr_eventcounters()
-{
-	/* Read the number of event counters, bits [15:11] in PMCR_EL0 */
-	uint64_t val = 0;
-	asm volatile("mrs %0, pmcr_el0" : "=r" (val));
-	return ((val >> ARMV8_PMCR_N_SHIFT) & 0x1F);
-}
+/* static inline uint64_t read_nr_eventcounters() */
+/* { */
+/* 	/\* Read the number of event counters, bits [15:11] in PMCR_EL0 *\/ */
+/* 	uint64_t val = 0; */
+/* 	asm volatile("mrs %0, pmcr_el0" : "=r" (val)); */
+/* 	return ((val >> ARMV8_PMCR_N_SHIFT) & 0x1F); */
+/* } */
 
-static inline uint64_t read_cei_reg()
-{
-	/* Read the common event identification register */
-	uint64_t val = 0;
-	asm volatile("mrs %0, pmceid0_el0" : "=r" (val));
-	return val;
-}
+/* static inline uint64_t read_cei_reg() */
+/* { */
+/* 	/\* Read the common event identification register *\/ */
+/* 	uint64_t val = 0; */
+/* 	asm volatile("mrs %0, pmceid0_el0" : "=r" (val)); */
+/* 	return val; */
+/* } */
 
-static inline void config_event_counter(unsigned int counter, unsigned int event)
-{
-	// select the performance counter, bits [4:0] of PMSELR_EL0
-	uint64_t cntr = ((uint64_t) counter & 0x1F);
-	asm volatile("msr pmselr_el0, %[val]" : : [val]"r" (cntr));
-	// synchronize context
-	asm volatile("isb");
-	// write the event type to the PMXEVTYPER
-	asm volatile("msr pmxevtyper_el0, %[val]" : : [val]"r" (event & 0xFFFFFFFF));
-}
+/* static inline void config_event_counter(unsigned int counter, unsigned int event) */
+/* { */
+/* 	// select the performance counter, bits [4:0] of PMSELR_EL0 */
+/* 	uint64_t cntr = ((uint64_t) counter & 0x1F); */
+/* 	asm volatile("msr pmselr_el0, %[val]" : : [val]"r" (cntr)); */
+/* 	// synchronize context */
+/* 	asm volatile("isb"); */
+/* 	// write the event type to the PMXEVTYPER */
+/* 	asm volatile("msr pmxevtyper_el0, %[val]" : : [val]"r" (event & 0xFFFFFFFF)); */
+/* } */
 
-static inline void enable_event_counter(unsigned int counter)
-{
-	uint64_t counter_bit=0;
-	asm volatile(
-		"mov x1, #0x1\n\t"
-		"lsl %[res], x1, %[val]"
-		: [res]"=r" (counter_bit)
-		: [val]"r" (counter));
-	asm volatile("msr pmcntenset_el0, %[val]" : : [val]"r" (counter_bit));
-}
+/* static inline void enable_event_counter(unsigned int counter) */
+/* { */
+/* 	uint64_t counter_bit=0; */
+/* 	asm volatile( */
+/* 		"mov x1, #0x1\n\t" */
+/* 		"lsl %[res], x1, %[val]" */
+/* 		: [res]"=r" (counter_bit) */
+/* 		: [val]"r" (counter)); */
+/* 	asm volatile("msr pmcntenset_el0, %[val]" : : [val]"r" (counter_bit)); */
+/* } */
 
-static inline void disable_event_counter(unsigned int counter)
-{
-	uint64_t counter_bit=0;
-	asm volatile(
-		"mov x1, #0x1\n\t"
-		"lsl %[res], x1, %[val]"
-		: [res]"=r" (counter_bit)
-		: [val]"r" (counter));
-	asm volatile("msr pmcntenclr_el0, %[val]" : : [val]"r" (counter_bit));
-}
+/* static inline void disable_event_counter(unsigned int counter) */
+/* { */
+/* 	uint64_t counter_bit=0; */
+/* 	asm volatile( */
+/* 		"mov x1, #0x1\n\t" */
+/* 		"lsl %[res], x1, %[val]" */
+/* 		: [res]"=r" (counter_bit) */
+/* 		: [val]"r" (counter)); */
+/* 	asm volatile("msr pmcntenclr_el0, %[val]" : : [val]"r" (counter_bit)); */
+/* } */
 
-static inline unsigned int read_event_counter(unsigned int counter)
-{
-	// select the performance counter, bits [4:0] of PMSELR_EL0
-	uint64_t cntr = ((uint64_t) counter & 0x1F);
-	asm volatile("msr pmselr_el0, %[val]" : : [val]"r" (cntr));
-	// synchronize context
-	asm volatile("isb");
-	// read the counter
-	unsigned int events = 0;
-	asm volatile("mrs %[res], pmxevcntr_el0" : [res]"=r" (events));
-	return events;
-}
+/* static inline unsigned int read_event_counter(unsigned int counter) */
+/* { */
+/* 	// select the performance counter, bits [4:0] of PMSELR_EL0 */
+/* 	uint64_t cntr = ((uint64_t) counter & 0x1F); */
+/* 	asm volatile("msr pmselr_el0, %[val]" : : [val]"r" (cntr)); */
+/* 	// synchronize context */
+/* 	asm volatile("isb"); */
+/* 	// read the counter */
+/* 	unsigned int events = 0; */
+/* 	asm volatile("mrs %[res], pmxevcntr_el0" : [res]"=r" (events)); */
+/* 	return events; */
+/* } */
 
-/**
- * Reset all event counters to zero (not including PMCCNTR_EL0).
- */
-static inline void reset_event_counters()
-{
-	uint64_t val=0;
-	asm volatile("mrs %[val], pmcr_el0" : [val]"=r" (val));
-	asm volatile("msr pmcr_el0, %[val]" : : [val]"r" (val|ARMV8_PMCR_P));
-}
+/* /\** */
+/*  * Reset all event counters to zero (not including PMCCNTR_EL0). */
+/*  *\/ */
+/* static inline void reset_event_counters() */
+/* { */
+/* 	uint64_t val=0; */
+/* 	asm volatile("mrs %[val], pmcr_el0" : [val]"=r" (val)); */
+/* 	asm volatile("msr pmcr_el0, %[val]" : : [val]"r" (val|ARMV8_PMCR_P)); */
+/* } */
 
 
 static bool lit = false;

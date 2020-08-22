@@ -6,8 +6,8 @@
  
 */
 
-#include <stdlib.h>
 #include "synthetic_bench.h"
+#include <stdlib.h>
 
 int array_access_linear(volatile bigstruct_t* data)
 {
@@ -29,12 +29,23 @@ void array_write_linear(volatile bigstruct_t* data)
 	}
 }
 
+#ifdef CIRCLE
+void array_access_randomize(volatile int* idx, RandomWrapper* rand)
+#else
 void array_access_randomize(volatile int* idx, int corenum)
+#endif
 {
+#ifndef CIRCLE
 	int seed = corenum + 1;
 	srand(seed);
+#endif
+
 	for (int i=0; i<SYNBENCH_DATASIZE; i++) {
+#ifdef CIRCLE
+		idx[i] = get_number(rand) % SYNBENCH_DATASIZE;
+#else
 		idx[i] = rand() % SYNBENCH_DATASIZE;
+#endif
 	}
 }
 
