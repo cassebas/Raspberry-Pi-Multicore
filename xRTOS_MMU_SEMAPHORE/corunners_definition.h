@@ -61,10 +61,10 @@
 
 #define BENCH_INIT2_CORE0 \
 	for (int i=0; i<(width*height); i++) { \
-		srcImage1->data[i] = rand.GetNumber() % 256; \
-		srcImage2->data[i] = rand.GetNumber() % 256; \
+		srcImage1->data[i] = rand() % 256; \
+		srcImage2->data[i] = rand() % 256; \
 	}
-#define BENCH_INIT2_CORE1 bsort100_Initialize(Array1, &rand);
+#define BENCH_INIT2_CORE1 bsort100_Initialize(Array1);
 #define BENCH_INIT2_CORE2
 #define BENCH_INIT2_CORE3
 
