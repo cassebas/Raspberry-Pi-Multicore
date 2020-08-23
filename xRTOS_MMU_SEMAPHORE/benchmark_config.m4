@@ -572,4 +572,12 @@ define(fir_inputsize_template, `
 ')dnl
 ifdef(`fir_inputsize', fir_inputsize_template(fir_inputsize), `')dnl
 
+dnl Optionally report the number of cycles spent while busy
+dnl waiting a specific number of countdown counts. The countdown
+dnl function is used for causing co-runners to delay their execution.
+define(report_cycles_countdown_template, `
+#define REPORT_CYCLES_COUNTDOWN
+')dnl
+ifdef(`report_cycles_countdown', report_cycles_countdown_template, `')dnl
+
 #endif /* ~BENCHMARK_CONFIG_H */

@@ -25,6 +25,8 @@
 /* cache invalidation */
 #include "iv_cache.h"
 
+volatile void countdown(u64);
+
 /**
  * Maybe define the needed datastructures (depending on
  * the specific configuration of benchmarks).
@@ -34,115 +36,26 @@ BENCH_DECL_CORE1
 BENCH_DECL_CORE2
 BENCH_DECL_CORE3
 
-/* /\** */
-/*  * Global enable of PMU */
-/*  *\/ */
-/* static inline void enable_pmu() */
-/* { */
-/* 	uint64_t val=0; */
-/* 	asm volatile("mrs %[val], pmcr_el0" : [val]"=r" (val)); */
-/* 	asm volatile("msr pmcr_el0, %[val]" : : [val]"r" (val|ARMV8_PMCR_E)); */
-/* } */
+/**
+ * Simple function that makes the processor perform a busy
+ * wait by counting down from a specific number. The number
+ * of cycles spent each time is measured and printed.
+ */
+static inline u64 report_cycles_countdown(u64 count)
+{
+    u64 cycles;
 
-/* static inline void enable_cycle_counter() */
-/* { */
-/* 	asm volatile("msr pmcntenset_el0, %0" : : "r" (ARMV8_PMCNTENSET_C)); */
-/* } */
-
-/* static void disable_cycle_counter() */
-/* { */
-/* 	asm volatile("msr pmcntenclr_el0, %0" : : "r" (ARMV8_PMCNTENCLR_C)); */
-/* } */
-
-/* static inline uint64_t read_cycle_counter() */
-/* { */
-/* 	uint64_t val = 0; */
-/* 	asm volatile("mrs %0, pmccntr_el0" : "=r" (val)); */
-/* 	return val; */
-/* } */
-
-/* /\** */
-/*  * Reset the cycle counter PMCCNTR_EL0 to zero. */
-/*  *\/ */
-/* static inline void reset_cycle_counter() */
-/* { */
-/* 	uint64_t val=0; */
-/* 	asm volatile("mrs %[val], pmcr_el0" : [val]"=r" (val)); */
-/* 	asm volatile("msr pmcr_el0, %[val]" : : [val]"r" (val|ARMV8_PMCR_C)); */
-/* } */
-
-
-/* static inline uint64_t read_nr_eventcounters() */
-/* { */
-/* 	/\* Read the number of event counters, bits [15:11] in PMCR_EL0 *\/ */
-/* 	uint64_t val = 0; */
-/* 	asm volatile("mrs %0, pmcr_el0" : "=r" (val)); */
-/* 	return ((val >> ARMV8_PMCR_N_SHIFT) & 0x1F); */
-/* } */
-
-/* static inline uint64_t read_cei_reg() */
-/* { */
-/* 	/\* Read the common event identification register *\/ */
-/* 	uint64_t val = 0; */
-/* 	asm volatile("mrs %0, pmceid0_el0" : "=r" (val)); */
-/* 	return val; */
-/* } */
-
-/* static inline void config_event_counter(unsigned int counter, unsigned int event) */
-/* { */
-/* 	// select the performance counter, bits [4:0] of PMSELR_EL0 */
-/* 	uint64_t cntr = ((uint64_t) counter & 0x1F); */
-/* 	asm volatile("msr pmselr_el0, %[val]" : : [val]"r" (cntr)); */
-/* 	// synchronize context */
-/* 	asm volatile("isb"); */
-/* 	// write the event type to the PMXEVTYPER */
-/* 	asm volatile("msr pmxevtyper_el0, %[val]" : : [val]"r" (event & 0xFFFFFFFF)); */
-/* } */
-
-/* static inline void enable_event_counter(unsigned int counter) */
-/* { */
-/* 	uint64_t counter_bit=0; */
-/* 	asm volatile( */
-/* 		"mov x1, #0x1\n\t" */
-/* 		"lsl %[res], x1, %[val]" */
-/* 		: [res]"=r" (counter_bit) */
-/* 		: [val]"r" (counter)); */
-/* 	asm volatile("msr pmcntenset_el0, %[val]" : : [val]"r" (counter_bit)); */
-/* } */
-
-/* static inline void disable_event_counter(unsigned int counter) */
-/* { */
-/* 	uint64_t counter_bit=0; */
-/* 	asm volatile( */
-/* 		"mov x1, #0x1\n\t" */
-/* 		"lsl %[res], x1, %[val]" */
-/* 		: [res]"=r" (counter_bit) */
-/* 		: [val]"r" (counter)); */
-/* 	asm volatile("msr pmcntenclr_el0, %[val]" : : [val]"r" (counter_bit)); */
-/* } */
-
-/* static inline unsigned int read_event_counter(unsigned int counter) */
-/* { */
-/* 	// select the performance counter, bits [4:0] of PMSELR_EL0 */
-/* 	uint64_t cntr = ((uint64_t) counter & 0x1F); */
-/* 	asm volatile("msr pmselr_el0, %[val]" : : [val]"r" (cntr)); */
-/* 	// synchronize context */
-/* 	asm volatile("isb"); */
-/* 	// read the counter */
-/* 	unsigned int events = 0; */
-/* 	asm volatile("mrs %[res], pmxevcntr_el0" : [res]"=r" (events)); */
-/* 	return events; */
-/* } */
-
-/* /\** */
-/*  * Reset all event counters to zero (not including PMCCNTR_EL0). */
-/*  *\/ */
-/* static inline void reset_event_counters() */
-/* { */
-/* 	uint64_t val=0; */
-/* 	asm volatile("mrs %[val], pmcr_el0" : [val]"=r" (val)); */
-/* 	asm volatile("msr pmcr_el0, %[val]" : : [val]"r" (val|ARMV8_PMCR_P)); */
-/* } */
+	enable_cycle_counter();
+	reset_cycle_counter();
+	//////////////////////
+	// now wait a while //
+	//////////////////////
+	countdown(count);
+	///////////////////
+	disable_cycle_counter();
+	cycles = read_cycle_counter();
+	return cycles;
+}
 
 
 static bool lit = false;
@@ -259,6 +172,22 @@ void core0(void* pParam) {
 #endif
 #ifdef PMU_EVENT_CORE0_4
 	config_event_counter(3, PMU_EVENT_CORE0_4);
+#endif
+
+#ifdef REPORT_CYCLES_COUNTDOWN
+	// Before we do anything, first report the number of cycles spent
+	// while busy waiting using the countdown function. This information
+	// is needed to cause delays for the co-runners.
+	u64 count;
+	float cpc=0.0;
+	for (int i=1; i<=10; i++) {
+		count = i*1000000;
+		cycles = report_cycles_countdown(count);
+		cpc = (float) cycles / count;
+		log_info(0, buf, "Countdown was %lu. Cycles spent=%lu\n\r",
+				 count, cycles);
+		log_info(0, buf, "Measured cycles per count was %.9f\n\r", cpc);
+	}
 #endif
 
 	while (1) {
