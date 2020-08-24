@@ -30,10 +30,10 @@ define(`forloop', `pushdef(`$1', `$2')_forloop($@)popdef(`$1')')
 define(`_forloop',
 `$4`'ifelse($1, `$3', `', `define(`$1', incr($1))$0($@)')')
 divert`'dnl
-/* Number of benchmarks series  */
+/* Number of benchmarks series is currently 3  */
 define(nr_of_benchmarks_series, 3)dnl
-/* Maximum number of benchmarks per series is 9 */
-define(nr_of_benchmarks, 9)dnl
+/* Maximum number of benchmarks per series is currently 4 */
+define(nr_of_benchmarks, 4)dnl
 /* Default configuration of series is '123' (but can be altered on the m4-cmdline) */
 define(config_series, `321')dnl
 /* Default configuration of benchmarks is '123' (but can be altered on the m4-cmdline) */
@@ -47,8 +47,8 @@ define(bench_string_core_undef, `
 #undef BENCH_STRING_CORE`$1'
 #endif')dnl
 define(bench_config_core_undef, `
-#ifdef BENCH_CONFIG_CORE`$1'
-#undef BENCH_CONFIG_CORE`$1'
+#ifdef BENCH_CONFIG_CORE`$1'_`$2'_`$3'
+#undef BENCH_CONFIG_CORE`$1'_`$2'_`$3'
 #endif')dnl
 define(bench_decl_core_undef, `
 #ifdef BENCH_DECL_CORE`$1'
@@ -71,8 +71,8 @@ define(bench_cleanup_core_undef, `
 #undef BENCH_CLEANUP_CORE`$1'
 #endif')dnl
 define(pmu_event_core_undef, `
-#ifdef PMU_EVENT_CORE`$1'
-#undef PMU_EVENT_CORE`$1'
+#ifdef PMU_EVENT_CORE`$1'_`$2'
+#undef PMU_EVENT_CORE`$1'_`$2'
 #endif')dnl
 dnl
 dnl Definition of macro_loop
@@ -92,7 +92,7 @@ dnl loop. In each iteration of the inner for loop, the fifth
 dnl arugment is called as a macro, with the index of the inner
 dnl for loop as the macro's argument.
 define(macro_doubleloop, `forloop(`i', `$1', `$2',
-                         `forloop(`j', `$3', `$4', `$5(i`_'j)')')')dnl
+                         `forloop(`j', `$3', `$4', `$5(i, j)')')')dnl
 dnl
 dnl Definition of macro_tripleloop
 dnl
@@ -106,7 +106,29 @@ dnl loop, the seventh argument is called as a macro, with the
 dnl index of the second inner for loop as the macro's argument.
 define(macro_tripleloop, `forloop(`i', `$1', `$2',
                          `forloop(`j', `$3', `$4',
-                         `forloop(`k', `$5', `$6', `$7(i`_'j`_'k)')')')')dnl
+                         `forloop(`k', `$5', `$6', `$7(i, j, k)')')')')dnl
+
+dnl *************************************
+dnl BENCHMARK INPUTSIZE NAMES FOR DEFINES
+dnl *************************************
+dnl
+dnl series nr 1: synthetic benchmarks
+define(bench_inputsize_name1_1, `SYNBENCH_DATASIZE')dnl
+define(bench_inputsize_name1_2, `SYNBENCH_DATASIZE')dnl
+define(bench_inputsize_name1_3, `SYNBENCH_DATASIZE')dnl
+define(bench_inputsize_name1_4, `SYNBENCH_DATASIZE')dnl
+dnl series nr 2: Mälardalen
+define(bench_inputsize_name2_1, `MALARDALEN_BSORT_INPUTSIZE')dnl
+define(bench_inputsize_name2_2, `MALARDALEN_NS_INPUTSIZE')dnl
+define(bench_inputsize_name2_3, `MALARDALEN_MATMULT_INPUTSIZE')dnl
+define(bench_inputsize_name2_4, `MALARDALEN_FIR_INPUTSIZE')dnl
+dnl series nr 2: SD-VBS
+define(bench_inputsize_name3_1, `SDVBS_DISPARITY_INPUTSIZE')dnl
+define(bench_inputsize_name3_2, `SDVBS_MSER_INPUTSIZE')dnl
+define(bench_inputsize_name3_3, `SDVBS_SVM_INPUTSIZE')dnl
+define(bench_inputsize_name3_4, `SDVBS_STITCH_INPUTSIZE')dnl
+dnl
+define(call_bench_inputsize_name, bench_inputsize_name$1_$2)dnl
 
 dnl **************************************
 dnl BENCHMARK NAMES FOR USAGE IN REPORTING
@@ -176,52 +198,52 @@ dnl BENCHMARK INITIALIZATION 1 STATEMENTS
 dnl *************************************
 dnl
 dnl series nr 1: synthetic benchmarks
-define(bench_init1_1_1, `mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * SYNBENCH_DATASIZE);')dnl
-define(bench_init1_1_2, `mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * SYNBENCH_DATASIZE);')dnl
+define(bench_init1_1_1, `mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * INPUTSIZE_CORE$1);')dnl
+define(bench_init1_1_2, `mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * INPUTSIZE_CORE$1);')dnl
 define(bench_init1_1_3, `\
-	mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * SYNBENCH_DATASIZE); \
-	myrandidx$1 = (int *) malloc(sizeof(int) * SYNBENCH_DATASIZE);
+	mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * INPUTSIZE_CORE$1); \
+	myrandidx$1 = (int *) malloc(sizeof(int) * INPUTSIZE_CORE$1);
 ')dnl
 define(bench_init1_1_4, `\
-	mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * SYNBENCH_DATASIZE); \
-	myrandidx$1 = (int *) malloc(sizeof(int) * SYNBENCH_DATASIZE);
+	mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * INPUTSIZE_CORE$1); \
+	myrandidx$1 = (int *) malloc(sizeof(int) * INPUTSIZE_CORE$1);
 ')dnl
 dnl series nr 2: Mälardalen
-define(bench_init1_2_1, `Array$1 = (volatile int*) malloc(sizeof(int) * NUMELEMS);')dnl
+define(bench_init1_2_1, `Array$1 = (volatile int*) malloc(sizeof(int) * INPUTSIZE_CORE$1);')dnl
 define(bench_init1_2_2, `\
-	/* nr of elements in 4-dim array */										\
-	int num_elems = NS_INPUTSIZE * NS_INPUTSIZE * NS_INPUTSIZE * NS_INPUTSIZE;	\
-	keys$1 = (int (*)[NS_ELEMS][NS_ELEMS][NS_ELEMS]) malloc(sizeof(int) * num_elems);\
-	answer$1 = (int (*)[NS_ELEMS][NS_ELEMS][NS_ELEMS]) malloc(sizeof(int) * num_elems);\
+	/* nr of elements in 4-dim array */									\
+	int num_elems = INPUTSIZE_CORE$1 * INPUTSIZE_CORE$1 * INPUTSIZE_CORE$1 * INPUTSIZE_CORE$1;										\
+	keys$1 = (int (*)[INPUTSIZE_CORE$1][INPUTSIZE_CORE$1][INPUTSIZE_CORE$1]) malloc(sizeof(int) * num_elems);		\
+	answer$1 = (int (*)[INPUTSIZE_CORE$1][INPUTSIZE_CORE$1][INPUTSIZE_CORE$1]) malloc(sizeof(int) * num_elems);		\
 	ns_Initialize(keys$1, answer$1);')dnl
 define(bench_init1_2_3, `')dnl
 define(bench_init1_2_4, `\
-	in_data$1 = (long*) malloc(sizeof(long) * FIR_NUMELEMS);				\
-	output$1 = (long*) malloc(sizeof(long) * FIR_NUMELEMS);
+	in_data$1 = (long*) malloc(sizeof(long) * INPUTSIZE_CORE$1);			\
+	output$1 = (long*) malloc(sizeof(long) * INPUTSIZE_CORE$1);
 	')dnl
 dnl series nr 3: SD-VBS
 define(bench_init1_3_1, `\
-	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;	\
+	int width=INPUTSIZE_CORE$1, height=INPUTSIZE_CORE$1;		\
 	int WIN_SZ=4, SHIFT=8;										\
 	I2D* srcImage1 = iMallocHandle(width, height);				\
 	I2D* srcImage2 = iMallocHandle(width, height);
 ')dnl
 define(bench_init1_3_2, `\
-	int width=MSER_INPUTSIZE, height=MSER_INPUTSIZE;		\
-	int in_delta=2;										\
+	int width=INPUTSIZE_CORE$1, height=INPUTSIZE_CORE$1;		\
+	int in_delta=2;											\
 	I2D* srcImage = iMallocHandle(width, height);
 ')dnl
 define(bench_init1_3_3, `\
 	int svm_iter = 8;										\
-    int svm_N = SVM_INPUTSIZE;								\
-    int svm_Ntst = SVM_INPUTSIZE;							\
+    int svm_N = INPUTSIZE_CORE$1;							\
+    int svm_Ntst = INPUTSIZE_CORE$1;						\
     F2D* svm_trn1 = fMallocHandle(svm_N, svm_N);			\
     F2D* svm_trn2 = fMallocHandle(svm_N, svm_N);			\
     F2D* svm_tst1 = fMallocHandle(svm_N, svm_N);			\
     F2D* svm_tst2 = fMallocHandle(svm_N, svm_N);
 ')dnl
 define(bench_init1_3_4, `\
-    int stitch_N = STITCH_INPUTSIZE;						\
+    int stitch_N = INPUTSIZE_CORE$1;						\
 	I2D* Icur = iMallocHandle(stitch_N, stitch_N);
 ')dnl
 
@@ -289,7 +311,7 @@ dnl series nr 2: Mälardalen
 define(do_bench2_1, bsort100_BubbleSort(Array$1);)dnl
 define(do_bench2_2, ns_foo(keys$1, answer$1);)dnl
 define(do_bench2_3, matmult_Multiply(matA$1, matB$1, matC$1);)dnl
-define(do_bench2_4, fir_filter_int(in_data$1,output$1,FIR_NUMELEMS,fir_int$1,FIR_COEFFSIZE-1,FIR_SCALE);)dnl
+define(do_bench2_4, fir_filter_int(in_data$1,output$1,INPUTSIZE_CORE$1,fir_int$1,FIR_COEFFSIZE-1,FIR_SCALE);)dnl
 dnl series nr 3: SD-VBS
 define(do_bench3_1, getDisparity(srcImage1, srcImage2, WIN_SZ, SHIFT);)dnl
 define(do_bench3_2, mser(srcImage, in_delta);)dnl
@@ -492,85 +514,40 @@ ifdef(`debug_enable', debug_enable_def, `')dnl
 
 dnl Benchmark specific configuration parameters
 dnl
-dnl SD-VBS Disparity: size of input image
-define(disparity_inputsize_template, `
-#ifdef DISPARITY_INPUTSIZE
-#undef DISPARITY_INPUTSIZE
+dnl Size of input for all cores, if inputsize was defined as a parameter
+dnl to this script this size will be used. Otherwise the default size of 50
+dnl will be used.
+define(inputsize_template, `
+#ifdef INPUTSIZE_CORE$1
+#undef INPUTSIZE_CORE$1
 #endif
-#define DISPARITY_INPUTSIZE $1
+#define INPUTSIZE_CORE$1 $2
 ')dnl
-ifdef(`disparity_inputsize', disparity_inputsize_template(disparity_inputsize), `')dnl
+define(call_inputsize_template, `
+ifdef(`inputsize_core$1', inputsize_template($1, `inputsize_core$1'), `inputsize_template($1, 50)')
+')dnl
+macro_loop(0, 3, `call_inputsize_template')dnl
 
-dnl SD-VBS mser: size of input image
-define(mser_inputsize_template, `
-#ifdef MSER_INPUTSIZE
-#undef MSER_INPUTSIZE
+dnl Define all benchmark inputsizes with a default value, to make
+dnl sure that all inputsizes have been defined.
+dnl The specific needed inputsizes that are given as parameters to
+dnl this script will be redefined below.
+define(bench_inputsize_name_init_def, `
+#ifndef call_bench_inputsize_name($1, $2)
+#define call_bench_inputsize_name($1, $2) `100'
 #endif
-#define MSER_INPUTSIZE $1
 ')dnl
-ifdef(`mser_inputsize', mser_inputsize_template(mser_inputsize), `')dnl
+macro_doubleloop(1, 3, 1, nr_of_benchmarks, `bench_inputsize_name_init_def')dnl
 
-dnl SD-VBS svm: size of input image
-define(svm_inputsize_template, `
-#ifdef SVM_INPUTSIZE
-#undef SVM_INPUTSIZE
+dnl For each benchmark that runs on a specifi core, define the corresponding
+dnl macro for the inputsize. The inputsize is specified per core, which is
+dnl tied to the specific benchmark with the following macro loop.
+define(inputsize_name_core_def, `
+#ifdef call_bench_inputsize_name(substr(config_series, $1, 1), substr(config_benchmarks, $1, 1))
+#undef call_bench_inputsize_name(substr(config_series, $1, 1), substr(config_benchmarks, $1, 1))
 #endif
-#define SVM_INPUTSIZE $1
-')dnl
-ifdef(`svm_inputsize', svm_inputsize_template(svm_inputsize), `')dnl
-
-dnl SD-VBS stich: size of input image
-define(stitch_inputsize_template, `
-#ifdef STITCH_INPUTSIZE
-#undef STITCH_INPUTSIZE
-#endif
-#define STITCH_INPUTSIZE $1
-')dnl
-ifdef(`stitch_inputsize', stitch_inputsize_template(stitch_inputsize), `')dnl
-
-dnl Benchmark specific configuration parameters
-dnl
-dnl Mälardalen bsort: size of input array
-define(bsort_inputsize_template, `
-#ifdef BSORT_INPUTSIZE
-#undef BSORT_INPUTSIZE
-#endif
-#define BSORT_INPUTSIZE $1
-')dnl
-ifdef(`bsort_inputsize', bsort_inputsize_template(bsort_inputsize), `')dnl
-
-dnl Benchmark specific configuration parameters
-dnl
-dnl Mälardalen ns: size of arrays
-define(ns_inputsize_template, `
-#ifdef NS_INPUTSIZE
-#undef NS_INPUTSIZE
-#endif
-#define NS_INPUTSIZE $1
-')dnl
-ifdef(`ns_inputsize', ns_inputsize_template(ns_inputsize), `')dnl
-
-dnl Benchmark specific configuration parameters
-dnl
-dnl Mälardalen matmult: size of input matrices
-define(matmult_inputsize_template, `
-#ifdef MATMULT_INPUTSIZE
-#undef MATMULT_INPUTSIZE
-#endif
-#define MATMULT_INPUTSIZE $1
-')dnl
-ifdef(`matmult_inputsize', matmult_inputsize_template(matmult_inputsize), `')dnl
-
-dnl Benchmark specific configuration parameters
-dnl
-dnl Mälardalen matmult: size of input matrices
-define(fir_inputsize_template, `
-#ifdef FIR_INPUTSIZE
-#undef FIR_INPUTSIZE
-#endif
-#define FIR_INPUTSIZE $1
-')dnl
-ifdef(`fir_inputsize', fir_inputsize_template(fir_inputsize), `')dnl
+#define call_bench_inputsize_name(substr(config_series, $1, 1), substr(config_benchmarks, $1, 1)) INPUTSIZE_CORE$1')dnl
+macro_loop(0, eval(len(config_benchmarks) - 1), `inputsize_name_core_def')dnl
 
 dnl Optionally report the number of cycles spent while busy
 dnl waiting a specific number of countdown counts. The countdown

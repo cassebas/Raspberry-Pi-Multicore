@@ -19,7 +19,7 @@ Slightly modified for our use case.
  * bsort100: Malardalen's Bubblesort definitions.
  */
 #define WORSTCASE 1
-#define NUMELEMS BSORT_INPUTSIZE
+#define NUMELEMS MALARDALEN_BSORT_INPUTSIZE
 #define MAXDIM   (NUMELEMS+1)
 
 #ifdef CIRCLE
@@ -33,7 +33,7 @@ void bsort100_BubbleSort(volatile int Array[]);
 /*
  * ns: Malardalen's test of deeply nested loops and non-local exits.
  */
-#define NS_ELEMS NS_INPUTSIZE
+#define NS_ELEMS MALARDALEN_NS_INPUTSIZE
 
 void ns_Initialize(int (*keys)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
 				   int (*answer)[NS_ELEMS][NS_ELEMS][NS_ELEMS]);
@@ -47,7 +47,7 @@ void ns_foo(int (*keys)[NS_ELEMS][NS_ELEMS][NS_ELEMS],
 /*
  * matmult: Malardalen's Matrix multiplication of two matrices.
  */
-#define UPPERLIMIT MATMULT_INPUTSIZE
+#define UPPERLIMIT MALARDALEN_MATMULT_INPUTSIZE
 typedef int matrix [UPPERLIMIT][UPPERLIMIT];
 
 void matmult_Multiply(matrix A, matrix B, matrix Res);
@@ -59,7 +59,7 @@ int matmult_RandomInteger(void);
 /*
  * fir: Malardalen's Finite Input Response implementation.
  */
-#define FIR_NUMELEMS FIR_INPUTSIZE
+#define FIR_NUMELEMS MALARDALEN_FIR_INPUTSIZE
 #define FIR_COEFFSIZE 36
 #define FIR_SCALE 285
 

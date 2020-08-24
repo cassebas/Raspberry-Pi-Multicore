@@ -51,11 +51,11 @@
 #define BENCH_DECL_CORE3
 
 #define BENCH_INIT1_CORE0 \
-	int width=DISPARITY_INPUTSIZE, height=DISPARITY_INPUTSIZE;	\
+	int width=SDVBS_DISPARITY_INPUTSIZE, height=SDVBS_DISPARITY_INPUTSIZE;	\
     int WIN_SZ=4, SHIFT=8;										\
     I2D* srcImage1 = iMallocHandle(width, height);				\
     I2D* srcImage2 = iMallocHandle(width, height);
-#define BENCH_INIT1_CORE1 Array1 = (volatile int*) malloc(sizeof(int) * NUMELEMS);
+#define BENCH_INIT1_CORE1 Array1 = (volatile int*) malloc(sizeof(int) * MALARDALEN_BSORT_INPUTSIZE);
 #define BENCH_INIT1_CORE2 mydata2 = (bigstruct_t*) malloc(sizeof(bigstruct_t) * SYNBENCH_DATASIZE);
 #define BENCH_INIT1_CORE3
 
@@ -81,44 +81,23 @@
 #define EXP_LABEL "DEFAULT"
 
 /**
- * Specific configuration for the Mälardalen bsort benchmark
+ * Input size configuration for each core: default for disparity 64
  */
-#define BSORT_INPUTSIZE 100
+#define INPUTSIZE_CORE0 64
 
 /**
- * Specific configuration for the Mälardalen bsort benchmark
+ * Input size configuration for each core: default for bsort 100
  */
-#define MATMULT_INPUTSIZE 100
+#define INPUTSIZE_CORE1 100
 
 /**
- * Specific configuration for the Mälardalen ns benchmark
+ * Input size configuration for each core: default for array write linear: 131072
  */
-#define NS_INPUTSIZE 5
+#define INPUTSIZE_CORE2 131072
 
-/**
- * Specific configuration for the Mälardalen fir benchmark
- */
-#define FIR_INPUTSIZE 700
-
-/**
- * Specific configuration for the SD-VBS Disparity benchmark
- */
-#define DISPARITY_INPUTSIZE 96
-
-/**
- * Specific configuration for the SD-VBS mser benchmark
- */
-#define MSER_INPUTSIZE 64
-
-/**
- * Specific configuration for the SD-VBS svm benchmark
- */
-#define SVM_INPUTSIZE 16
-
-/**
- * Specific configuration for the SD-VBS stitch benchmark
- */
-#define STITCH_INPUTSIZE 64
+#define SDVBS_DISPARITY_INPUTSIZE INPUTSIZE_CORE0
+#define MALARDALEN_BSORT_INPUTSIZE INPUTSIZE_CORE1
+#define SYNBENCH_DATASIZE INPUTSIZE_CORE2
 
 /**
  * If the following macro with name BENCHMARK_CONFIG_M4 was
