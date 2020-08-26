@@ -480,13 +480,13 @@ ifdef(`exp_label', `', `define(exp_label, `default')')
 #endif
 
 dnl maybe define the tick rate in Hz
-define(tick_rate_hz_template, `
-#ifdef TICK_RATE_HZ
-#undef TICK_RATE_HZ
+define(delay_step_countdown_template, `
+#ifdef DELAY_STEP_COUNTDOWN
+#undef DELAY_STEP_COUNTDOWN
 #endif
-#define TICK_RATE_HZ $1
+#define DELAY_STEP_COUNTDOWN $1
 ')dnl
-ifdef(`tick_rate_hz', `tick_rate_hz_template(tick_rate_hz)', `')
+ifdef(`delay_step_countdown', `delay_step_countdown_template(delay_step_countdown)', `')
 
 dnl maybe enable the MMU
 define(mmu_enable_def, `

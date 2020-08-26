@@ -81,6 +81,15 @@
 #define EXP_LABEL "DEFAULT"
 
 /**
+ * Default number of countdown per step to cause a certain delay.
+ * Here, it only functions as a placeholder, it should be configured
+ * per benchmark/inputsize running on core0.
+ */
+#define DELAY_STEP_COUNTDOWN 100000
+#define ITERATIONS_PER_STEP 50
+#define OFFSET_STEP_SIZE (1)
+
+/**
  * Input size configuration for each core: default for disparity 64
  */
 #define INPUTSIZE_CORE0 64

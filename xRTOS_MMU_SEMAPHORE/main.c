@@ -321,8 +321,8 @@ void core0(void* pParam) {
 				 corenum, PMU_EVENT_CORE0_4, event4, iter);
 #endif
 
-		if (++iter % OFFSET_INTERVAL == 0)
-			offset += TICKS_INCR_OFFSET;
+		if (++iter % ITERATIONS_PER_STEP == 0)
+			offset += OFFSET_STEP_SIZE;
 	}
 }
 
@@ -495,8 +495,8 @@ void core1(void* pParam) {
 				 corenum, PMU_EVENT_CORE1_4, event4, iter);
 #endif
 
-		if (++iter % OFFSET_INTERVAL == 0)
-			offset += TICKS_INCR_OFFSET;
+		if (++iter % ITERATIONS_PER_STEP == 0)
+			offset += OFFSET_STEP_SIZE;
 	}
 }
 
@@ -669,8 +669,8 @@ void core2(void* pParam) {
 				 corenum, PMU_EVENT_CORE2_4, event4, iter);
 #endif
 
-		if (++iter % OFFSET_INTERVAL == 0)
-			offset += TICKS_INCR_OFFSET;
+		if (++iter % ITERATIONS_PER_STEP == 0)
+			offset += OFFSET_STEP_SIZE;
 	}
 }
 
@@ -843,8 +843,8 @@ void core3(void* pParam) {
 				 corenum, PMU_EVENT_CORE3_4, event4, iter);
 #endif
 
-		if (++iter % OFFSET_INTERVAL == 0)
-			offset += TICKS_INCR_OFFSET;
+		if (++iter % ITERATIONS_PER_STEP == 0)
+			offset += OFFSET_STEP_SIZE;
 	}
 }
 
