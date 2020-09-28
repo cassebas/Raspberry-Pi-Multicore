@@ -35,14 +35,14 @@
 /* Event types and their number to use in the configuration */
 #define PMU_L1D_CACHE_REFILL 0x03  /* 0: L1 Data cache refill */
 #define PMU_L1D_CACHE        0x04  /* 1: L1 Data cache access */
-#define PMU_L1I_TLB_REFILL   0x02  /* 2: L1 Instruction TLB refill. */
-#define PMU_L1D_TLB_REFILL   0x05  /* 3: L1 Data TLB refill. */
-#define PMU_MEM_ACCESS       0x13  /* 4: Data memory access */
-#define PMU_L1D_CACHE_WB     0x15  /* 5: L1 Data cache Write-back */
-#define PMU_L2D_CACHE        0x16  /* 6: L2 Data cache access */
-#define PMU_L2D_CACHE_REFILL 0x17  /* 7: L2 Data cache refill */
-#define PMU_L2D_CACHE_WB     0x18  /* 8: L2 Data cache Write-back */
-#define PMU_BUS_ACCESS       0x19  /* 9: Bus access */
+#define PMU_L1D_TLB_REFILL   0x05  /* 2: L1 Data TLB refill. */
+#define PMU_MEM_ACCESS       0x13  /* 3: Data memory access */
+#define PMU_L1D_CACHE_WB     0x15  /* 4: L1 Data cache Write-back */
+#define PMU_L2D_CACHE        0x16  /* 5: L2 Data cache access */
+#define PMU_L2D_CACHE_REFILL 0x17  /* 6: L2 Data cache refill */
+#define PMU_L2D_CACHE_WB     0x18  /* 7: L2 Data cache Write-back */
+#define PMU_BUS_ACCESS       0x19  /* 8: Bus access */
+#define PMU_BUS_CYCLES       0x1D  /* 9: Bus cycles */
 
 
 /**
