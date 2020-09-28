@@ -395,14 +395,14 @@ define(bench_cleanup_core_empty_def, `
 dnl
 define(pmu_event0, `(PMU_L1D_CACHE_REFILL)')dnl
 define(pmu_event1, `(PMU_L1D_CACHE)')dnl
-define(pmu_event2, `(PMU_L1I_TLB_REFILL)')dnl
-define(pmu_event3, `(PMU_L1D_TLB_REFILL)')dnl
-define(pmu_event4, `(PMU_MEM_ACCESS)')dnl
-define(pmu_event5, `(PMU_L1D_CACHE_WB)')dnl
-define(pmu_event6, `(PMU_L2D_CACHE)')dnl
-define(pmu_event7, `(PMU_L2D_CACHE_REFILL)')dnl
-define(pmu_event8, `(PMU_L1D_CACHE_WB)')dnl
-define(pmu_event9, `(PMU_BUS_ACCESS)')dnl
+define(pmu_event2, `(PMU_L1D_TLB_REFILL)')dnl
+define(pmu_event3, `(PMU_MEM_ACCESS)')dnl
+define(pmu_event4, `(PMU_L1D_CACHE_WB)')dnl
+define(pmu_event5, `(PMU_L2D_CACHE)')dnl
+define(pmu_event6, `(PMU_L2D_CACHE_REFILL)')dnl
+define(pmu_event7, `(PMU_L1D_CACHE_WB)')dnl
+define(pmu_event8, `(PMU_BUS_ACCESS)')dnl
+define(pmu_event9, `(PMU_BUS_CYCLES)')dnl
 define(call_pmu_event, pmu_event$1)dnl
 dnl
 divert(0)dnl
