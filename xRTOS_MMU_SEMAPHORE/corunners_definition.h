@@ -84,6 +84,14 @@
  * Default number of countdown per step to cause a certain delay.
  * Here, it only functions as a placeholder, it should be configured
  * per benchmark/inputsize running on core0.
+ *
+ * The DELAY_STEP_COUNTDOWN should be about 1/10th of the number of 
+ * delay step cycles that would be equal to the baseline number of cycles.
+ *
+ * Example: baseline (task running in isolation) takes 100,000 cycles.
+ * If one delay step count (using the special 'countdown' instruction) takes
+ * 2 cycles, then DELAY_STEP_COUNTDOWN should be:
+ *    100,000 / 2 cyles / 10th = 5,000.
  */
 #define DELAY_STEP_COUNTDOWN 100000
 #define ITERATIONS_PER_STEP 50
