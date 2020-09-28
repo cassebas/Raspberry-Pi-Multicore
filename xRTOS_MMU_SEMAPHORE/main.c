@@ -298,27 +298,27 @@ void core0(void* pParam) {
 		 * zero(!). Beats me. */
 		log_info(corenum, buf, "%#02x\n\r", 0x03);
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE0_1, event1, iter);
+				 corenum, PMU_EVENT_CORE0_1, event1, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE0_2
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE0_2, event2, iter);
+				 corenum, PMU_EVENT_CORE0_2, event2, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE0_3
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE0_3, event3, iter);
+				 corenum, PMU_EVENT_CORE0_3, event3, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE0_4
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE0_4, event4, iter);
+				 corenum, PMU_EVENT_CORE0_4, event4, iter, offset);
 #endif
 
 		if (++iter % ITERATIONS_PER_STEP == 0)
@@ -472,27 +472,27 @@ void core1(void* pParam) {
 
 #ifdef PMU_EVENT_CORE1_1
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE1_1, event1, iter);
+				 corenum, PMU_EVENT_CORE1_1, event1, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE1_2
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE1_2, event2, iter);
+				 corenum, PMU_EVENT_CORE1_2, event2, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE1_3
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE1_3, event3, iter);
+				 corenum, PMU_EVENT_CORE1_3, event3, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE1_4
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE1_4, event4, iter);
+				 corenum, PMU_EVENT_CORE1_4, event4, iter, offset);
 #endif
 
 		if (++iter % ITERATIONS_PER_STEP == 0)
@@ -646,27 +646,27 @@ void core2(void* pParam) {
 
 #ifdef PMU_EVENT_CORE2_1
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE2_1, event1, iter);
+				 corenum, PMU_EVENT_CORE2_1, event1, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE2_2
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE2_2, event2, iter);
+				 corenum, PMU_EVENT_CORE2_2, event2, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE2_3
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE2_3, event3, iter);
+				 corenum, PMU_EVENT_CORE2_3, event3, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE2_4
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE2_4, event4, iter);
+				 corenum, PMU_EVENT_CORE2_4, event4, iter, offset);
 #endif
 
 		if (++iter % ITERATIONS_PER_STEP == 0)
@@ -820,27 +820,27 @@ void core3(void* pParam) {
 
 #ifdef PMU_EVENT_CORE3_1
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 1 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE3_1, event1, iter);
+				 corenum, PMU_EVENT_CORE3_1, event1, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE3_2
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 2 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE3_2, event2, iter);
+				 corenum, PMU_EVENT_CORE3_2, event2, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE3_3
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 3 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE3_3, event3, iter);
+				 corenum, PMU_EVENT_CORE3_3, event3, iter, offset);
 #endif
 #ifdef PMU_EVENT_CORE3_4
 		log_info(corenum, buf,
-				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d\n\r",
+				 "EVENTCOUNT label: %s %s %s cores: %d core: %d pmu: 4 event_number: %#02x event_count: %d iteration: %d offset: %d\n\r",
 				 EXP_LABEL, CONFIG_SERIES_STRING, CONFIG_BENCH_STRING, NR_OF_CORES,
-				 corenum, PMU_EVENT_CORE3_4, event4, iter);
+				 corenum, PMU_EVENT_CORE3_4, event4, iter, offset);
 #endif
 
 		if (++iter % ITERATIONS_PER_STEP == 0)
