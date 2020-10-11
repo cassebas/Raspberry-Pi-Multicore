@@ -16,6 +16,18 @@ int array_access_linear(volatile bigstruct_t* data)
 		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
 			sum += data[i].id;
 		}
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			sum += data[i].id;
+		}
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			sum += data[i].id;
+		}
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			sum += data[i].id;
+		}
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			sum += data[i].id;
+		}
 	}
 	return sum;
 }
