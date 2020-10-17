@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "corunners_definition.h"
 #include "xRTOS.h"
 #include "rpi-smartstart.h"
 #include "task.h"
@@ -6,6 +7,7 @@
 #include <stdarg.h>
 #include "debug.h"
 #include "mutex.h"
+
 
 #ifdef MMU_ENABLE
 #include "semaphore.h"

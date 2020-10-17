@@ -4,6 +4,7 @@
 #include "types.h"
 #include "rpi-smartstart.h"
 #include "emb-stdio.h"
+#include "corunners_definition.h"
 #include "xRTOS.h"
 #include "task.h"
 #include "windows.h"
@@ -15,7 +16,6 @@
 #include "sdvbs/svm/svm.h"
 #include "sdvbs/stitch/stitch.h"
 
-#include "corunners_definition.h"
 /* definition of performance monitor control registers and such */
 #include "armv8_pm.h"
 /* our own synthetic benchmark for testing purposes */
