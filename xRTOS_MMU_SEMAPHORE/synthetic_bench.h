@@ -11,12 +11,13 @@
 #include "randomwrapper.h"
 #endif
 
+#include "corunners_definition.h"
+
 /**
  * We want to use a data structure that consists of more than
- * 512KB (size of L2 cache). We'll use 10,240 arrays of 64 bytes
- * large. The 64 bytes is chosen because we want to touch as
- * many cache lines as possible, with a jump of 64 bytes each
- * iteration, we try to fill the L2 as soon as possible.
+ * 512KB (size of L2 cache). The 64 bytes is chosen because we 
+ * want to touch as many cache lines as possible, with a jump of
+ * 64 bytes each iteration, we try to fill the L2 as soon as possible.
  * This is because the cache (both L1 and L2) have cache line
  * sizes of 64 bytes.
  *

@@ -157,15 +157,15 @@ dnl DECLARATION OF BENCHMARK VARIABLES
 dnl **********************************
 dnl
 dnl series nr 1: synthetic benchmarks
-define(bench_decl_1_1, `volatile bigstruct_t* mydata$1;')dnl
-define(bench_decl_1_2, `volatile bigstruct_t* mydata$1;')dnl
+define(bench_decl_1_1, `volatile bigstruct_t mydata$1[INPUTSIZE_CORE$1];')dnl
+define(bench_decl_1_2, `volatile bigstruct_t mydata$1[INPUTSIZE_CORE$1];')dnl
 define(bench_decl_1_3, `\
-	volatile bigstruct_t* mydata$1;			\
-	volatile int* myrandidx$1;
+	volatile bigstruct_t mydata$1[INPUTSIZE_CORE$1];			\
+	volatile int myrandidx$1[INPUTSIZE_CORE$1];
 ')dnl
 define(bench_decl_1_4, `\
-	volatile bigstruct_t* mydata$1;			\
-	volatile int* myrandidx$1;
+	volatile bigstruct_t mydata$1[INPUTSIZE_CORE$1];			\
+	volatile int myrandidx$1[INPUTSIZE_CORE$1];
 ')dnl
 dnl series nr 2: Mälardalen
 define(bench_decl_2_1, `volatile int* Array$1;')dnl
@@ -198,16 +198,10 @@ dnl BENCHMARK INITIALIZATION 1 STATEMENTS
 dnl *************************************
 dnl
 dnl series nr 1: synthetic benchmarks
-define(bench_init1_1_1, `mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * INPUTSIZE_CORE$1);')dnl
-define(bench_init1_1_2, `mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * INPUTSIZE_CORE$1);')dnl
-define(bench_init1_1_3, `\
-	mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * INPUTSIZE_CORE$1); \
-	myrandidx$1 = (int *) malloc(sizeof(int) * INPUTSIZE_CORE$1);
-')dnl
-define(bench_init1_1_4, `\
-	mydata$1 = (bigstruct_t *) malloc(sizeof(bigstruct_t) * INPUTSIZE_CORE$1); \
-	myrandidx$1 = (int *) malloc(sizeof(int) * INPUTSIZE_CORE$1);
-')dnl
+define(bench_init1_1_1, `')dnl
+define(bench_init1_1_2, `')dnl
+define(bench_init1_1_3, `')dnl
+define(bench_init1_1_4, `')dnl
 dnl series nr 2: Mälardalen
 define(bench_init1_2_1, `Array$1 = (volatile int*) malloc(sizeof(int) * INPUTSIZE_CORE$1);')dnl
 define(bench_init1_2_2, `\
@@ -407,6 +401,8 @@ define(call_pmu_event, pmu_event$1)dnl
 dnl
 divert(0)dnl
 dnl
+
+
 macro_loop(0, 3, `bench_string_core_undef')dnl
 macro_loop(0, 3, `bench_decl_core_undef')dnl
 macro_loop(0, 3, `bench_init1_core_undef')dnl
@@ -415,6 +411,46 @@ macro_loop(0, 3, `do_bench_core_undef')dnl
 macro_loop(0, 3, `bench_cleanup_core_undef')dnl
 macro_tripleloop(0, 3, 1, 3, 1, nr_of_benchmarks, `bench_config_core_undef')dnl
 macro_doubleloop(0, 3, 1, nr_of_pmus, `pmu_event_core_undef')dnl
+
+
+dnl Define all benchmark inputsizes with a default value, to make
+dnl sure that all inputsizes have been defined.
+dnl The specific needed inputsizes that are given as parameters to
+dnl this script will be redefined below.
+define(bench_inputsize_name_init_def, `
+#ifndef call_bench_inputsize_name($1, $2)
+#define call_bench_inputsize_name($1, $2) `100'
+#endif
+')dnl
+macro_doubleloop(1, 3, 1, nr_of_benchmarks, `bench_inputsize_name_init_def')dnl
+
+
+dnl Benchmark specific configuration parameters
+dnl
+dnl Size of input for all cores, if inputsize was defined as a parameter
+dnl to this script this size will be used. Otherwise the default size of 50
+dnl will be used.
+define(inputsize_template, `
+#ifdef INPUTSIZE_CORE$1
+#undef INPUTSIZE_CORE$1
+#endif
+#define INPUTSIZE_CORE$1 $2
+')dnl
+define(call_inputsize_template, `
+ifdef(`inputsize_core$1', inputsize_template($1, `inputsize_core$1'), `inputsize_template($1, 50)')
+')dnl
+macro_loop(0, 3, `call_inputsize_template')dnl
+
+
+dnl For each benchmark that runs on a specifi core, define the corresponding
+dnl macro for the inputsize. The inputsize is specified per core, which is
+dnl tied to the specific benchmark with the following macro loop.
+define(inputsize_name_core_def, `
+#ifdef call_bench_inputsize_name(substr(config_series, $1, 1), substr(config_benchmarks, $1, 1))
+#undef call_bench_inputsize_name(substr(config_series, $1, 1), substr(config_benchmarks, $1, 1))
+#endif
+#define call_bench_inputsize_name(substr(config_series, $1, 1), substr(config_benchmarks, $1, 1)) INPUTSIZE_CORE$1')dnl
+macro_loop(0, eval(len(config_benchmarks) - 1), `inputsize_name_core_def')dnl
 
 
 /* Configuration of benchmarks */
@@ -511,43 +547,6 @@ define(debug_enable_def, `
 #endif
 ')dnl
 ifdef(`debug_enable', debug_enable_def, `')dnl
-
-dnl Benchmark specific configuration parameters
-dnl
-dnl Size of input for all cores, if inputsize was defined as a parameter
-dnl to this script this size will be used. Otherwise the default size of 50
-dnl will be used.
-define(inputsize_template, `
-#ifdef INPUTSIZE_CORE$1
-#undef INPUTSIZE_CORE$1
-#endif
-#define INPUTSIZE_CORE$1 $2
-')dnl
-define(call_inputsize_template, `
-ifdef(`inputsize_core$1', inputsize_template($1, `inputsize_core$1'), `inputsize_template($1, 50)')
-')dnl
-macro_loop(0, 3, `call_inputsize_template')dnl
-
-dnl Define all benchmark inputsizes with a default value, to make
-dnl sure that all inputsizes have been defined.
-dnl The specific needed inputsizes that are given as parameters to
-dnl this script will be redefined below.
-define(bench_inputsize_name_init_def, `
-#ifndef call_bench_inputsize_name($1, $2)
-#define call_bench_inputsize_name($1, $2) `100'
-#endif
-')dnl
-macro_doubleloop(1, 3, 1, nr_of_benchmarks, `bench_inputsize_name_init_def')dnl
-
-dnl For each benchmark that runs on a specifi core, define the corresponding
-dnl macro for the inputsize. The inputsize is specified per core, which is
-dnl tied to the specific benchmark with the following macro loop.
-define(inputsize_name_core_def, `
-#ifdef call_bench_inputsize_name(substr(config_series, $1, 1), substr(config_benchmarks, $1, 1))
-#undef call_bench_inputsize_name(substr(config_series, $1, 1), substr(config_benchmarks, $1, 1))
-#endif
-#define call_bench_inputsize_name(substr(config_series, $1, 1), substr(config_benchmarks, $1, 1)) INPUTSIZE_CORE$1')dnl
-macro_loop(0, eval(len(config_benchmarks) - 1), `inputsize_name_core_def')dnl
 
 dnl Optionally report the number of cycles spent while busy
 dnl waiting a specific number of countdown counts. The countdown
