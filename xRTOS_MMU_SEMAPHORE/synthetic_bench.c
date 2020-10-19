@@ -38,6 +38,9 @@ void array_write_linear(volatile bigstruct_t* data)
 		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
 			data[i].id = 0xff;
 		}
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			data[i].id = 0xff;
+		}
 	}
 }
 
@@ -68,6 +71,18 @@ int array_access_random(volatile bigstruct_t* data, volatile int* idx)
 		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
 			sum += data[idx[i]].id;
 		}
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			sum += data[idx[i]].id;
+		}
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			sum += data[idx[i]].id;
+		}
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			sum += data[idx[i]].id;
+		}
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			sum += data[idx[i]].id;
+		}
 	}
 	return sum;
 }
@@ -75,6 +90,9 @@ int array_access_random(volatile bigstruct_t* data, volatile int* idx)
 void array_write_random(volatile bigstruct_t* data, volatile int* idx)
 {
 	if (data != NULL && idx != NULL) {
+		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+			data[idx[i]].id = 0xff;
+		}
 		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
 			data[idx[i]].id = 0xff;
 		}
