@@ -13,20 +13,10 @@ int array_access_linear(volatile bigstruct_t* data)
 {
 	int sum = 0;
 	if (data != NULL) {
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			sum += data[i].id;
-		}
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			sum += data[i].id;
-		}
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			sum += data[i].id;
-		}
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			sum += data[i].id;
-		}
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			sum += data[i].id;
+		for (int j=0; j<SYNBENCH_REPEAT; ++j) {
+			for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+				sum += data[i].id;
+			}
 		}
 	}
 	return sum;
@@ -35,11 +25,10 @@ int array_access_linear(volatile bigstruct_t* data)
 void array_write_linear(volatile bigstruct_t* data)
 {
 	if (data != NULL) {
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			data[i].id = 0xff;
-		}
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			data[i].id = 0xff;
+		for (int j=0; j<SYNBENCH_REPEAT; ++j) {
+			for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+				data[i].id = 0xff;
+			}
 		}
 	}
 }
@@ -68,20 +57,10 @@ int array_access_random(volatile bigstruct_t* data, volatile int* idx)
 {
 	int sum = 0;
 	if (data != NULL && idx != NULL) {
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			sum += data[idx[i]].id;
-		}
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			sum += data[idx[i]].id;
-		}
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			sum += data[idx[i]].id;
-		}
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			sum += data[idx[i]].id;
-		}
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			sum += data[idx[i]].id;
+		for (int j=0; j<SYNBENCH_REPEAT; ++j) {
+			for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+				sum += data[idx[i]].id;
+			}
 		}
 	}
 	return sum;
@@ -90,21 +69,10 @@ int array_access_random(volatile bigstruct_t* data, volatile int* idx)
 void array_write_random(volatile bigstruct_t* data, volatile int* idx)
 {
 	if (data != NULL && idx != NULL) {
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			data[idx[i]].id = 0xff;
-		}
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			data[idx[i]].id = 0xff;
-		}
-	}
-}
-
-void array_access_alternate(volatile bigstruct_t* data)
-{
-	/* TODO: make array access alternate! */
-	if (data != NULL) {
-		for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
-			data[i].id;
+		for (int j=0; j<SYNBENCH_REPEAT; ++j) {
+			for (int i=0; i<SYNBENCH_DATASIZE; ++i) {
+				data[idx[i]].id = 0xff;
+			}
 		}
 	}
 }

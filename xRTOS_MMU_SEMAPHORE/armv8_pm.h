@@ -132,7 +132,7 @@ inline void disable_event_counter(unsigned int counter)
 	asm volatile("msr pmcntenclr_el0, %[val]" : : [val]"r" (counter_bit));
 }
 
-inline unsigned int read_event_counter(unsigned int counter)
+inline u64 read_event_counter(unsigned int counter)
 {
 	// select the performance counter, bits [4:0] of PMSELR_EL0
 	u64 cntr = ((u64) counter & 0x1F);
@@ -140,7 +140,7 @@ inline unsigned int read_event_counter(unsigned int counter)
 	// synchronize context
 	asm volatile("isb");
 	// read the counter
-	unsigned int events = 0;
+	u64 events = 0;
 	asm volatile("mrs %[res], pmxevcntr_el0" : [res]"=r" (events));
 	return events;
 }

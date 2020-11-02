@@ -37,6 +37,16 @@
 // id + data == 64 bytes
 #define BIGSTRUCT_DATASIZE 63
 
+/* Maybe define the number of times the synthetic benchmark must be
+   repeated. This is to make sure that the synthetic benchmark runs
+   long enough to stress the task under study during its complete
+   execution time.
+   If already defined in the CFLAGS (-DSYNBENCH_REPEAT=...) then
+   do nothing. */
+#ifndef SYNBENCH_REPEAT
+#define SYNBENCH_REPEAT 1
+#endif
+
 /**
  * Synthetic benchmark inspired by the paper `Predictable and Efficient Virtual
  * Addressing for Safety-Critical Real-Time Systems', written by Bennet and
@@ -61,6 +71,5 @@ void array_access_randomize(volatile int* idx, int corenum);
 #endif
 int array_access_random(volatile bigstruct_t* data, volatile int* idx);
 void array_write_random(volatile bigstruct_t* data, volatile int* idx);
-void array_access_alternate(volatile bigstruct_t* data);
 
 #endif /* SYNTHETIC_BENCH_H */

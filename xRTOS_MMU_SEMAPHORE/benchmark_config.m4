@@ -515,6 +515,15 @@ ifdef(`exp_label', `', `define(exp_label, `default')')
 #define EXP_LABEL "exp_label"
 #endif
 
+dnl maybe define synbench_repeat
+define(synbench_repeat_template, `
+#ifdef SYNBENCH_REPEAT
+#undef SYNBENCH_REPEAT
+#endif
+#define SYNBENCH_REPEAT $1
+')dnl
+ifdef(`synbench_repeat', `synbench_repeat_template(synbench_repeat)', `')
+
 dnl maybe define the tick rate in Hz
 define(delay_step_countdown_template, `
 #ifdef DELAY_STEP_COUNTDOWN
